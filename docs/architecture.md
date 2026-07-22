@@ -25,6 +25,7 @@ com.example.habitz
 |   +-- time
 +-- di
 +-- feature
+    +-- home
     +-- habits
     +-- checkins
     +-- statistics
@@ -72,6 +73,7 @@ Habitz does not depend on remote APIs. Source of truth should be local storage:
 
 ## Suggested Feature Ownership
 
+- `feature/home`: dashboard composition, today overview, category filtering, and entry points into habit actions.
 - `feature/habits`: create, edit, archive, reorder, and view habit definitions.
 - `feature/checkins`: daily completion flow, undo, skip, notes, and local completion history.
 - `feature/statistics`: streaks, completion rates, calendar summaries, and trend visualizations.

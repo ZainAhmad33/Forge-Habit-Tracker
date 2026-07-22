@@ -1,0 +1,157 @@
+package com.example.habitz.feature.home.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.habitz.core.designsystem.component.CustomShapeProgress
+import com.example.habitz.core.designsystem.theme.HabitzTheme
+import com.example.habitz.feature.home.data.local.DummyHomeData
+import com.example.habitz.feature.home.domain.model.HomeHabit
+import com.example.habitz.feature.home.domain.model.ProgressShapeEnumResolver
+import com.example.habitz.feature.home.presentation.screen.HomeScreen
+import com.example.habitz.feature.home.presentation.state.HomeUiState
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun HabitCard(
+    habit: HomeHabit,
+    modifier: Modifier = Modifier,
+    onDetailsClick: () -> Unit = {},
+) {
+    val containerColor = MaterialTheme.colorScheme.surfaceContainer
+    val progressShape = ProgressShapeEnumResolver[habit.progressShape] ?: MaterialShapes.Cookie12Sided.toShape()
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // 1. Centered Icon with Status Ring
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(100.dp)
+            ) {
+                CustomShapeProgress(
+                    habit.progressPercent/100f,
+                    shape = progressShape,
+                    startAngle = 140f,
+                    label = habit.image,
+                    strokeWidth = 7.dp)
+            }
+
+            // 2. Centered Title & Schedule
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = habit.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = habit.scheduleLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // 3. Horizontal Divider
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                thickness = 1.dp
+            )
+
+            // 4. Bottom Actions: Details Link (Left) & Streak Pill (Right)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Details Link
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = CircleShape
+                ) {
+                    Text(
+                        text = "Details",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable { onDetailsClick() }
+                            .padding(horizontal = 10.dp, vertical = 2.dp)
+                    )
+                }
+
+                // Streak Pill
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = CircleShape
+                ) {
+                    Text(
+                        text = "${habit.streakDays} 🔥",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+private data class HabitAccentColors(
+    val container: androidx.compose.ui.graphics.Color,
+    val content: androidx.compose.ui.graphics.Color,
+)
+
+
+@Preview(showBackground = true)
+@Composable
+private fun HabitCardPreview() {
+    HabitzTheme {
+        HabitCard(habit = HomeUiState.from(DummyHomeData.dashboard).habits.get(1))
+    }
+}
