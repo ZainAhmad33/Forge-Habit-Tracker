@@ -17,11 +17,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.feature.home.data.local.DummyHomeData
 import com.example.habitz.feature.home.domain.model.HabitCategory
+import com.example.habitz.feature.home.presentation.components.HomeAppBar
 import com.example.habitz.feature.home.presentation.components.HabitCategoryChips
 import com.example.habitz.feature.home.presentation.components.HabitGrid
 import com.example.habitz.feature.home.presentation.components.HomeHeader
@@ -52,9 +54,26 @@ fun HomeScreen(
     onCategorySelected: (HabitCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+
+    var query by remember { mutableStateOf("") }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
+        topBar = {
+            HomeAppBar(
+                appName = "HabitTracker",
+                searchQuery = query,
+                onSearchQueryChange = { query = it },
+                onSearchSubmitted = { submittedQuery ->
+                    // Handle search submit (e.g. filter list or trigger API call)
+                },
+                onProfileClick = {
+                    // Navigate to Profile Screen
+                },
+                backdropColor = MaterialTheme.colorScheme.surface.copy(),
+
+            )
+        }
     ) { innerPadding ->
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -68,6 +87,7 @@ fun HomeScreen(
                     .padding(PaddingValues(horizontal = 20.dp, vertical = 18.dp)),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
+
                 HomeHeader(
                     greetingName = uiState.greetingName,
                     dateLabel = uiState.dateLabel,

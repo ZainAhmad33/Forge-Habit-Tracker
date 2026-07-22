@@ -9,7 +9,7 @@ import com.example.habitz.feature.home.domain.model.ProgressShape
 object DummyHomeData {
     val dashboard = HomeDashboard(
         greetingName = "Zain",
-        dateLabel = "Today, July 22",
+        dateLabel = "Wednesday, July 22",
         summary = HomeSummary(
             completedCount = 4,
             totalCount = 7,

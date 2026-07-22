@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeHeader(
     greetingName: String,
@@ -33,23 +36,20 @@ fun HomeHeader(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = "Good afternoon, $greetingName",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-        AssistChip(
-            onClick = {},
-            label = { Text("ZA") },
-            leadingIcon = {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+            Row() {
+                Text(
+                    text = "Good afternoon, ",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-            },
-        )
+                Text(
+                    text = greetingName,
+                    style = MaterialTheme.typography.headlineMediumEmphasized,
+                    fontWeight = FontWeight(700),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+        }
     }
 }
