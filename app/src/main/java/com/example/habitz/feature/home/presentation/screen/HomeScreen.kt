@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -17,9 +20,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.habitz.core.designsystem.component.BottomNavBar
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.feature.home.data.local.DummyHomeData
 import com.example.habitz.feature.home.domain.model.HabitCategory
@@ -48,6 +55,7 @@ fun HomeRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
@@ -56,8 +64,23 @@ fun HomeScreen(
 ) {
 
     var query by remember { mutableStateOf("") }
+    var isToolbarVisible by remember { mutableStateOf(true) }
+    val scrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -10f) isToolbarVisible = false
+                if (available.y > 10f) isToolbarVisible = true
+                return Offset.Zero
+            }
+        }
+    }
+    val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
+        exitDirection = FloatingToolbarExitDirection.Bottom
+    )
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             HomeAppBar(
@@ -109,6 +132,9 @@ fun HomeScreen(
                 )
                 HabitGrid(habits = uiState.visibleHabits)
             }
+            BottomNavBar(
+                scrollBehavior
+            )
         }
     }
 }
