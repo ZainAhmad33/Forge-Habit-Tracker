@@ -1,17 +1,17 @@
 package com.example.habitz.core.database
 
-import com.example.habitz.core.database.interfaces.CategoryRepository
-import com.example.habitz.core.database.interfaces.HabitRepository
+import com.example.habitz.core.database.interfaces.ICategoryRepository
+import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.database.respositories.InMemoryCategoryRepository
-import com.example.habitz.core.database.respositories.InMemoryHabitRepository
+import com.example.habitz.core.database.respositories.InMemoryIHabitRepository
 
-class RepositoryResolver(private val habitRepository: HabitRepository, private val categoryRepository: CategoryRepository){
+class RepositoryResolver(private val IHabitRepository: IHabitRepository, private val ICategoryRepository: ICategoryRepository){
 
-    public fun getHabitRepository(): HabitRepository{
-        return habitRepository
+    public fun getHabitRepository(): IHabitRepository{
+        return IHabitRepository
     }
-    public fun getCategoryRepository(): CategoryRepository{
-        return categoryRepository
+    public fun getCategoryRepository(): ICategoryRepository{
+        return ICategoryRepository
     }
 
 }
@@ -22,11 +22,11 @@ object ServiceLocator {
         RepositoryResolver(provideHabitRepository(), provideCategoryRepository())
     }
 
-    private fun provideHabitRepository(): HabitRepository {
-        return InMemoryHabitRepository() // Or however you instantiate HabitRepository
+    private fun provideHabitRepository(): IHabitRepository {
+        return InMemoryIHabitRepository() // Or however you instantiate HabitRepository
     }
 
-    private fun provideCategoryRepository(): CategoryRepository {
+    private fun provideCategoryRepository(): ICategoryRepository {
         return InMemoryCategoryRepository() // Or however you instantiate HabitRepository
     }
 }

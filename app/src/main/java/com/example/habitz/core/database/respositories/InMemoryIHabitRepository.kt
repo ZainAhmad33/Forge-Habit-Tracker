@@ -1,20 +1,17 @@
 package com.example.habitz.core.database.respositories
 
-import com.example.habitz.core.database.interfaces.HabitRepository
-import com.example.habitz.core.database.entity.HabitCategory
-import com.example.habitz.core.database.entity.HomeDashboard
+import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.database.entity.HomeHabit
 import com.example.habitz.core.database.entity.HomeSummary
-import com.example.habitz.core.database.entity.ProgressShape
 import com.example.habitz.core.datastore.dummyDatabase
 
 /**
  * Temporary local data source for the home feature.
  *
  * Keep this implementation as the composition root's dependency until Room is
- * introduced; then replace it with a database-backed [com.example.habitz.core.database.interfaces.HabitRepository].
+ * introduced; then replace it with a database-backed [com.example.habitz.core.database.interfaces.IHabitRepository].
  */
-class InMemoryHabitRepository : HabitRepository {
+class InMemoryIHabitRepository : IHabitRepository {
 
 
     override fun getHabitSummary(): HomeSummary{

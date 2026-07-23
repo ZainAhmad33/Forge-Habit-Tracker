@@ -1,15 +1,15 @@
+// app/build.gradle.kts
 plugins {
     alias(libs.plugins.android.application)
+    // alias(libs.plugins.kotlin.android)      // <-- Add this
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)                 // Uses libs alias
+    alias(libs.plugins.hilt)                // Uses libs alias
 }
 
 android {
     namespace = "com.example.habitz"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36 // Cleaned up syntax for standard API levels
 
     defaultConfig {
         applicationId = "com.example.habitz"
@@ -23,15 +23,15 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = false
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
     }
@@ -57,5 +57,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("androidx.compose.material3:material3-android:1.5.0-alpha01")
     implementation("androidx.compose.material:material-icons-extended")
-    debugImplementation(libs.androidx.ui.tooling)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 }
