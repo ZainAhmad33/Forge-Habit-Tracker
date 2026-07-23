@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +27,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.habitz.core.database.ServiceLocator
 import com.example.habitz.core.designsystem.component.BottomNavBar
 import com.example.habitz.core.designsystem.theme.HabitzTheme
@@ -38,6 +40,7 @@ import com.example.habitz.feature.home.presentation.components.HomeHeader
 import com.example.habitz.feature.home.presentation.components.HomeSummaryCard
 import com.example.habitz.feature.home.presentation.components.SectionHeader
 import com.example.habitz.feature.home.presentation.state.HomeUiState
+import com.example.habitz.feature.home.presentation.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -46,26 +49,13 @@ import java.util.Locale
 @Composable
 fun HomeRoute(
     modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
-    var selectedCategory by remember { mutableStateOf(HabitCategory.All) }
-    val currentDate = LocalDate.now()
-    val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
-
-    val uiState = HomeUiState.from(
-        dashboard = HomeDashboard(
-            "Zain",
-            currentDate.format(formatter),
-
-            ServiceLocator.repositoryResolver.getHabitRepository().getHabitSummary(),
-            ServiceLocator.repositoryResolver.getCategoryRepository().getCategories(),
-            ServiceLocator.repositoryResolver.getHabitRepository().getHabits(),
-        ),
-        selectedCategory = selectedCategory,
-    )
+    val uiState by viewModel.uiState.collectAsState()
 
     HomeScreen(
         uiState = uiState,
-        onCategorySelected = { selectedCategory = it },
+        onCategorySelected = viewModel::onCategorySelected,
         modifier = modifier,
     )
 }

@@ -3,8 +3,9 @@ package com.example.habitz.core.database.respositories
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.interfaces.ICategoryRepository
 import com.example.habitz.core.datastore.dummyDatabase
+import javax.inject.Inject
 
-class InMemoryCategoryRepository: ICategoryRepository {
+class InMemoryCategoryRepository @Inject constructor(): ICategoryRepository {
     override fun getCategories(): List<HabitCategory> {
         var categories = dummyDatabase.habitsById.values.map {
             it.category

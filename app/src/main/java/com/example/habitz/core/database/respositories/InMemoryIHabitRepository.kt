@@ -4,6 +4,7 @@ import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.database.entity.HomeHabit
 import com.example.habitz.core.database.entity.HomeSummary
 import com.example.habitz.core.datastore.dummyDatabase
+import javax.inject.Inject
 
 /**
  * Temporary local data source for the home feature.
@@ -11,7 +12,7 @@ import com.example.habitz.core.datastore.dummyDatabase
  * Keep this implementation as the composition root's dependency until Room is
  * introduced; then replace it with a database-backed [com.example.habitz.core.database.interfaces.IHabitRepository].
  */
-class InMemoryIHabitRepository : IHabitRepository {
+class InMemoryIHabitRepository @Inject constructor() : IHabitRepository {
 
 
     override fun getHabitSummary(): HomeSummary{

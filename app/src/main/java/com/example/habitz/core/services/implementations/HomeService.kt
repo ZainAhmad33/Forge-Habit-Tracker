@@ -8,11 +8,13 @@ import com.example.habitz.core.services.interfaces.IHomeService
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import javax.inject.Inject
 
-class HomeService(private val habitRepository: IHabitRepository,
-                  private val categoryRepository: ICategoryRepository,
-                  private val userRepository: IUserRepository)
-    : IHomeService {
+class HomeService @Inject constructor(
+    private val habitRepository: IHabitRepository,
+    private val categoryRepository: ICategoryRepository,
+    private val userRepository: IUserRepository
+) : IHomeService {
     override fun getDashboardData(): HomeDashboard {
         var user = userRepository.getUserDetails()
         var habits = habitRepository.getHabits()
