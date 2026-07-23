@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.habitz.feature.home.domain.model.HomeSummary
+import com.example.habitz.core.database.entity.HomeSummary
 
 @Composable
 fun HomeSummaryCard(

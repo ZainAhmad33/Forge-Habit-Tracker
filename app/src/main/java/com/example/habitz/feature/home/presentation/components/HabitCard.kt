@@ -27,12 +27,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.habitz.core.database.ServiceLocator
 import com.example.habitz.core.designsystem.component.CustomShapeProgress
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.home.data.local.DummyHomeData
-import com.example.habitz.feature.home.domain.model.HomeHabit
-import com.example.habitz.feature.home.domain.model.ProgressShapeEnumResolver
-import com.example.habitz.feature.home.presentation.state.HomeUiState
+import com.example.habitz.core.database.entity.HomeHabit
+import com.example.habitz.core.database.entity.ProgressShapeEnumResolver
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -144,6 +143,6 @@ private data class HabitAccentColors(
 @Composable
 private fun HabitCardPreview() {
     HabitzTheme {
-        HabitCard(habit = HomeUiState.from(DummyHomeData.dashboard).habits.get(1))
+        HabitCard(habit = ServiceLocator.repositoryResolver.getHabitRepository().getHabits().get(1))
     }
 }

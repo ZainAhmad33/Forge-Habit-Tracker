@@ -26,10 +26,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.habitz.core.database.ServiceLocator
 import com.example.habitz.core.designsystem.component.BottomNavBar
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.home.data.local.DummyHomeData
-import com.example.habitz.feature.home.domain.model.HabitCategory
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HomeDashboard
 import com.example.habitz.feature.home.presentation.components.HomeAppBar
 import com.example.habitz.feature.home.presentation.components.HabitCategoryChips
 import com.example.habitz.feature.home.presentation.components.HabitGrid
@@ -37,14 +38,28 @@ import com.example.habitz.feature.home.presentation.components.HomeHeader
 import com.example.habitz.feature.home.presentation.components.HomeSummaryCard
 import com.example.habitz.feature.home.presentation.components.SectionHeader
 import com.example.habitz.feature.home.presentation.state.HomeUiState
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HomeRoute(
     modifier: Modifier = Modifier,
 ) {
     var selectedCategory by remember { mutableStateOf(HabitCategory.All) }
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
+
     val uiState = HomeUiState.from(
-        dashboard = DummyHomeData.dashboard,
+        dashboard = HomeDashboard(
+            "Zain",
+            currentDate.format(formatter),
+
+            ServiceLocator.repositoryResolver.getHabitRepository().getHabitSummary(),
+            ServiceLocator.repositoryResolver.getCategoryRepository().getCategories(),
+            ServiceLocator.repositoryResolver.getHabitRepository().getHabits(),
+        ),
         selectedCategory = selectedCategory,
     )
 
@@ -142,9 +157,24 @@ fun HomeScreen(
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
+    var selectedCategory by remember { mutableStateOf(HabitCategory.All) }
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
+
+    val uiState = HomeUiState.from(
+        dashboard = HomeDashboard(
+            "Zain",
+            currentDate.format(formatter),
+
+            ServiceLocator.repositoryResolver.getHabitRepository().getHabitSummary(),
+            ServiceLocator.repositoryResolver.getCategoryRepository().getCategories(),
+            ServiceLocator.repositoryResolver.getHabitRepository().getHabits(),
+        ),
+        selectedCategory = selectedCategory,
+    )
     HabitzTheme {
         HomeScreen(
-            uiState = HomeUiState.from(DummyHomeData.dashboard),
+            uiState = uiState,
             onCategorySelected = {},
         )
     }

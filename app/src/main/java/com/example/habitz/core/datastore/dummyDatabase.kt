@@ -1,24 +1,15 @@
-package com.example.habitz.feature.home.data.local
+package com.example.habitz.core.datastore
 
-import com.example.habitz.feature.home.domain.model.HabitCategory
-import com.example.habitz.feature.home.domain.model.HomeDashboard
-import com.example.habitz.feature.home.domain.model.HomeHabit
-import com.example.habitz.feature.home.domain.model.HomeSummary
-import com.example.habitz.feature.home.domain.model.ProgressShape
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HomeHabit
+import com.example.habitz.core.database.entity.ProgressShape
+import com.example.habitz.core.database.entity.UserModel
+import java.util.Date
 
-object DummyHomeData {
-    val dashboard = HomeDashboard(
-        greetingName = "Zain",
-        dateLabel = "Wednesday, July 22",
-        summary = HomeSummary(
-            completedCount = 4,
-            totalCount = 7,
-            currentStreakDays = 12,
-            weeklyCompletionPercent = 78,
-        ),
-        categories = HabitCategory.entries,
-        habits = listOf(
-            HomeHabit(
+class dummyDatabase {
+    companion object{
+        val habitsById = linkedMapOf(
+            "morning-walk" to HomeHabit(
                 id = "morning-walk",
                 title = "Morning walk",
                 category = HabitCategory.Health,
@@ -27,9 +18,9 @@ object DummyHomeData {
                 progressPercent = 100,
                 isCompletedToday = true,
                 image = "🚶‍♂️",
-                progressShape = ProgressShape.Cookie12Sided
+                progressShape = ProgressShape.Cookie12Sided,
             ),
-            HomeHabit(
+            "read" to HomeHabit(
                 id = "read",
                 title = "Read 10 pages",
                 category = HabitCategory.Mind,
@@ -37,10 +28,10 @@ object DummyHomeData {
                 streakDays = 6,
                 progressPercent = 85,
                 isCompletedToday = false,
-                image = "📖️",
-                progressShape = ProgressShape.Cookie4Sided
+                image = "📖",
+                progressShape = ProgressShape.Cookie4Sided,
             ),
-            HomeHabit(
+            "deep-work" to HomeHabit(
                 id = "deep-work",
                 title = "Deep work block",
                 category = HabitCategory.Work,
@@ -49,9 +40,9 @@ object DummyHomeData {
                 progressPercent = 65,
                 isCompletedToday = false,
                 image = "💻",
-                progressShape = ProgressShape.VerySunny
+                progressShape = ProgressShape.VerySunny,
             ),
-            HomeHabit(
+            "water" to HomeHabit(
                 id = "water",
                 title = "Drink water",
                 category = HabitCategory.Health,
@@ -59,10 +50,10 @@ object DummyHomeData {
                 streakDays = 9,
                 progressPercent = 67,
                 isCompletedToday = false,
-                image = "🥤️",
-                progressShape = ProgressShape.Arch
+                image = "🥤",
+                progressShape = ProgressShape.Arch,
             ),
-            HomeHabit(
+            "tidy-room" to HomeHabit(
                 id = "tidy-room",
                 title = "Tidy room",
                 category = HabitCategory.Home,
@@ -71,8 +62,11 @@ object DummyHomeData {
                 progressPercent = 20,
                 isCompletedToday = false,
                 image = "🧹",
-                progressShape = ProgressShape.Gem
+                progressShape = ProgressShape.Gem,
             ),
-        ),
-    )
+        )
+
+        val userInformation = UserModel("Zain", "Ahmad", Date(2001, 9, 1))
+    }
+
 }

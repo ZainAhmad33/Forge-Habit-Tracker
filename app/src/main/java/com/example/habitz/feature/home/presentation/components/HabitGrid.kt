@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.habitz.feature.home.domain.model.HomeHabit
+import com.example.habitz.core.database.entity.HomeHabit
 
 @Composable
 fun HabitGrid(

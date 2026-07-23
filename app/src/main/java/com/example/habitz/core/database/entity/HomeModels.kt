@@ -1,4 +1,4 @@
-package com.example.habitz.feature.home.domain.model
+package com.example.habitz.core.database.entity
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes

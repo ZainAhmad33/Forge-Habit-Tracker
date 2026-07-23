@@ -1,9 +1,9 @@
 package com.example.habitz.feature.home.presentation.state
 
-import com.example.habitz.feature.home.domain.model.HabitCategory
-import com.example.habitz.feature.home.domain.model.HomeDashboard
-import com.example.habitz.feature.home.domain.model.HomeHabit
-import com.example.habitz.feature.home.domain.model.HomeSummary
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HomeDashboard
+import com.example.habitz.core.database.entity.HomeHabit
+import com.example.habitz.core.database.entity.HomeSummary
 
 data class HomeUiState(
     val greetingName: String,
