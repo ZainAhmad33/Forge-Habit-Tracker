@@ -33,6 +33,7 @@ import com.example.habitz.core.designsystem.component.BottomNavBar
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HomeDashboard
+import com.example.habitz.core.uiEntities.CategoryPill
 import com.example.habitz.feature.home.presentation.components.HomeAppBar
 import com.example.habitz.feature.home.presentation.components.HabitCategoryChips
 import com.example.habitz.feature.home.presentation.components.HabitGrid
@@ -117,6 +118,7 @@ fun HomeScreen(
             ) {
 
                 HomeHeader(
+                    greetingMessage = uiState.greetingMessage,
                     greetingName = uiState.greetingName,
                     dateLabel = uiState.dateLabel,
                     modifier = Modifier.fillMaxWidth(),
@@ -153,11 +155,12 @@ private fun HomeScreenPreview() {
 
     val uiState = HomeUiState.from(
         dashboard = HomeDashboard(
+            "Good morning",
             "Zain",
             currentDate.format(formatter),
 
             ServiceLocator.repositoryResolver.getHabitRepository().getHabitSummary(),
-            ServiceLocator.repositoryResolver.getCategoryRepository().getCategories(),
+            List<CategoryPill>(2){ CategoryPill(HabitCategory.Home, "🏡")},
             ServiceLocator.repositoryResolver.getHabitRepository().getHabits(),
         ),
         selectedCategory = selectedCategory,

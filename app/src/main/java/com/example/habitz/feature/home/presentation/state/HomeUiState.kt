@@ -4,12 +4,14 @@ import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HomeDashboard
 import com.example.habitz.core.database.entity.HomeHabit
 import com.example.habitz.core.database.entity.HomeSummary
+import com.example.habitz.core.uiEntities.CategoryPill
 
 data class HomeUiState(
+    val greetingMessage: String,
     val greetingName: String,
     val dateLabel: String,
     val summary: HomeSummary,
-    val categories: List<HabitCategory>,
+    val categories: List<CategoryPill>,
     val selectedCategory: HabitCategory,
     val habits: List<HomeHabit>,
 ) {
@@ -25,6 +27,7 @@ data class HomeUiState(
             dashboard: HomeDashboard,
             selectedCategory: HabitCategory = HabitCategory.All,
         ) = HomeUiState(
+            greetingMessage = dashboard.greetingMessage,
             greetingName = dashboard.greetingName,
             dateLabel = dashboard.dateLabel,
             summary = dashboard.summary,

@@ -17,12 +17,12 @@ class InMemoryIHabitRepository @Inject constructor() : IHabitRepository {
 
     override fun getHabitSummary(): HomeSummary{
         var completedCount = dummyDatabase.habitsById.values.filter { it.isCompletedToday }.size
-        var totalCount = dummyDatabase.habitsById.values.size
+        var totalCount = dummyDatabase.habitsById.size
         var summary = HomeSummary(
             completedCount = completedCount,
             totalCount = totalCount,
             currentStreakDays = 12,
-            weeklyCompletionPercent = 78,
+            weeklyCompletionPercent = ((completedCount.toFloat()/totalCount.toFloat())*100).toInt(),
         )
 
         return summary

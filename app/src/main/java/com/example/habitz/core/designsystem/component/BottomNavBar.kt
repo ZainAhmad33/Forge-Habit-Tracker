@@ -39,9 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -78,6 +80,7 @@ private fun SlidingTabRow(
     selectedTab: String,
     onTabSelected: (String) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val tabs = listOf("Home", "Insights")
     val selectedIndex = tabs.indexOf(selectedTab)
 
@@ -133,7 +136,9 @@ private fun SlidingTabRow(
                 )
 
                 TextButton(
-                    onClick = { onTabSelected(label) },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onTabSelected(label) },
                     colors = ButtonDefaults.textButtonColors(contentColor = contentColor),
                     modifier = Modifier.onGloballyPositioned { coordinates ->
                         with(density) {
@@ -202,7 +207,10 @@ private fun NavTabItem(
 }
 @Composable
 fun CreateHabitFab(){
+    val haptic = LocalHapticFeedback.current
     FloatingActionButton(onClick = {
+
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         // TODO: Create action
     }) {
         Icon(

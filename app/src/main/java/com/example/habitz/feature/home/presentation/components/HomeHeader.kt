@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeHeader(
+    greetingMessage: String,
     greetingName: String,
     dateLabel: String,
     modifier: Modifier = Modifier,
@@ -38,7 +39,7 @@ fun HomeHeader(
             )
             Row() {
                 Text(
-                    text = "Good afternoon, ",
+                    text = "${ greetingMessage }, ",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

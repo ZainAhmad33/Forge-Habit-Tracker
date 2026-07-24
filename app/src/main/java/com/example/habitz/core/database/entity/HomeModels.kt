@@ -5,12 +5,15 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Shape
+import com.example.habitz.core.uiEntities.CategoryPill
+import kotlin.collections.mapOf
 
 data class HomeDashboard(
+    val greetingMessage: String,
     val greetingName: String,
     val dateLabel: String,
     val summary: HomeSummary,
-    val categories: List<HabitCategory>,
+    val categories: List<CategoryPill>,
     val habits: List<HomeHabit>
 )
 
@@ -35,10 +38,20 @@ data class HomeHabit(
 
 enum class HabitCategory(val label: String) {
     All("All"),
-    Health("Health"),
-    Mind("Mind"),
+    Health("Health & Fitness"),
+    Mindfulness("Mindfulness"),
     Work("Work"),
     Home("Home"),
+    Nutrition("Nutrition"),
+    Productivity("Productivity"),
+    Learning("Learning"),
+    Sleep("Sleep"),
+    Finance("Finance"),
+    Social("Social"),
+    Creativity("Creativity"),
+    Environment("Environment"),
+    Spirituality("Spirituality"),
+    DigitalWellbeing("Digital Wellbeing"),
 }
 
 enum class ProgressShape{
@@ -84,3 +97,20 @@ val ProgressShapeEnumResolver: Map<ProgressShape, Shape>
         ProgressShape.Puffy             to MaterialShapes.Puffy.toShape(),
 
     )
+
+val CategoryToImage = mapOf(
+    HabitCategory.Health            to "🏃",
+    HabitCategory.Nutrition         to "🥗",
+    HabitCategory.Mindfulness       to "🧘",
+    HabitCategory.Productivity      to "🎯",
+    HabitCategory.Learning          to "📖",
+    HabitCategory.Sleep             to "😴",
+    HabitCategory.Finance           to "💰",
+    HabitCategory.Social            to "👥",
+    HabitCategory.Creativity        to "🎨",
+    HabitCategory.Work              to "💼",
+    HabitCategory.Home              to "🏠",
+    HabitCategory.Environment       to "🌱",
+    HabitCategory.Spirituality      to "🙏",
+    HabitCategory.DigitalWellbeing  to "📵",
+)

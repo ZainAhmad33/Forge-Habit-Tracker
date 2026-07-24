@@ -23,7 +23,7 @@ class dummyDatabase {
             "read" to HomeHabit(
                 id = "read",
                 title = "Read 10 pages",
-                category = HabitCategory.Mind,
+                category = HabitCategory.Mindfulness,
                 scheduleLabel = "Daily",
                 streakDays = 6,
                 progressPercent = 85,
