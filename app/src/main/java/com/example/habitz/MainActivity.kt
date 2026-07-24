@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.home.presentation.screen.HomeRoute
+import com.example.habitz.feature.home.screen.HomeRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

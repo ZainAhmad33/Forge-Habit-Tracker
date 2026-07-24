@@ -1,4 +1,4 @@
-package com.example.habitz.feature.home.presentation.state
+package com.example.habitz.feature.home.state
 
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HomeDashboard

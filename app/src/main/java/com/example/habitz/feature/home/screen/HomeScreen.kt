@@ -1,4 +1,4 @@
-package com.example.habitz.feature.home.presentation.screen
+package com.example.habitz.feature.home.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -44,14 +44,14 @@ import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HomeDashboard
 import com.example.habitz.core.uiEntities.CategoryPill
-import com.example.habitz.feature.home.presentation.components.HomeAppBar
-import com.example.habitz.feature.home.presentation.components.HabitCategoryChips
-import com.example.habitz.feature.home.presentation.components.HabitGrid
-import com.example.habitz.feature.home.presentation.components.HomeHeader
-import com.example.habitz.feature.home.presentation.components.HomeSummaryCard
-import com.example.habitz.feature.home.presentation.components.SectionHeader
-import com.example.habitz.feature.home.presentation.state.HomeUiState
-import com.example.habitz.feature.home.presentation.viewmodel.HomeViewModel
+import com.example.habitz.feature.home.components.HomeAppBar
+import com.example.habitz.feature.home.components.HabitCategoryChips
+import com.example.habitz.feature.home.components.HabitGrid
+import com.example.habitz.feature.home.components.HomeHeader
+import com.example.habitz.feature.home.components.HomeSummaryCard
+import com.example.habitz.feature.home.components.SectionHeader
+import com.example.habitz.feature.home.state.HomeUiState
+import com.example.habitz.feature.home.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale

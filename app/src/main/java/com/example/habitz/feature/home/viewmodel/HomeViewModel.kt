@@ -1,10 +1,9 @@
-package com.example.habitz.feature.home.presentation.viewmodel
+package com.example.habitz.feature.home.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.services.interfaces.IHomeService
-import com.example.habitz.feature.home.presentation.state.HomeUiState
+import com.example.habitz.feature.home.state.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

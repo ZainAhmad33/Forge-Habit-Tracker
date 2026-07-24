@@ -1,4 +1,4 @@
-package com.example.habitz.feature.home.presentation.components
+package com.example.habitz.feature.home.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
