@@ -68,6 +68,7 @@ fun HomeRoute(
         uiState = uiState,
         onCategorySelected = viewModel::onCategorySelected,
         modifier = modifier,
+        searchHabits = viewModel::searchHabits
     )
 }
 
@@ -76,6 +77,7 @@ fun HomeRoute(
 fun HomeScreen(
     uiState: HomeUiState,
     onCategorySelected: (HabitCategory) -> Unit,
+    searchHabits: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -102,9 +104,12 @@ fun HomeScreen(
             HomeAppBar(
                 appName = "HabitTracker",
                 searchQuery = query,
-                onSearchQueryChange = { query = it },
-                onSearchSubmitted = { submittedQuery ->
-                    // Handle search submit (e.g. filter list or trigger API call)
+                onSearchQueryChange = {
+                    query = it
+                    searchHabits(query)
+                },
+                onSearchSubmitted = {
+                    searchHabits(query)
                 },
                 onProfileClick = {
                     // Navigate to Profile Screen
@@ -167,7 +172,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "No habits yet",
+                            text = "Create habits",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.W600
                             ),
@@ -218,6 +223,7 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = uiState,
             onCategorySelected = {},
+            searchHabits = {}
         )
     }
 }

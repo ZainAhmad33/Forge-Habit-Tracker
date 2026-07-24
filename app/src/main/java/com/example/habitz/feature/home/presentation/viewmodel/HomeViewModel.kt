@@ -23,4 +23,8 @@ class HomeViewModel @Inject constructor(
     fun onCategorySelected(category: HabitCategory) {
         _uiState.update { it.copy(selectedCategory = category) }
     }
+
+    fun searchHabits(query: String){
+        _uiState.update{ it.copy(habits = homeService.searchHabits(query))}
+    }
 }

@@ -2,6 +2,7 @@ package com.example.habitz.core.services.implementations
 
 import com.example.habitz.core.database.entity.CategoryToImage
 import com.example.habitz.core.database.entity.HomeDashboard
+import com.example.habitz.core.database.entity.HomeHabit
 import com.example.habitz.core.database.interfaces.ICategoryRepository
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.database.interfaces.IUserRepository
@@ -37,6 +38,13 @@ class HomeService @Inject constructor(
             categories,
             habits
         )
+    }
+
+    override fun searchHabits(query: String): List<HomeHabit> {
+        if (query == ""){
+            return habitRepository.getHabits()
+        }
+        return habitRepository.getHabits().filter { it.title.lowercase().contains(query.lowercase()) }
     }
 
     private fun getDynamicGreeting(): String {

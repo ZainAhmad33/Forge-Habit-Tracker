@@ -1,30 +1,17 @@
-<!-- res/drawable/ic_seedling.xml -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="64dp"
-    android:height="64dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
 
-    <!-- Soil Mound -->
+    <!-- Green Leaves & Stem -->
     <path
-        android:fillColor="#8D6E63"
-        android:pathData="M4,19.5 C4,18.12 7.58,17 12,17 C16.42,17 20,18.12 20,19.5 C20,20.88 16.42,22 12,22 C7.58,22 4,20.88 4,19.5Z" />
+        android:fillColor="#86D72F"
+        android:pathData="M22.39,6.45c-2.29,0 -4.32,1.08 -5.63,2.75v-0.47h-0.01C16.53,4.98 13.42,2 9.61,2H2c0,3.95 3.2,7.15 7.15,7.15h5.19v12.46h2.42v-8h6.09c3.95,0 7.15,-3.2 7.15,-7.15h-7.61v-0.01Z" />
 
-    <!-- Stem -->
+    <!-- Soil Base -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#4CAF50"
-        android:strokeWidth="1.8"
-        android:strokeLineCap="round"
-        android:pathData="M12,18 V10 C12,10 12,7 15,6" />
+        android:fillColor="#6D4534"
+        android:pathData="M15.5501,21c-4.9647,0 -8.98986,4.0252 -8.98986,8.9899H24.5499c0,-4.9647 -4.0251,-8.9899 -8.9998,-8.9899Z" />
 
-    <!-- Left Leaf -->
-    <path
-        android:fillColor="#66BB6A"
-        android:pathData="M12,13 C12,13 8,13 6.5,10 C5,7 8,5.5 12,11 Z" />
-
-    <!-- Right Leaf -->
-    <path
-        android:fillColor="#4CAF50"
-        android:pathData="M12,10 C12,10 16,10 17.5,7 C19,4 16,2.5 12,8 Z" />
 </vector>
