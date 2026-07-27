@@ -94,11 +94,11 @@ data class UpsertHabitUiState(
     val selectedCategory: HabitCategory = HabitCategory.Health,
     val categories: List<CategoryPill> = emptyList(),
     val selectedType: HabitType = HabitType.YesNo,
-    val dailyGoal: Int = 0,
+    val dailyGoal: Int = 1,
     val selectedUnit: String = "Liters",
     val selectedFrequency: HabitFrequency = HabitFrequency.EveryDay,
     val specificDays: Set<Int> = emptySet(), // 0-6 for Mon-Sun
-    val daysPerWeek: Int = 0,
+    val daysPerWeek: Int = 1,
     val remindersEnabled: Boolean = false,
     val reminders: List<LocalTime> = listOf(),
     val otherUnitInput: String = "",
@@ -115,5 +115,5 @@ enum class HabitType(val label: String, val subLabel: String) {
 enum class HabitFrequency(val label: String) {
     EveryDay("Every day"),
     SpecificDays("Specific days"),
-    XPerWeek("X per week")
+    DaysPerWeek("Days a week")
 }

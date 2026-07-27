@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habitz.core.designsystem.component.CounterInput
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.feature.upserthabit.HabitFrequency
 
@@ -58,13 +59,13 @@ fun FrequencySelector(
                 FilterChip(
                     selected = isSelected,
                     onClick = { onFrequencySelected(freq) },
-                    label = { Text(freq.label) },
+                    label = { Text(freq.label, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
                     modifier = Modifier.weight(1f),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
-                    shape = RoundedCornerShape(24.dp)
+                    shape = FilterChipDefaults.shape
                 )
             }
         }
@@ -78,9 +79,13 @@ fun FrequencySelector(
                     onDayToggle = onDayToggle
                 )
             }
-            HabitFrequency.XPerWeek -> {
-                // Simplified version for now
-                Text("Select $daysPerWeek days per week")
+            HabitFrequency.DaysPerWeek -> {
+                CounterInput(
+                    value = daysPerWeek,
+                    valueMin = 1,
+                    valueMax = 7,
+                    onValueChange = onDaysPerWeekChange
+                )
             }
             else -> {}
         }

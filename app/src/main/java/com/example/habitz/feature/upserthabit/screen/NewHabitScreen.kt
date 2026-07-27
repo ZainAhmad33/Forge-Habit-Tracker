@@ -210,7 +210,8 @@ fun NewHabitScreen(
                 availableUnits = uiState.availableUnits,
                 otherUnitInput = uiState.otherUnitInput,
                 onOtherUnitInputChange = onOtherUnitInputChange,
-                onUnitSelected = onUnitSelected
+                onUnitSelected = onUnitSelected,
+                showCounter = uiState.selectedType != HabitType.YesNo
             )
             
             if (uiState.selectedType == HabitType.Quantity) {

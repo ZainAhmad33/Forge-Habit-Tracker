@@ -49,7 +49,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habitz.core.designsystem.component.CounterInput
 import com.example.habitz.core.designsystem.theme.HabitzTheme
+import com.example.habitz.feature.upserthabit.HabitType
 
 @Composable
 fun GoalSelector(
@@ -61,6 +63,7 @@ fun GoalSelector(
     onUnitSelected: (String) -> Unit,
     otherUnitInput: String,
     onOtherUnitInputChange: (String) -> Unit,
+    showCounter: Boolean,
     modifier: Modifier = Modifier
 ) {
     var showOtherUnitInput by remember {mutableStateOf(false)}
@@ -71,21 +74,24 @@ fun GoalSelector(
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Daily target counter
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Daily target",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            if(showCounter){
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Daily target",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                CounterInput(
-                    value = goal,
-                    onValueChange = onGoalChange
-                )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CounterInput(
+                        value = goal,
+                        onValueChange = onGoalChange,
+                        valueMin = 1
+                    )
+                }
             }
+
 
             // Unit selector (if applicable)
             if (showUnit) {
@@ -130,64 +136,6 @@ fun GoalSelector(
         }
     }
 
-}
-
-@Composable
-private fun CounterInput(
-    value: Int,
-    onValueChange: (Int) -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(
-                onClick = { if (value > 1) onValueChange(value - 1) },
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-            ) {
-                Icon(Icons.Rounded.Remove, contentDescription = "Decrease")
-            }
-
-            BasicTextField(
-                value = value.toString(),
-                onValueChange = { newValue ->
-                    if (newValue.isEmpty()) {
-                        onValueChange(0)
-                    } else {
-                        newValue.toIntOrNull()?.let { onValueChange(it) }
-                    }
-                },
-                textStyle = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(
-                onClick = { onValueChange(value + 1) },
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
-            ) {
-                Icon(Icons.Rounded.Add, contentDescription = "Increase")
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,6 +203,7 @@ private fun GoalSelectorPreview() {
             goal = 3,
             onGoalChange = {},
             showUnit = true,
+            showCounter = true,
             unit = "Liters",
             availableUnits = listOf("Liters", "Minutes", "Hours", "Pages"),
             onUnitSelected = {},
