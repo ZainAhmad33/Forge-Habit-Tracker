@@ -24,6 +24,7 @@ fun HabitCategoryChips(
     categories: List<CategoryPill>,
     selectedCategory: HabitCategory,
     onCategorySelected: (HabitCategory) -> Unit,
+    showAllCategoryChip: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     var haptic = LocalHapticFeedback.current
@@ -31,15 +32,18 @@ fun HabitCategoryChips(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        FilterChip(
-            selected = HabitCategory.All == selectedCategory,
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                onCategorySelected(HabitCategory.All) },
-            label = { Text(HabitCategory.All.label) },
-            leadingIcon = { Icon(Icons.Rounded.Apps, contentDescription = "All categories icon") },
-            shape = FilterChipDefaults.shape
-        )
+        if (showAllCategoryChip){
+            FilterChip(
+                selected = HabitCategory.All == selectedCategory,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    onCategorySelected(HabitCategory.All) },
+                label = { Text(HabitCategory.All.label) },
+                leadingIcon = { Icon(Icons.Rounded.Apps, contentDescription = "All categories icon") },
+                shape = FilterChipDefaults.shape
+            )
+        }
+
         categories.forEach { category ->
             FilterChip(
                 selected = category.name == selectedCategory,

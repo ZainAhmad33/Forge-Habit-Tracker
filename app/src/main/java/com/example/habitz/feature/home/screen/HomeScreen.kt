@@ -146,6 +146,7 @@ fun HomeScreen(
                         categories = uiState.categories,
                         selectedCategory = uiState.selectedCategory,
                         onCategorySelected = onCategorySelected,
+                        showAllCategoryChip = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     SectionHeader(
