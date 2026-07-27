@@ -4,6 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.feature.home.screen.HomeRoute
 import com.example.habitz.feature.upserthabit.screen.NewHabitRoute
@@ -16,9 +23,43 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HabitzTheme {
-               // HomeRoute()
-                NewHabitRoute({})
+                HabitzApp()
             }
+        }
+    }
+}
+
+@Composable
+fun HabitzApp() {
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable("home") {
+            HomeRoute(
+                onAddHabitClick = { navController.navigate("new_habit") }
+            )
+        }
+        composable(
+                route = "new_habit",
+        // Slide up from bottom when navigating in
+        enterTransition = {
+            slideInVertically(
+                initialOffsetY = { fullHeight -> fullHeight },
+                animationSpec = tween(400)
+            )
+        },
+        // Slide down to bottom when pressing back or popping stack
+        popExitTransition = {
+            slideOutVertically(
+                targetOffsetY = { fullHeight -> fullHeight },
+                animationSpec = tween(400)
+            )
+        }) {
+            NewHabitRoute(
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

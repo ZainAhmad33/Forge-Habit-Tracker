@@ -59,6 +59,7 @@ import com.example.habitz.R
 
 @Composable
 fun HomeRoute(
+    onAddHabitClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -67,6 +68,7 @@ fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onCategorySelected = viewModel::onCategorySelected,
+        onAddHabitClick = onAddHabitClick,
         modifier = modifier,
         searchHabits = viewModel::searchHabits
     )
@@ -78,6 +80,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     onCategorySelected: (HabitCategory) -> Unit,
     searchHabits: (String) -> Unit,
+    onAddHabitClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -194,7 +197,8 @@ fun HomeScreen(
 
             }
             BottomNavBar(
-                scrollBehavior
+                scrollBehavior = scrollBehavior,
+                onAddHabitClick = onAddHabitClick
             )
         }
     }
@@ -224,7 +228,8 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = uiState,
             onCategorySelected = {},
-            searchHabits = {}
+            searchHabits = {},
+            onAddHabitClick = {}
         )
     }
 }

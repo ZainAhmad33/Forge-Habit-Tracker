@@ -47,11 +47,15 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.habitz.core.database.entity.HomeHabit
+import com.example.habitz.feature.home.screen.HomeRoute
+import com.example.habitz.feature.upserthabit.screen.NewHabitRoute
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BottomNavBar(
-    scrollBehavior: FloatingToolbarScrollBehavior
+    scrollBehavior: FloatingToolbarScrollBehavior,
+    onAddHabitClick: () -> Unit
 ) {
     var selected by remember { mutableStateOf("Home") }
 
@@ -61,7 +65,7 @@ fun BottomNavBar(
         HorizontalFloatingToolbar(
             expanded = true,
             colors = FloatingToolbarDefaults.standardFloatingToolbarColors(),
-            floatingActionButton = { CreateHabitFab() },
+            floatingActionButton = { CreateHabitFab(onClick = onAddHabitClick) },
             scrollBehavior = scrollBehavior,
             modifier = Modifier
                 .offset(y = -FloatingToolbarDefaults.ScreenOffset)
@@ -206,12 +210,13 @@ private fun NavTabItem(
     }
 }
 @Composable
-fun CreateHabitFab(){
+fun CreateHabitFab(
+    onClick: () -> Unit
+){
     val haptic = LocalHapticFeedback.current
     FloatingActionButton(onClick = {
-
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        // TODO: Create action
+        onClick()
     }) {
         Icon(
             imageVector = Icons.Rounded.AddCircleOutline,
@@ -228,5 +233,5 @@ fun PreviewBottomNav(){
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
         exitDirection = FloatingToolbarExitDirection.Bottom
     )
-    BottomNavBar(scrollBehavior)
+    BottomNavBar(scrollBehavior, onAddHabitClick = {})
 }
