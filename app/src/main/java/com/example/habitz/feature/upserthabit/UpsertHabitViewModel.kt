@@ -68,8 +68,10 @@ class UpsertHabitViewModel @Inject constructor(
     }
 
     fun addReminder(time: LocalTime) {
-        _uiState.update { state ->
-            state.copy(reminders = state.reminders + time)
+        if (!_uiState.value.reminders.contains(time)){
+            _uiState.update { state ->
+                state.copy(reminders = state.reminders + time)
+            }
         }
     }
 

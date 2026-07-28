@@ -60,6 +60,7 @@ fun NewHabitRoute(
 
     NewHabitScreen(
         uiState = uiState,
+        pageTitle = "New Habit",
         onBackClick = onBackClick,
         onTitleChange = viewModel::onTitleChange,
         onEmojiSelected = viewModel::onEmojiChange,
@@ -72,7 +73,7 @@ fun NewHabitRoute(
         onDaysPerWeekChange = viewModel::onDaysPerWeekChange,
         onRemindersEnabledChange = viewModel::onRemindersEnabledChange,
         onRemoveReminder = viewModel::removeReminder,
-        onAddReminderClick = { /* Open time picker */ },
+        onAddReminderClick = viewModel::addReminder,
         onCreateHabitClick = { /* Save habit */ },
         onOtherUnitInputChange = viewModel::onOtherUnitInputChange,
         modifier = modifier
@@ -83,6 +84,7 @@ fun NewHabitRoute(
 @Composable
 fun NewHabitScreen(
     uiState: UpsertHabitUiState,
+    pageTitle: String,
     onBackClick: () -> Unit,
     onTitleChange: (String) -> Unit,
     onEmojiSelected: (String) -> Unit,
@@ -95,7 +97,7 @@ fun NewHabitScreen(
     onDaysPerWeekChange: (Int) -> Unit,
     onRemindersEnabledChange: (Boolean) -> Unit,
     onRemoveReminder: (LocalTime) -> Unit,
-    onAddReminderClick: () -> Unit,
+    onAddReminderClick: (LocalTime) -> Unit,
     onCreateHabitClick: () -> Unit,
     onOtherUnitInputChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -107,7 +109,7 @@ fun NewHabitScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "New habit",
+                        text = pageTitle,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 },
@@ -158,7 +160,7 @@ fun NewHabitScreen(
                 value = uiState.title,
                 onValueChange = onTitleChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Habit name i.e. Meditate") },
+                placeholder = { Text("Name") },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -213,15 +215,6 @@ fun NewHabitScreen(
                 onUnitSelected = onUnitSelected,
                 showCounter = uiState.selectedType != HabitType.YesNo
             )
-            
-            if (uiState.selectedType == HabitType.Quantity) {
-                Text(
-                    text = "Progress fills as you log amounts — e.g. \"2.5 / 3 L\" throughout the day.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
 
             // 7 & 8. Frequency Selector
             FrequencySelector(
@@ -241,8 +234,6 @@ fun NewHabitScreen(
                 onRemoveReminder = onRemoveReminder,
                 onAddReminderClick = onAddReminderClick
             )
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -272,7 +263,8 @@ private fun NewHabitScreenPreview() {
             onRemoveReminder = {},
             onAddReminderClick = {},
             onCreateHabitClick = {},
-            onOtherUnitInputChange = {}
+            onOtherUnitInputChange = {},
+            pageTitle = "New Habit"
         )
     }
 }

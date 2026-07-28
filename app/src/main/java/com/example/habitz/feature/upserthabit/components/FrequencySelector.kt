@@ -2,6 +2,7 @@ package com.example.habitz.feature.upserthabit.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -49,18 +50,19 @@ fun FrequencySelector(
             )
         )
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        )  {
             HabitFrequency.entries.forEach { freq ->
                 val isSelected = freq == selectedFrequency
                 FilterChip(
                     selected = isSelected,
                     onClick = { onFrequencySelected(freq) },
-                    label = { Text(freq.label, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-                    modifier = Modifier.weight(1f),
+                    label = { Text(freq.label, textAlign = TextAlign.Center) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
