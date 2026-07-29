@@ -16,7 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.habits.presentation.screen.HabitDetailRoute
+import com.example.habitz.feature.habits.screen.HabitDetailRoute
 import com.example.habitz.feature.home.screen.HomeRoute
 import com.example.habitz.feature.upserthabit.screen.NewHabitRoute
 import dagger.hilt.android.AndroidEntryPoint

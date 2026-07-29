@@ -1,4 +1,4 @@
-package com.example.habitz.feature.habits.presentation.viewmodel
+package com.example.habitz.feature.habits.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -6,15 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
-import com.example.habitz.feature.habits.presentation.state.HabitDetailUiState
+import com.example.habitz.feature.habits.state.HabitDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
@@ -46,7 +47,7 @@ class HabitDetailViewModel @Inject constructor(
         combine(
             statsService.getHabitStats(habitId),
             activityService.getActivitiesForToday(listOf(habitId)),
-            activityService.getActivitiesForHabits(listOf(habitId), habit.createdAt, java.util.Date())
+            activityService.getActivitiesForHabits(listOf(habitId), habit.createdAt, Date())
         ) { stats, todayLogs, allLogs ->
             val historicalLogs = allLogs.filter { it.createdAt.time < getStartOfToday().time }
                 .sortedByDescending { it.createdAt }
@@ -74,12 +75,12 @@ class HabitDetailViewModel @Inject constructor(
         }
     }
 
-    private fun getStartOfToday(): java.util.Date {
-        val cal = java.util.Calendar.getInstance()
-        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-        cal.set(java.util.Calendar.MINUTE, 0)
-        cal.set(java.util.Calendar.SECOND, 0)
-        cal.set(java.util.Calendar.MILLISECOND, 0)
+    private fun getStartOfToday(): Date {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
         return cal.time
     }
 }

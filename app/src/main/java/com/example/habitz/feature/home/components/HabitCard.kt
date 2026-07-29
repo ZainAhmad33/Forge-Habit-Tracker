@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -102,10 +103,10 @@ fun HabitCard(
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(16.dp, 16.dp, 16.dp, 0.dp)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             // 1. Centered Icon with Status Ring
             Box(
@@ -141,7 +142,7 @@ fun HabitCard(
                     textAlign = TextAlign.Center
                 )
             }
-
+            Spacer(modifier = Modifier.size(12.dp))
             // 3. Horizontal Divider
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),

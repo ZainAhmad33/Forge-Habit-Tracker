@@ -1,4 +1,4 @@
-package com.example.habitz.feature.habits.presentation.screen
+package com.example.habitz.feature.habits.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,8 +15,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.habitz.feature.habits.presentation.components.*
-import com.example.habitz.feature.habits.presentation.viewmodel.HabitDetailViewModel
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HabitFrequency
+import com.example.habitz.core.database.entity.HabitType
+import com.example.habitz.core.database.entity.Reward
+import com.example.habitz.core.designsystem.theme.HabitzTheme
+import com.example.habitz.core.services.interfaces.HabitStats
+import com.example.habitz.core.uiEntities.ProgressShape
+import com.example.habitz.feature.habits.components.AdditionalDetailsSection
+import com.example.habitz.feature.habits.components.HabitDetailHeader
+import com.example.habitz.feature.habits.components.LogsSection
+import com.example.habitz.feature.habits.components.MonthlyCompletionChart
+import com.example.habitz.feature.habits.components.QuarterlyProgressCards
+import com.example.habitz.feature.habits.components.RewardsSection
+import com.example.habitz.feature.habits.viewmodel.HabitDetailViewModel
+import com.example.habitz.feature.habits.state.HabitDetailUiState
+import java.util.Date
+import java.util.UUID
 
 @Composable
 fun HabitDetailRoute(
@@ -38,11 +54,11 @@ fun HabitDetailRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitDetailScreen(
-    uiState: com.example.habitz.feature.habits.presentation.state.HabitDetailUiState,
+    uiState: HabitDetailUiState,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onMarkCompleted: () -> Unit,
-    onDeleteLog: (java.util.UUID) -> Unit
+    onDeleteLog: (UUID) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -98,21 +114,21 @@ fun HabitDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 HabitDetailHeader(habit, stats)
-                
+
                 RewardsSection(stats.rewards)
-                
+
                 MonthlyCompletionChart(stats.monthlyCompletionData)
-                
+
                 QuarterlyProgressCards(stats.quarterlyCompletionRates)
                 
                 HorizontalDivider()
-                
+
                 AdditionalDetailsSection(habit)
                 
                 HorizontalDivider()
-                
+
                 LogsSection(
                     todayLogs = uiState.todayLogs,
                     historicalLogs = uiState.historicalLogs,
@@ -122,5 +138,50 @@ fun HabitDetailScreen(
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HabitDetailScreenPreview() {
+    HabitzTheme {
+        val habit = com.example.habitz.core.database.entity.Habit(
+            id = UUID.randomUUID(),
+            title = "Morning Meditation",
+            category = HabitCategory.Mindfulness,
+            emoji = "🧘",
+            habitType = HabitType.YesNo,
+            reminders = emptyList(),
+            frequencyType = HabitFrequency.EveryDay,
+            numberOfTrackedDays = 7,
+            completionTargetPerDay = 1,
+            targetUnit = "Per Day",
+            progressShape = ProgressShape.Pill,
+            createdAt = Date(),
+            updatedAt = Date()
+        )
+        val stats = HabitStats(
+            currentStreak = 10,
+            bestStreak = 25,
+            overallCompletionRate = 0.95f,
+            monthlyCompletionData = emptyList(),
+            quarterlyCompletionRates = emptyList(),
+            rewards = listOf(
+                Reward(title = "Starter", description = "3 day streak", emoji = "🥉", requiredStreak = 3, isUnlocked = true),
+                Reward(title = "Consistent", description = "7 day streak", emoji = "🥈", requiredStreak = 7, isUnlocked = true)
+            )
+        )
+        val uiState = HabitDetailUiState(
+            habit = habit,
+            stats = stats,
+            isLoading = false
+        )
+        HabitDetailScreen(
+            uiState = uiState,
+            onBackClick = {},
+            onEditClick = {},
+            onMarkCompleted = {},
+            onDeleteLog = {}
+        )
     }
 }

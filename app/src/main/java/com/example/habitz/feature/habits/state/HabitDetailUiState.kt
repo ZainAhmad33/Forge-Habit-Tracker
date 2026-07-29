@@ -1,4 +1,4 @@
-package com.example.habitz.feature.habits.presentation.state
+package com.example.habitz.feature.habits.state
 
 import com.example.habitz.core.database.entity.Habit
 import com.example.habitz.core.database.entity.HabitActivity
