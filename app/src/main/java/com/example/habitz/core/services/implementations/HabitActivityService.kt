@@ -12,29 +12,15 @@ import java.util.UUID
 import javax.inject.Inject
 
 class HabitActivityService @Inject constructor(
-    private val activityRepository: IHabitActivityRepository,
-    private val habitRepository: IHabitRepository
+    private val activityRepository: IHabitActivityRepository
 ) : IHabitActivityService {
 
     override suspend fun logHabitActivity(habitId: UUID, quantity: Int) {
-        val habit = habitRepository.getHabitById(habitId) ?: return
-
-        // 1. Get current logs for today
-        val todayLogs = getActivitiesForToday(listOf(habitId)).first()
-        val currentTotal = todayLogs.sumOf { it.quantity }
-
-        // 2. Log new activity
         val activity = HabitActivity(
             habitId = habitId,
             quantity = quantity
         )
         activityRepository.logActivity(activity)
-
-        // 3. Check if goal was met for the FIRST time today
-        val newTotal = currentTotal + quantity
-        if (currentTotal < habit.completionTargetPerDay && newTotal >= habit.completionTargetPerDay) {
-            habitRepository.incrementStreak(habitId)
-        }
     }
 
     override fun getActivitiesForHabits(habitIds: List<UUID>, from: Date, to: Date): Flow<List<HabitActivity>> {

@@ -32,13 +32,4 @@ class InMemoryIHabitRepository @Inject constructor() : IHabitRepository {
         dummyDatabase.habits = dummyDatabase.habits + habit
         _habits.value = dummyDatabase.habits
     }
-
-    override fun incrementStreak(habitId: UUID) {
-        val index = dummyDatabase.habits.indexOfFirst { it.id == habitId }
-        if (index != -1) {
-            val habit = dummyDatabase.habits[index]
-            habit.dailyStreakCount += 1
-            _habits.value = dummyDatabase.habits.toList() // Trigger flow update
-        }
-    }
 }

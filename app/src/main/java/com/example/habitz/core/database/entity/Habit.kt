@@ -18,7 +18,6 @@ class Habit (
     var numberOfTrackedDays: Int, // to be populated only if frequencyType == DaysPerWeek,
     var completionTargetPerDay: Int, // 1 in case of HabitType==YesOrNo otherwise >= 1
     var targetUnit: String, // "Per Day" in case of HabitType==Count/YesOrNo, otherwise string input for quantity
-    var dailyStreakCount: Int,
     var progressShape: ProgressShape,
     var createdAt: Date,
     var updatedAt: Date

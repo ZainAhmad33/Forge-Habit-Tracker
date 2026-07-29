@@ -8,7 +8,9 @@ import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.uiEntities.HomeHabit
 import com.example.habitz.core.uiEntities.ProgressShape
 import com.example.habitz.core.database.entity.User
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 import java.util.UUID
@@ -33,10 +35,19 @@ class dummyDatabase {
             numberOfTrackedDays = 7,
             completionTargetPerDay = 2500,
             targetUnit = "ml",
-            dailyStreakCount = 0,
             progressShape = ProgressShape.Circle,
-            createdAt = Date(),
-            updatedAt = Date()
+            createdAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
+            updatedAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
         ),
         Habit(
             id = UUID.fromString("22222222-2222-2222-2222-222222222222"),
@@ -53,10 +64,19 @@ class dummyDatabase {
             numberOfTrackedDays = 3,
             completionTargetPerDay = 1,
             targetUnit = "Per Day",
-            dailyStreakCount = 0,
             progressShape = ProgressShape.Pill,
-            createdAt = Date(),
-            updatedAt = Date()
+            createdAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
+            updatedAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
         ),
         Habit(
             id = UUID.fromString("33333333-3333-3333-3333-333333333333"),
@@ -72,11 +92,20 @@ class dummyDatabase {
             trackedDays = emptyList(),
             numberOfTrackedDays = 7,
             completionTargetPerDay = 50,
-            targetUnit = "Per Day",
-            dailyStreakCount = 0, // Reset / not completed today
+            targetUnit = "Per Day", // Reset / not completed today
             progressShape = ProgressShape.Gem,
-            createdAt = Date(),
-            updatedAt = Date()
+            createdAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
+            updatedAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
         ),
         Habit(
             id = UUID.fromString("44444444-4444-4444-4444-444444444444"),
@@ -91,10 +120,19 @@ class dummyDatabase {
             numberOfTrackedDays = 4, // 4 days out of 7
             completionTargetPerDay = 20,
             targetUnit = "pages",
-            dailyStreakCount = 0,
             progressShape = ProgressShape.Arch,
-            createdAt = Date(),
-            updatedAt = Date()
+            createdAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
+            updatedAt = Date.from(
+                Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .minusDays(7)
+                    .toInstant()
+            ),
         )
         )
         val userInformation = User("Zain", "Ahmad", Date(2001, 9, 1))
@@ -142,6 +180,7 @@ class dummyDatabase {
             createLog("11111111-1111-1111-1111-111111111111", 13, 2200),
 
             // --- Morning Meditation ---
+            createLog("22222222-2222-2222-2222-222222222222", 1, 1),
             createLog("22222222-2222-2222-2222-222222222222", 2, 1),
             createLog("22222222-2222-2222-2222-222222222222", 4, 1),
             createLog("22222222-2222-2222-2222-222222222222", 7, 1),

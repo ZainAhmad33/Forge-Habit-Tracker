@@ -16,12 +16,12 @@ import com.example.habitz.feature.home.viewmodel.HomeDashboardUIState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 class HomeService @Inject constructor(
@@ -30,59 +30,68 @@ class HomeService @Inject constructor(
     private val userRepository: IUserRepository,
     private val activityService: IHabitActivityService
 ) : IHomeService {
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getDashboardData(): Flow<HomeDashboardUIState> {
-        return habitRepository.getHabits().flatMapLatest { habits ->
-            val habitIds = habits.map { it.id }
-            activityService.getActivitiesForToday(habitIds).map { logs ->
-                val user = userRepository.getUserDetails()
-                
-                val homeHabits = habits.map { habit ->
-                    val habitLogs = logs.filter { it.habitId == habit.id }
-                    val totalQuantity = habitLogs.sumOf { it.quantity }
-                    val progress = if (habit.completionTargetPerDay > 0) {
-                        (totalQuantity.toFloat() / habit.completionTargetPerDay * 100).toInt().coerceAtMost(100)
-                    } else 0
+        return combine(
+            habitRepository.getHabits(),
+            activityService.getAllActivities()
+        ) { habits, allActivities ->
+            val user = userRepository.getUserDetails()
+            val todayDate = LocalDate.now()
+            val zoneId = ZoneId.systemDefault()
 
-                    val isScheduledForToday = when (habit.frequencyType) {
-                        HabitFrequency.EveryDay -> true
-                        HabitFrequency.DaysPerWeek -> true
-                        HabitFrequency.SpecificDays -> {
-                            val today = LocalDate.now().dayOfWeek.value
-                            habit.trackedDays.contains(today)
-                        }
-                    }
-                    
-                    convertToHomeHabit(habit, progress, totalQuantity >= habit.completionTargetPerDay, isScheduledForToday)
+            // Pre-group activities by (HabitId -> (LocalDate -> Sum Quantity))
+            val activityMap: Map<UUID, Map<LocalDate, Int>> = allActivities
+                .groupBy { it.habitId }
+                .mapValues { (_, activities) ->
+                    activities.groupBy { it.createdAt.toInstant().atZone(zoneId).toLocalDate() }
+                        .mapValues { (_, logs) -> logs.sumOf { it.quantity } }
                 }
 
-                val habitSummary = createSummary(homeHabits)
-                val categories = categoryRepository.getCategories().distinct().map {
-                    CategoryPill(it, CategoryToImage[it] ?: "❓")
-                }
+            val homeHabits = habits.map { habit ->
+                val habitLogsMap = activityMap[habit.id] ?: emptyMap()
+                val todayQuantity = habitLogsMap[todayDate] ?: 0
 
-                val currentDate = LocalDate.now()
-                val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
+                val progress = if (habit.completionTargetPerDay > 0) {
+                    (todayQuantity.toFloat() / habit.completionTargetPerDay * 100).toInt().coerceAtMost(100)
+                } else 0
 
-                HomeDashboardUIState(
-                    getDynamicGreeting(),
-                    user.firstName,
-                    currentDate.format(formatter),
-                    habitSummary,
-                    categories,
-                    homeHabits
+                val isScheduledForToday = isScheduledForDate(habit, todayDate)
+                val streak = calculateHabitStreak(habit, habitLogsMap, todayDate, zoneId)
+
+                convertToHomeHabit(
+                    habit = habit,
+                    progress = progress,
+                    isCompletedToday = todayQuantity >= habit.completionTargetPerDay,
+                    isScheduledForToday = isScheduledForToday,
+                    streak = streak
                 )
             }
+
+            val totalStreak = calculatePerfectDayStreak(habits, activityMap, todayDate, zoneId)
+            val habitSummary = createSummary(homeHabits, totalStreak)
+            val categories = categoryRepository.getCategories().distinct().map {
+                CategoryPill(it, CategoryToImage[it] ?: "❓")
+            }
+
+            val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
+
+            HomeDashboardUIState(
+                getDynamicGreeting(),
+                user.firstName,
+                todayDate.format(formatter),
+                habitSummary,
+                categories,
+                homeHabits
+            )
         }
     }
 
-    override fun searchHabits(query: String): List<HomeHabit> {
-        return emptyList()
-    }
+    override fun searchHabits(query: String): List<HomeHabit> = emptyList()
 
     private fun getDynamicGreeting(): String {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        return when (hour) {
+        return when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
             in 4..11 -> "Good morning"
             in 12..16 -> "Good afternoon"
             in 17..21 -> "Good evening"
@@ -90,27 +99,111 @@ class HomeService @Inject constructor(
         }
     }
 
-    private fun createSummary(homeHabits: List<HomeHabit>): HomeSummary {
-        val habitsCompleted = homeHabits.filter{ it.isScheduledForToday }.count { it.isCompletedToday }
-        val totalHabits = homeHabits.filter{ it.isScheduledForToday }.size
-        val totalStreak = 0
-        val overallProgress = habitsCompleted.toFloat() / totalHabits * 100
+    private fun createSummary(homeHabits: List<HomeHabit>, totalStreak: Int): HomeSummary {
+        val scheduled = homeHabits.filter { it.isScheduledForToday }
+        val habitsCompleted = scheduled.count { it.isCompletedToday }
+        val totalHabits = scheduled.size
+        val overallProgress = if (totalHabits > 0) (habitsCompleted.toFloat() / totalHabits * 100).toInt() else 0
 
-        return HomeSummary(
-            habitsCompleted,
-            totalHabits,
-            totalStreak,
-            overallProgress.toInt()
-        )
+        return HomeSummary(habitsCompleted, totalHabits, totalStreak, overallProgress)
     }
 
-    private fun convertToHomeHabit(habit: Habit, progress: Int, isCompletedToday: Boolean, isScheduledForToday: Boolean): HomeHabit {
+    private fun calculatePerfectDayStreak(
+        habits: List<Habit>,
+        activityMap: Map<UUID, Map<LocalDate, Int>>,
+        today: LocalDate,
+        zoneId: ZoneId
+    ): Int {
+        var streak = 0
+        var date = today
+
+        val limitDate = habits.minOfOrNull {
+            it.createdAt.toInstant().atZone(zoneId).toLocalDate()
+        } ?: today
+
+        // Check today first
+        val todayResult = checkPerfectDay(date, habits, activityMap)
+        if (todayResult == true) streak++
+
+        // Step back through days
+        date = date.minusDays(1)
+        while (!date.isBefore(limitDate)) {
+            when (checkPerfectDay(date, habits, activityMap)) {
+                true -> streak++
+                false -> return streak
+                null -> {} // Rest day: skip without breaking streak
+            }
+            date = date.minusDays(1)
+        }
+
+        return streak
+    }
+
+    private fun checkPerfectDay(
+        date: LocalDate,
+        habits: List<Habit>,
+        activityMap: Map<UUID, Map<LocalDate, Int>>
+    ): Boolean? {
+        val scheduledHabits = habits.filter { isScheduledForDate(it, date) }
+        if (scheduledHabits.isEmpty()) return null
+
+        return scheduledHabits.all { habit ->
+            val totalQuantity = activityMap[habit.id]?.get(date) ?: 0
+            totalQuantity >= habit.completionTargetPerDay
+        }
+    }
+
+    private fun isScheduledForDate(habit: Habit, date: LocalDate): Boolean {
+        val habitStartDate = habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        if (date.isBefore(habitStartDate)) return false
+
+        return when (habit.frequencyType) {
+            HabitFrequency.EveryDay, HabitFrequency.DaysPerWeek -> true
+            HabitFrequency.SpecificDays -> habit.trackedDays.contains(date.dayOfWeek.value)
+        }
+    }
+
+    private fun calculateHabitStreak(
+        habit: Habit,
+        habitLogsMap: Map<LocalDate, Int>,
+        today: LocalDate,
+        zoneId: ZoneId
+    ): Int {
+        var streak = 0
+        var date = today
+        val limitDate = habit.createdAt.toInstant().atZone(zoneId).toLocalDate()
+
+        while (!date.isBefore(limitDate)) {
+            val completed = (habitLogsMap[date] ?: 0) >= habit.completionTargetPerDay
+            val isScheduled = isScheduledForDate(habit, date)
+
+            if (isScheduled) {
+                if (completed) {
+                    streak++
+                } else if (date != today) {
+                    // Today not being finished yet doesn't break yesterday's streak
+                    break
+                }
+            }
+            date = date.minusDays(1)
+        }
+
+        return streak
+    }
+
+    private fun convertToHomeHabit(
+        habit: Habit,
+        progress: Int,
+        isCompletedToday: Boolean,
+        isScheduledForToday: Boolean,
+        streak: Int
+    ): HomeHabit {
         return HomeHabit(
             habit.id.toString(),
             habit.title,
             habit.category,
             "${habit.completionTargetPerDay} ${habit.targetUnit}",
-            habit.dailyStreakCount,
+            streak,
             progress,
             isCompletedToday,
             habit.emoji,

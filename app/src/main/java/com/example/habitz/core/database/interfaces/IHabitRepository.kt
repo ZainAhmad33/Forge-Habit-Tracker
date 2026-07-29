@@ -15,5 +15,4 @@ interface IHabitRepository {
     fun getHabits(): Flow<List<Habit>>
     fun getHabitById(habitId: UUID): Habit?
     fun createHabit(habit: Habit)
-    fun incrementStreak(habitId: UUID)
 }

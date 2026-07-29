@@ -67,7 +67,7 @@ fun HomeSummaryCard(
                     shape = CircleShape
                 ) {
                     Text(
-                        text = "🔥 ${summary.currentStreakDays} Day Streak",
+                        text = "🔥 ${summary.currentStreakDays} Perfect Day Streak",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,

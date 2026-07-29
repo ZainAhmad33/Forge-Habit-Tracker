@@ -60,7 +60,6 @@ class HabitsService @Inject constructor(
             numOfTrackedDays,
             habitForm.dailyGoal,
             unit,
-            0,
             ProgressShape.getRandom(),
             Date(),
             Date(),
