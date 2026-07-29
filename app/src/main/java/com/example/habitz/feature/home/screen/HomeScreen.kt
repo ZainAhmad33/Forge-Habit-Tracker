@@ -46,6 +46,7 @@ import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.core.uiEntities.CategoryPill
 import com.example.habitz.core.uiEntities.HomeHabit
 import com.example.habitz.core.uiEntities.HomeSummary
+import com.example.habitz.core.uiEntities.ProgressShape
 import com.example.habitz.feature.home.components.HabitCategoryChips
 import com.example.habitz.feature.home.components.HabitGrid
 import com.example.habitz.feature.home.components.HabitLogBottomSheet
@@ -167,12 +168,23 @@ fun HomeScreen(
                     )
                     SectionHeader(
                         title = "Today's habits",
-                        trailingText = "${uiState.visibleHabits.size} shown",
+                        trailingText = "${uiState.todaysHabits.size} shown",
                     )
                     HabitGrid(
-                        habits = uiState.visibleHabits,
+                        habits = uiState.todaysHabits,
                         onHabitCardClick = onHabitCardClick
                     )
+
+                    if (uiState.otherHabits.isNotEmpty()) {
+                        SectionHeader(
+                            title = "Other habits",
+                            trailingText = "${uiState.otherHabits.size} shown",
+                        )
+                        HabitGrid(
+                            habits = uiState.otherHabits,
+                            onHabitCardClick = onHabitCardClick
+                        )
+                    }
                 }
                 else{
                     // no habits currently
@@ -245,7 +257,16 @@ private fun HomeScreenPreview() {
 
             HomeSummary(5, 10, 10, 50),
             List<CategoryPill>(2) { CategoryPill(HabitCategory.Home, "🏡") },
-            listOf()
+            listOf(
+                HomeHabit(
+                    "1", "Water", HabitCategory.Health, "2L", 5, 50, false, "💧",
+                    ProgressShape.Circle, HabitType.Quantity, true
+                ),
+                HomeHabit(
+                    "2", "Read", HabitCategory.Productivity, "20p", 3, 0, false, "📚",
+                    ProgressShape.Arch, HabitType.Quantity, false
+                )
+            )
         ),
         selectedCategory = selectedCategory,
     )

@@ -208,7 +208,8 @@ private fun HabitCardPreview() {
                 isCompletedToday = false,
                 image = "💧",
                 progressShape = ProgressShape.Puffy,
-                habitType = HabitType.YesNo
+                habitType = HabitType.YesNo,
+                isScheduledForToday = true
             ),
             onDetailsClick = {  },
             onHabitCardClick = {  }

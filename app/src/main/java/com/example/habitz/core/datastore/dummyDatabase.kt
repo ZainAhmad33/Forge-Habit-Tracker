@@ -49,7 +49,7 @@ class dummyDatabase {
             ),
             frequencyType = HabitFrequency.SpecificDays,
             isTrackedEveryDay = false,
-            trackedDays = listOf(1, 3, 5), // Monday, Wednesday, Friday
+            trackedDays = listOf(1, 2, 5), // Monday, Tuesday, Friday
             numberOfTrackedDays = 3,
             completionTargetPerDay = 1,
             targetUnit = "Per Day",

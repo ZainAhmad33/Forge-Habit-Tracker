@@ -13,5 +13,6 @@ data class HomeHabit(
     val isCompletedToday: Boolean,
     val image: String,
     val progressShape: ProgressShape,
-    val habitType: HabitType
+    val habitType: HabitType,
+    val isScheduledForToday: Boolean
 )

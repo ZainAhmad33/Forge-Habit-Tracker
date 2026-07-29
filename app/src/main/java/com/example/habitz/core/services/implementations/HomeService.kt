@@ -8,6 +8,7 @@ import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.database.interfaces.IUserRepository
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHomeService
+import com.example.habitz.core.database.entity.HabitFrequency
 import com.example.habitz.core.uiEntities.CategoryPill
 import com.example.habitz.core.uiEntities.HomeHabit
 import com.example.habitz.core.uiEntities.HomeSummary
@@ -42,8 +43,17 @@ class HomeService @Inject constructor(
                     val progress = if (habit.completionTargetPerDay > 0) {
                         (totalQuantity.toFloat() / habit.completionTargetPerDay * 100).toInt().coerceAtMost(100)
                     } else 0
+
+                    val isScheduledForToday = when (habit.frequencyType) {
+                        HabitFrequency.EveryDay -> true
+                        HabitFrequency.DaysPerWeek -> true
+                        HabitFrequency.SpecificDays -> {
+                            val today = LocalDate.now().dayOfWeek.value
+                            habit.trackedDays.contains(today)
+                        }
+                    }
                     
-                    convertToHomeHabit(habit, progress, totalQuantity >= habit.completionTargetPerDay)
+                    convertToHomeHabit(habit, progress, totalQuantity >= habit.completionTargetPerDay, isScheduledForToday)
                 }
 
                 val habitSummary = createSummary(homeHabits)
@@ -81,8 +91,8 @@ class HomeService @Inject constructor(
     }
 
     private fun createSummary(homeHabits: List<HomeHabit>): HomeSummary {
-        val habitsCompleted = homeHabits.count { it.isCompletedToday }
-        val totalHabits = homeHabits.size
+        val habitsCompleted = homeHabits.filter{ it.isScheduledForToday }.count { it.isCompletedToday }
+        val totalHabits = homeHabits.filter{ it.isScheduledForToday }.size
         val totalStreak = 0
         val overallProgress = habitsCompleted.toFloat() / totalHabits * 100
 
@@ -94,7 +104,7 @@ class HomeService @Inject constructor(
         )
     }
 
-    private fun convertToHomeHabit(habit: Habit, progress: Int, isCompletedToday: Boolean): HomeHabit {
+    private fun convertToHomeHabit(habit: Habit, progress: Int, isCompletedToday: Boolean, isScheduledForToday: Boolean): HomeHabit {
         return HomeHabit(
             habit.id.toString(),
             habit.title,
@@ -105,7 +115,8 @@ class HomeService @Inject constructor(
             isCompletedToday,
             habit.emoji,
             habit.progressShape,
-            habit.habitType
+            habit.habitType,
+            isScheduledForToday
         )
     }
 }

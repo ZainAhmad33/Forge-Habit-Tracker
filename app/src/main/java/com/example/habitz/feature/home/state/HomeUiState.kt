@@ -22,6 +22,12 @@ data class HomeUiState(
             habits.filter { it.category == selectedCategory }
         }
 
+    val todaysHabits: List<HomeHabit>
+        get() = visibleHabits.filter { it.isScheduledForToday }
+
+    val otherHabits: List<HomeHabit>
+        get() = visibleHabits.filter { !it.isScheduledForToday }
+
     companion object {
         fun from(
             dashboard: HomeDashboardUIState,
