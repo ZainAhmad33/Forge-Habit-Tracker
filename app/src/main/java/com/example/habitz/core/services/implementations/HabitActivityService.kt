@@ -26,8 +26,7 @@ class HabitActivityService @Inject constructor(
         // 2. Log new activity
         val activity = HabitActivity(
             habitId = habitId,
-            quantity = quantity,
-            completedAt = Date()
+            quantity = quantity
         )
         activityRepository.logActivity(activity)
 

@@ -99,63 +99,80 @@ class dummyDatabase {
         )
         val userInformation = User("Zain", "Ahmad", Date(2001, 9, 1))
 
-        var activities: List<HabitActivity> = generateDummyActivities(habits)
-
-        private fun generateDummyActivities(habits: List<Habit>): List<HabitActivity> {
-            val list = mutableListOf<HabitActivity>()
+        private fun daysAgo(days: Int): Date {
             val calendar = Calendar.getInstance()
-            val now = Date()
-
-            for (i in 1..14) { // Last 14 days
-                calendar.time = now
-                calendar.add(Calendar.DAY_OF_YEAR, -i)
-                val date = calendar.time
-                val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
-
-                habits.forEach { habit ->
-                    val shouldLog = when (habit.frequencyType) {
-                        HabitFrequency.EveryDay -> true
-                        HabitFrequency.SpecificDays -> habit.trackedDays.contains(
-                            when (dayOfWeek) {
-                                Calendar.MONDAY -> 1
-                                Calendar.TUESDAY -> 2
-                                Calendar.WEDNESDAY -> 3
-                                Calendar.THURSDAY -> 4
-                                Calendar.FRIDAY -> 5
-                                Calendar.SATURDAY -> 6
-                                Calendar.SUNDAY -> 7
-                                else -> 0
-                            }
-                        )
-                        HabitFrequency.DaysPerWeek -> (i % 7) < habit.numberOfTrackedDays
-                        else -> true
-                    }
-
-                    // Add some randomness (80% chance of completion)
-                    if (shouldLog && (0..10).random() > 2) {
-                        val quantity = when (habit.habitType) {
-                            HabitType.Quantity -> {
-                                // For water (2500ml target), logs around 1500-3000
-                                if (habit.title.contains("Water")) (1500..3000).random()
-                                // For reading (20 pages target), logs 10-30
-                                else (10..30).random()
-                            }
-                            HabitType.Count -> (40..60).random() // For pushups (50 target)
-                            HabitType.YesNo -> 1
-                        }
-
-                        list.add(
-                            HabitActivity(
-                                habitId = habit.id,
-                                completedAt = date,
-                                quantity = quantity,
-                                createdAt = date
-                            )
-                        )
-                    }
-                }
-            }
-            return list
+            calendar.add(Calendar.DAY_OF_YEAR, -days)
+            return calendar.time
         }
+
+        private fun createLog(habitId: String, days: Int, quantity: Int): HabitActivity {
+            val date = daysAgo(days)
+            return HabitActivity(
+                habitId = UUID.fromString(habitId),
+                quantity = quantity,
+                createdAt = date
+            )
+        }
+
+        var activities: List<HabitActivity> = listOf(
+            // --- Drink Water [Quantity] (Daily) ---
+            // drank 2200ML today
+            createLog("11111111-1111-1111-1111-111111111111", 0, 1000),
+            createLog("11111111-1111-1111-1111-111111111111", 0, 600),
+            createLog("11111111-1111-1111-1111-111111111111", 0, 600),
+            // drank 2600 ML yesterday
+            createLog("11111111-1111-1111-1111-111111111111", 1, 500),
+            createLog("11111111-1111-1111-1111-111111111111", 1, 400),
+            createLog("11111111-1111-1111-1111-111111111111", 1, 200),
+            createLog("11111111-1111-1111-1111-111111111111", 1, 1000),
+            createLog("11111111-1111-1111-1111-111111111111", 1, 500),
+            // drank 2000ML 2 days ago
+            createLog("11111111-1111-1111-1111-111111111111", 2, 2000),
+            // Older Drink Water logs
+            createLog("11111111-1111-1111-1111-111111111111", 3, 2500),
+            createLog("11111111-1111-1111-1111-111111111111", 4, 2100),
+            createLog("11111111-1111-1111-1111-111111111111", 5, 2500),
+            createLog("11111111-1111-1111-1111-111111111111", 6, 2700),
+            createLog("11111111-1111-1111-1111-111111111111", 7, 2500),
+            createLog("11111111-1111-1111-1111-111111111111", 8, 2300),
+            createLog("11111111-1111-1111-1111-111111111111", 9, 2500),
+            createLog("11111111-1111-1111-1111-111111111111", 10, 2600),
+            createLog("11111111-1111-1111-1111-111111111111", 11, 2400),
+            createLog("11111111-1111-1111-1111-111111111111", 12, 2500),
+            createLog("11111111-1111-1111-1111-111111111111", 13, 2200),
+
+            // --- Morning Meditation ---
+            createLog("22222222-2222-2222-2222-222222222222", 2, 1),
+            createLog("22222222-2222-2222-2222-222222222222", 4, 1),
+            createLog("22222222-2222-2222-2222-222222222222", 7, 1),
+            createLog("22222222-2222-2222-2222-222222222222", 9, 1),
+            createLog("22222222-2222-2222-2222-222222222222", 11, 1),
+
+            // --- Daily Pushups ---
+            createLog("33333333-3333-3333-3333-333333333333", 0, 10),
+            createLog("33333333-3333-3333-3333-333333333333", 0, 5),
+            createLog("33333333-3333-3333-3333-333333333333", 0, 15),
+            createLog("33333333-3333-3333-3333-333333333333", 1, 10),
+            createLog("33333333-3333-3333-3333-333333333333", 1, 15),
+            createLog("33333333-3333-3333-3333-333333333333", 1, 20),
+            createLog("33333333-3333-3333-3333-333333333333", 1, 6),
+            createLog("33333333-3333-3333-3333-333333333333", 3, 60),
+            createLog("33333333-3333-3333-3333-333333333333", 4, 50),
+            createLog("33333333-3333-3333-3333-333333333333", 5, 45),
+            createLog("33333333-3333-3333-3333-333333333333", 7, 50),
+            createLog("33333333-3333-3333-3333-333333333333", 8, 50),
+            createLog("33333333-3333-3333-3333-333333333333", 10, 55),
+            createLog("33333333-3333-3333-3333-333333333333", 12, 50),
+
+            // --- Read Tech Blogs ---
+            createLog("44444444-4444-4444-4444-444444444444", 1, 25),
+            createLog("44444444-4444-4444-4444-444444444444", 2, 15),
+            createLog("44444444-4444-4444-4444-444444444444", 5, 20),
+            createLog("44444444-4444-4444-4444-444444444444", 6, 30),
+            createLog("44444444-4444-4444-4444-444444444444", 8, 20),
+            createLog("44444444-4444-4444-4444-444444444444", 9, 22),
+            createLog("44444444-4444-4444-4444-444444444444", 12, 20),
+            createLog("44444444-4444-4444-4444-444444444444", 13, 25)
+        )
     }
 }
