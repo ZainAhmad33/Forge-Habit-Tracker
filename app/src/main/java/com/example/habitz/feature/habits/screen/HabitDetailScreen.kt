@@ -26,6 +26,7 @@ import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.core.services.interfaces.HabitStats
 import com.example.habitz.core.uiEntities.ProgressShape
 import com.example.habitz.feature.habits.components.AdditionalDetailsSection
+import com.example.habitz.feature.habits.components.CurrentMonthCompletion
 import com.example.habitz.feature.habits.components.HabitDetailHeader
 import com.example.habitz.feature.habits.components.LogsSection
 import com.example.habitz.feature.habits.components.MonthlyCompletionChart
@@ -49,7 +50,8 @@ fun HabitDetailRoute(
         onBackClick = onBackClick,
         onEditClick = { uiState.habit?.id?.let { onEditClick(it.toString()) } },
         onMarkCompleted = { viewModel.markCompleted() },
-        onDeleteLog = { viewModel.deleteLog(it) }
+        onDeleteLog = { viewModel.deleteLog(it) },
+        activeDays = viewModel.totalActiveDays()
     )
 }
 
@@ -60,7 +62,8 @@ fun HabitDetailScreen(
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onMarkCompleted: () -> Unit,
-    onDeleteLog: (UUID) -> Unit
+    onDeleteLog: (UUID) -> Unit,
+    activeDays: Int = 0
 ) {
     Scaffold(
         topBar = {
@@ -114,14 +117,14 @@ fun HabitDetailScreen(
                     .padding(padding)
                     .padding(horizontal = 12.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
                 HabitDetailHeader(habit, stats)
 
                 RewardsSection(stats.rewards)
 
-                MonthlyCompletionChart(stats.monthlyCompletionData)
+                CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit, activeDays)
 
                 QuarterlyProgressCards(stats.quarterlyCompletionRates)
                 
@@ -170,7 +173,8 @@ fun HabitDetailScreenPreview() {
             quarterlyCompletionRates = emptyList(),
             rewards = listOf(
                 Reward(title = "Starter", description = "3 day streak", emoji = "🥉", requiredStreak = 3, isUnlocked = true),
-                Reward(title = "Consistent", description = "7 day streak", emoji = "🥈", requiredStreak = 7, isUnlocked = true)
+                Reward(title = "Consistent", description = "7 day streak", emoji = "🥈", requiredStreak = 7, isUnlocked = true),
+                Reward(title = "Consistent", description = "14 day streak", emoji = "🥈", requiredStreak = 7, isUnlocked = false)
             )
         )
         val uiState = HabitDetailUiState(

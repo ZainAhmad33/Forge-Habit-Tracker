@@ -3,6 +3,8 @@ package com.example.habitz.feature.habits.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.habitz.core.database.entity.HabitFrequency
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
+import java.time.YearMonth
 import java.util.Calendar
 import java.util.Date
 import java.util.UUID
@@ -82,5 +85,32 @@ class HabitDetailViewModel @Inject constructor(
         cal.set(Calendar.SECOND, 0)
         cal.set(Calendar.MILLISECOND, 0)
         return cal.time
+    }
+
+    fun totalActiveDays(): Int{
+        val habit = _uiState.value.habit
+        if (habit?.frequencyType == HabitFrequency.EveryDay){
+            return YearMonth.now().lengthOfMonth()
+        }
+        else if(habit?.frequencyType == HabitFrequency.DaysPerWeek){
+            return (YearMonth.now().lengthOfMonth().toFloat()/7 * habit.numberOfTrackedDays.toFloat()).toInt()
+        }
+        else{
+            val daysTracked = habit?.trackedDays ?: listOf()
+            val currentYearMonth = YearMonth.now() // e.g., current month & year
+            val daysInMonth = currentYearMonth.lengthOfMonth() // e.g., 30, 31, 28, 29
+
+            // Convert list to Set for O(1) fast lookup
+            val trackedSet = daysTracked.toSet()
+
+            // Count how many days in the month fall on a tracked day
+            return (1..daysInMonth).count { day ->
+                val date = currentYearMonth.atDay(day)
+                // date.dayOfWeek.value returns 1 (Mon) through 7 (Sun)
+                date.dayOfWeek.value in trackedSet
+            }
+        }
+
+        return 0
     }
 }

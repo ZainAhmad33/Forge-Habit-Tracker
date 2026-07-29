@@ -118,8 +118,7 @@ class HabitStatsService @Inject constructor(
 
         return (1..daysInMonth).map { day ->
             val sum = activitiesByDay[day]?.sumOf { it.quantity } ?: 0
-            val ratio = (sum.toFloat() / target).coerceAtMost(1f)
-            DailyCompletion(day, ratio, sum < target)
+            DailyCompletion(day, sum)
         }
     }
 

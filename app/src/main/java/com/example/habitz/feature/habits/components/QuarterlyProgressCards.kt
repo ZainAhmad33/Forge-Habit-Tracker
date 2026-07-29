@@ -31,7 +31,8 @@ fun QuarterlyProgressCards(rates: List<MonthlyRate>) {
                         CircularProgressIndicator(
                             progress = { rate.rate },
                             modifier = Modifier.size(40.dp),
-                            strokeWidth = 4.dp
+                            strokeWidth = 4.dp,
+                            color = HabitzTheme.colors.success
                         )
                         Text(
                             text = "${(rate.rate * 100).toInt()}%",

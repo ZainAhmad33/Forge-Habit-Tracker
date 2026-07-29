@@ -15,16 +15,9 @@ import com.example.habitz.core.designsystem.theme.HabitzTheme
 
 @Composable
 fun RewardsSection(rewards: List<Reward>) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Rewards",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(rewards) { reward ->
-                RewardCard(reward)
-            }
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(rewards) { reward ->
+            RewardCard(reward)
         }
     }
 }
