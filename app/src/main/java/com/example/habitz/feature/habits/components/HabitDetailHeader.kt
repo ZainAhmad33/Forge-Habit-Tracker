@@ -1,7 +1,9 @@
 package com.example.habitz.feature.habits.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -9,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.habitz.core.database.entity.CategoryToImage
 import com.example.habitz.core.database.entity.Habit
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HabitFrequency
@@ -20,42 +24,59 @@ import java.util.*
 
 @Composable
 fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Surface(
+                modifier = Modifier.size(100.dp),
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
-                Column {
-                    Text(text = habit.emoji + " " + habit.title, style = MaterialTheme.typography.headlineMedium)
-                    Text(
-                        text = habit.category.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape
-                ) {
-                    Text(
-                        text = "${(stats.overallCompletionRate * 100).toInt()}%",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                Box(contentAlignment = Alignment.Center) {
+                    Text(text = habit.emoji, fontSize = 48.sp)
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+            Spacer(Modifier.size(24.dp))
+            Text(habit.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight(800))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ){
+                val icon = CategoryToImage[habit.category] ?: ""
+                FilterChip(
+                    label = {Text(text = habit.category.label)},
+                    selected = true,
+                    onClick = {},
+                    leadingIcon = { Text(icon) }
+                )
+                FilterChip(
+                    label = {Text(text = habit.completionTargetPerDay.toString() + " " + habit.targetUnit)},
+                    selected = false,
+                    onClick = {}
+                )
+            }
+
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+        ){
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .height(56.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
                 StatItem(label = "Current Streak", value = "${stats.currentStreak} 🔥")
+                VerticalDivider()
                 StatItem(label = "Best Streak", value = "${stats.bestStreak} ⭐")
+                VerticalDivider()
+                StatItem(label = "Overall Completion", value = "${(stats.overallCompletionRate * 100).toInt()}%")
             }
         }
+
     }
 }
 
