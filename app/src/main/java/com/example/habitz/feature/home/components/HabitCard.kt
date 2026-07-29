@@ -43,10 +43,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.habitz.core.database.ServiceLocator
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.designsystem.component.CustomShapeProgress
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.core.database.entity.HomeHabit
-import com.example.habitz.core.database.entity.ProgressShapeEnumResolver
+import com.example.habitz.core.uiEntities.HomeHabit
+import com.example.habitz.core.uiEntities.ProgressShape
+import com.example.habitz.core.uiEntities.ProgressShapeAngleResolver
+import com.example.habitz.core.uiEntities.ProgressShapeEnumResolver
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -54,6 +58,8 @@ fun HabitCard(
     habit: HomeHabit,
     modifier: Modifier = Modifier,
     onDetailsClick: () -> Unit = {},
+
+    onHabitCardClick: (habit: HomeHabit) -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val context = LocalContext.current
@@ -71,6 +77,7 @@ fun HabitCard(
 
     val containerColor = MaterialTheme.colorScheme.surfaceContainer
     val progressShape = ProgressShapeEnumResolver[habit.progressShape] ?: MaterialShapes.Cookie12Sided.toShape()
+    val shapeAngle = ProgressShapeAngleResolver[habit.progressShape] ?: 0f
     Card(
         modifier = modifier
             .graphicsLayer {
@@ -85,9 +92,8 @@ fun HabitCard(
                         isPressed = false
                     },
                     onTap = {
-                        Toast.makeText(context, "Card clicked!", Toast.LENGTH_SHORT).show()
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDetailsClick()
+                        onHabitCardClick(habit)
                     }
                 )
             },
@@ -109,9 +115,11 @@ fun HabitCard(
                 CustomShapeProgress(
                     habit.progressPercent/100f,
                     shape = progressShape,
-                    startAngle = 140f,
+                    startAngle = shapeAngle,
                     label = habit.image,
-                    strokeWidth = 7.dp)
+                    strokeWidth = 7.dp,
+                    showCheckMark = true
+                )
             }
 
             // 2. Centered Title & Schedule
@@ -189,6 +197,23 @@ private data class HabitAccentColors(
 @Composable
 private fun HabitCardPreview() {
     HabitzTheme {
-        HabitCard(habit = ServiceLocator.repositoryResolver.getHabitRepository().getHabits().get(1))
+        HabitCard(
+            habit = HomeHabit(
+                id = "1",
+                title = "Drink Water",
+                category = HabitCategory.Work, // Adjust based on your enum values
+                scheduleLabel = "Every Day",
+                streakDays = 12,
+                progressPercent = 100,
+                isCompletedToday = false,
+                image = "💧",
+                progressShape = ProgressShape.Puffy,
+                habitType = HabitType.YesNo
+            ),
+            onDetailsClick = {  },
+            onHabitCardClick = {  }
+        )
     }
 }
+
+

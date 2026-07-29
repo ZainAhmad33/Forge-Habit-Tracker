@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class InMemoryCategoryRepository @Inject constructor(): ICategoryRepository {
     override fun getCategories(): List<HabitCategory> {
-        var categories = dummyDatabase.habitsById.values.map {
+        var categories = dummyDatabase.habits.map {
             it.category
         }
         return categories

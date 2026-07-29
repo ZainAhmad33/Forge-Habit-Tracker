@@ -35,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,8 +54,10 @@ fun ReminderSelector(
     reminders: List<LocalTime>,
     onRemoveReminder: (LocalTime) -> Unit,
     onAddReminderClick: (time: LocalTime) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
+    val haptic = LocalHapticFeedback.current
     var showTimePicker by remember{ mutableStateOf(false) }
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -62,15 +66,18 @@ fun ReminderSelector(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "REMINDERS",
+                text = "Reminders",
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
             Switch(
                 checked = remindersEnabled,
-                onCheckedChange = onRemindersEnabledChange,
+                onCheckedChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onRemindersEnabledChange(it)
+                },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = MaterialTheme.colorScheme.primary
@@ -79,6 +86,14 @@ fun ReminderSelector(
         }
 
         if (remindersEnabled) {
+            if (isError) {
+                Text(
+                    text = "Please add at least one reminder",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier.selectableGroup(),
@@ -103,7 +118,10 @@ fun ReminderSelector(
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         ) },
-                        trailingContent = { IconButton(onClick = { onRemoveReminder(time) }) {
+                        trailingContent = { IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onRemoveReminder(time)
+                        }) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
                                 contentDescription = "Remove reminder",
@@ -125,7 +143,10 @@ fun ReminderSelector(
                     .fillMaxWidth()
                     .height(48.dp),
                 enabled = true,
-                onClick = { showTimePicker = true }
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    showTimePicker = true
+                }
             ) {
                 Text(
                     text = "+ Add reminder",
@@ -159,6 +180,7 @@ fun TimeInputDialog(
     initialMinute: Int = Calendar.getInstance().get(Calendar.MINUTE),
     is24Hour: Boolean = false // Set false to show AM/PM selector
 ) {
+    val haptic = LocalHapticFeedback.current
     val timePickerState = rememberTimePickerState(
         initialHour = initialHour,
         initialMinute = initialMinute,
@@ -203,6 +225,7 @@ fun TimeInputDialog(
                     }
                     TextButton(
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             onConfirm(timePickerState.hour, timePickerState.minute)
                         }
                     ) {

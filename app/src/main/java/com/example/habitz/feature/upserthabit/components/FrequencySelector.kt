@@ -22,31 +22,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.habitz.core.designsystem.component.CounterInput
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.upserthabit.HabitFrequency
+import com.example.habitz.core.database.entity.HabitFrequency
 
 @Composable
 fun FrequencySelector(
     selectedFrequency: HabitFrequency,
     onFrequencySelected: (HabitFrequency) -> Unit,
-    specificDays: Set<Int>,
+    specificDays: List<Int>,
     onDayToggle: (Int) -> Unit,
     daysPerWeek: Int,
     onDaysPerWeekChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
+    val haptic = LocalHapticFeedback.current
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "FREQUENCY",
+            text = "Frequency",
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -61,7 +64,10 @@ fun FrequencySelector(
                 val isSelected = freq == selectedFrequency
                 FilterChip(
                     selected = isSelected,
-                    onClick = { onFrequencySelected(freq) },
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onFrequencySelected(freq)
+                    },
                     label = { Text(freq.label, textAlign = TextAlign.Center) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -78,7 +84,8 @@ fun FrequencySelector(
             HabitFrequency.SpecificDays -> {
                 DayOfWeekSelector(
                     selectedDays = specificDays,
-                    onDayToggle = onDayToggle
+                    onDayToggle = onDayToggle,
+                    isError = isError
                 )
             }
             HabitFrequency.DaysPerWeek -> {
@@ -91,15 +98,26 @@ fun FrequencySelector(
             }
             else -> {}
         }
+
+        if (isError) {
+            Text(
+                text = "Please select at least one day",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 
 @Composable
 fun DayOfWeekSelector(
-    selectedDays: Set<Int>,
+    selectedDays: List<Int>,
     onDayToggle: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
+    val haptic = LocalHapticFeedback.current
     val days = listOf("M", "T", "W", "T", "F", "S", "S")
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -107,17 +125,25 @@ fun DayOfWeekSelector(
     ) {
         days.forEachIndexed { index, day ->
             val isSelected = selectedDays.contains(index)
+            val backgroundColor = when {
+                isSelected -> MaterialTheme.colorScheme.primary
+                isError -> MaterialTheme.colorScheme.errorContainer
+                else -> MaterialTheme.colorScheme.surfaceContainer
+            }
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow)
-                    .clickable { onDayToggle(index) },
+                    .background(backgroundColor)
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onDayToggle(index)
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = day,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -132,10 +158,27 @@ private fun FrequencySelectorPreview() {
         FrequencySelector(
             selectedFrequency = HabitFrequency.SpecificDays,
             onFrequencySelected = {},
-            specificDays = setOf(0, 2, 4),
+            specificDays = listOf(0, 2, 4),
             onDayToggle = {},
             daysPerWeek = 3,
             onDaysPerWeekChange = {},
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun FrequencySelectorErrorPreview() {
+    HabitzTheme {
+        FrequencySelector(
+            selectedFrequency = HabitFrequency.SpecificDays,
+            onFrequencySelected = {},
+            specificDays = emptyList(),
+            onDayToggle = {},
+            daysPerWeek = 3,
+            onDaysPerWeekChange = {},
+            isError = true,
             modifier = Modifier.padding(16.dp)
         )
     }

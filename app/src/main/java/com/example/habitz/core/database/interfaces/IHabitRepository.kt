@@ -1,7 +1,8 @@
 package com.example.habitz.core.database.interfaces
 
-import com.example.habitz.core.database.entity.HomeHabit
-import com.example.habitz.core.database.entity.HomeSummary
+import com.example.habitz.core.database.entity.Habit
+import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 /**
  * Access point for the habits shown on the home dashboard.
@@ -10,7 +11,9 @@ import com.example.habitz.core.database.entity.HomeSummary
  * without changing presentation code.
  */
 interface IHabitRepository {
-    fun getHabitSummary(): HomeSummary
 
-    fun getHabits(): List<HomeHabit>
+    fun getHabits(): Flow<List<Habit>>
+    fun getHabitById(habitId: UUID): Habit?
+    fun createHabit(habit: Habit)
+    fun incrementStreak(habitId: UUID)
 }

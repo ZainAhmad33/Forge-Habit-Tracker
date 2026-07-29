@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -36,12 +38,13 @@ public fun CounterInput(
     valueMin: Int = 0,
     valueMax: Int = 99999999
 ) {
+    val haptic = LocalHapticFeedback.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp),
@@ -49,7 +52,10 @@ public fun CounterInput(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(
-                onClick = { onValueChange(max(valueMin, value - 1)) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onValueChange(max(valueMin, value - 1))
+                },
                 modifier = Modifier
                     .size(40.dp)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
@@ -78,7 +84,10 @@ public fun CounterInput(
             )
 
             IconButton(
-                onClick = { onValueChange(min(valueMax, value + 1)) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onValueChange(min(valueMax, value + 1))
+                },
                 modifier = Modifier
                     .size(40.dp)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)

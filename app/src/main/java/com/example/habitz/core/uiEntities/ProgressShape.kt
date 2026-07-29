@@ -1,58 +1,10 @@
-package com.example.habitz.core.database.entity
+package com.example.habitz.core.uiEntities
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Shape
-import com.example.habitz.core.uiEntities.CategoryPill
-import kotlin.collections.mapOf
-
-data class HomeDashboard(
-    val greetingMessage: String,
-    val greetingName: String,
-    val dateLabel: String,
-    val summary: HomeSummary,
-    val categories: List<CategoryPill>,
-    val habits: List<HomeHabit>
-)
-
-data class HomeSummary(
-    val completedCount: Int,
-    val totalCount: Int,
-    val currentStreakDays: Int,
-    val weeklyCompletionPercent: Int,
-)
-
-data class HomeHabit(
-    val id: String,
-    val title: String,
-    val category: HabitCategory,
-    val scheduleLabel: String,
-    val streakDays: Int,
-    val progressPercent: Int,
-    val isCompletedToday: Boolean,
-    val image: String,
-    val progressShape: ProgressShape
-)
-
-enum class HabitCategory(val label: String) {
-    All("All"),
-    Health("Health & Fitness"),
-    Mindfulness("Mindfulness"),
-    Work("Work"),
-    Home("Home"),
-    Nutrition("Nutrition"),
-    Productivity("Productivity"),
-    Learning("Learning"),
-    Sleep("Sleep"),
-    Finance("Finance"),
-    Social("Social"),
-    Creativity("Creativity"),
-    Environment("Environment"),
-    Spirituality("Spirituality"),
-    DigitalWellbeing("Digital Wellbeing"),
-}
 
 enum class ProgressShape{
     Circle,
@@ -71,8 +23,15 @@ enum class ProgressShape{
     Cookie12Sided,
     Clover4Leaf,
     Clover8Leaf,
-    Puffy
+    Puffy;
+
+    companion object {
+        fun getRandom(): ProgressShape {
+            return entries.random()
+        }
+    }
 }
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val ProgressShapeEnumResolver: Map<ProgressShape, Shape>
@@ -96,21 +55,26 @@ val ProgressShapeEnumResolver: Map<ProgressShape, Shape>
         ProgressShape.Clover8Leaf       to MaterialShapes.Clover8Leaf.toShape(),
         ProgressShape.Puffy             to MaterialShapes.Puffy.toShape(),
 
-    )
+        )
 
-val CategoryToImage = mapOf(
-    HabitCategory.Health            to "🏃",
-    HabitCategory.Nutrition         to "🥗",
-    HabitCategory.Mindfulness       to "🧘",
-    HabitCategory.Productivity      to "🎯",
-    HabitCategory.Learning          to "📖",
-    HabitCategory.Sleep             to "😴",
-    HabitCategory.Finance           to "💰",
-    HabitCategory.Social            to "👥",
-    HabitCategory.Creativity        to "🎨",
-    HabitCategory.Work              to "💼",
-    HabitCategory.Home              to "🏠",
-    HabitCategory.Environment       to "🌱",
-    HabitCategory.Spirituality      to "🙏",
-    HabitCategory.DigitalWellbeing  to "📵",
-)
+val ProgressShapeAngleResolver: Map<ProgressShape, Float>
+    @Composable
+    get() = mapOf(
+        ProgressShape.Circle            to 45f,
+        ProgressShape.Square            to 0f,
+        ProgressShape.Pill              to 85f,
+        ProgressShape.Arch              to -180f,
+        ProgressShape.Slanted           to 0f,
+        ProgressShape.Pentagon          to 144f,
+        ProgressShape.Gem               to -50f,
+        ProgressShape.Sunny             to 40f,
+        ProgressShape.VerySunny         to -50f,
+        ProgressShape.Cookie4Sided      to 0f,
+        ProgressShape.Cookie7Sided      to 130f,
+        ProgressShape.Cookie6Sided      to -15f,
+        ProgressShape.Cookie9Sided      to 130f,
+        ProgressShape.Cookie12Sided     to 130f,
+        ProgressShape.Clover4Leaf       to 130f,
+        ProgressShape.Clover8Leaf       to 130f,
+        ProgressShape.Puffy             to 130f,
+        )

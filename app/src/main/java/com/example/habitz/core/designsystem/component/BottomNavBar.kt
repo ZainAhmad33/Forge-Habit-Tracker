@@ -47,9 +47,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.habitz.core.database.entity.HomeHabit
-import com.example.habitz.feature.home.screen.HomeRoute
-import com.example.habitz.feature.upserthabit.screen.NewHabitRoute
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

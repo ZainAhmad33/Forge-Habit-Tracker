@@ -23,13 +23,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.upserthabit.HabitType
+import com.example.habitz.core.database.entity.HabitType
 
 @Composable
 fun HabitTypeSelector(
@@ -37,6 +39,7 @@ fun HabitTypeSelector(
     onTypeSelected: (HabitType) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -45,7 +48,10 @@ fun HabitTypeSelector(
             TypeCard(
                 type = type,
                 isSelected = type == selectedType,
-                onClick = { onTypeSelected(type) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onTypeSelected(type)
+                },
                 modifier = Modifier.weight(1f)
             )
         }

@@ -38,24 +38,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.habitz.core.database.ServiceLocator
+import com.example.habitz.R
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.designsystem.component.BottomNavBar
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.core.database.entity.HabitCategory
-import com.example.habitz.core.database.entity.HomeDashboard
 import com.example.habitz.core.uiEntities.CategoryPill
-import com.example.habitz.feature.home.components.HomeAppBar
+import com.example.habitz.core.uiEntities.HomeHabit
+import com.example.habitz.core.uiEntities.HomeSummary
 import com.example.habitz.feature.home.components.HabitCategoryChips
 import com.example.habitz.feature.home.components.HabitGrid
+import com.example.habitz.feature.home.components.HabitLogBottomSheet
+import com.example.habitz.feature.home.components.HomeAppBar
 import com.example.habitz.feature.home.components.HomeHeader
 import com.example.habitz.feature.home.components.HomeSummaryCard
 import com.example.habitz.feature.home.components.SectionHeader
 import com.example.habitz.feature.home.state.HomeUiState
+import com.example.habitz.feature.home.viewmodel.HomeDashboardUIState
 import com.example.habitz.feature.home.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import com.example.habitz.R
 
 @Composable
 fun HomeRoute(
@@ -64,13 +67,19 @@ fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedHabitId by viewModel.selectedHabitIdForLogging.collectAsState()
+    val selectedHabit = uiState.habits.find { it.id == selectedHabitId }
 
     HomeScreen(
         uiState = uiState,
+        selectedHabitForLogging = selectedHabit,
         onCategorySelected = viewModel::onCategorySelected,
         onAddHabitClick = onAddHabitClick,
         modifier = modifier,
-        searchHabits = viewModel::searchHabits
+        searchHabits = viewModel::searchHabits,
+        onHabitCardClick = viewModel::onHabitClick,
+        onLogProgress = viewModel::onLogProgress,
+        onDismissBottomSheet = viewModel::onDismissBottomSheet
     )
 }
 
@@ -78,9 +87,13 @@ fun HomeRoute(
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
+    selectedHabitForLogging: HomeHabit?,
     onCategorySelected: (HabitCategory) -> Unit,
     searchHabits: (String) -> Unit,
     onAddHabitClick: () -> Unit,
+    onHabitCardClick: (habit: HomeHabit) -> Unit,
+    onLogProgress: (String, Int) -> Unit,
+    onDismissBottomSheet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -156,7 +169,10 @@ fun HomeScreen(
                         title = "Today's habits",
                         trailingText = "${uiState.visibleHabits.size} shown",
                     )
-                    HabitGrid(habits = uiState.visibleHabits)
+                    HabitGrid(
+                        habits = uiState.visibleHabits,
+                        onHabitCardClick = onHabitCardClick
+                    )
                 }
                 else{
                     // no habits currently
@@ -202,6 +218,16 @@ fun HomeScreen(
             )
         }
     }
+
+    selectedHabitForLogging?.let { habit ->
+        HabitLogBottomSheet(
+            habit = habit,
+            onDismiss = onDismissBottomSheet,
+            onLogProgress = { quantity ->
+                onLogProgress(habit.id, quantity)
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -212,24 +238,27 @@ private fun HomeScreenPreview() {
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
 
     val uiState = HomeUiState.from(
-        dashboard = HomeDashboard(
+        dashboard = HomeDashboardUIState(
             "Good morning",
             "Zain",
             currentDate.format(formatter),
 
-            ServiceLocator.repositoryResolver.getHabitRepository().getHabitSummary(),
-            List<CategoryPill>(2){ CategoryPill(HabitCategory.Home, "🏡")},
+            HomeSummary(5, 10, 10, 50),
+            List<CategoryPill>(2) { CategoryPill(HabitCategory.Home, "🏡") },
             listOf()
-            //ServiceLocator.repositoryResolver.getHabitRepository().getHabits(),
         ),
         selectedCategory = selectedCategory,
     )
     HabitzTheme {
         HomeScreen(
             uiState = uiState,
+            selectedHabitForLogging = null,
             onCategorySelected = {},
             searchHabits = {},
-            onAddHabitClick = {}
+            onAddHabitClick = {},
+            onHabitCardClick = {},
+            onLogProgress = { _, _ -> },
+            onDismissBottomSheet = {}
         )
     }
 }

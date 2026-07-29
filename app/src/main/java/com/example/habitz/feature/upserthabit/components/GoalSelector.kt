@@ -1,7 +1,6 @@
 package com.example.habitz.feature.upserthabit.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,49 +8,36 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.designsystem.component.CounterInput
 import com.example.habitz.core.designsystem.theme.HabitzTheme
-import com.example.habitz.feature.upserthabit.HabitType
 
 @Composable
 fun GoalSelector(
@@ -64,8 +50,11 @@ fun GoalSelector(
     otherUnitInput: String,
     onOtherUnitInputChange: (String) -> Unit,
     showCounter: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isOtherUnitError: Boolean = false,
+    habitTypeSelected: HabitType
 ) {
+    val focusManager = LocalFocusManager.current
     var showOtherUnitInput by remember {mutableStateOf(false)}
     Column(
         verticalArrangement = Arrangement.SpaceBetween
@@ -114,18 +103,30 @@ fun GoalSelector(
             }
         }
 
-        if(showOtherUnitInput){
+        if(showOtherUnitInput && habitTypeSelected == HabitType.Quantity){
             OutlinedTextField(
                 value = otherUnitInput,
                 onValueChange = onOtherUnitInputChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(0.dp, 16.dp),
-                placeholder = { Text("Unit") },
+                    .padding(top = 16.dp),
+                placeholder = { Text("Unit name") },
                 shape = RoundedCornerShape(12.dp),
+                isError = isOtherUnitError,
+                supportingText = if (isOtherUnitError) {
+                    { Text("Please enter a unit name") }
+                } else null,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                ),
+                singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     unfocusedBorderColor = Color.Transparent,
                     focusedBorderColor = MaterialTheme.colorScheme.primary
                 )
@@ -146,6 +147,7 @@ private fun UnitPicker(
     onUnitSelected: (String) -> Unit,
     onShowOtherUnitInput: (Boolean) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
@@ -159,8 +161,8 @@ private fun UnitPicker(
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 unfocusedBorderColor = Color.Transparent,
                 focusedBorderColor = MaterialTheme.colorScheme.primary
             ),
@@ -179,7 +181,8 @@ private fun UnitPicker(
                 DropdownMenuItem(
                     text = { Text(text = unit) },
                     onClick = {
-                        if (unit == "Other...") {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        if (unit == "Other") {
                             onUnitSelected("Other")
                             onShowOtherUnitInput(true)
                         } else {
@@ -209,7 +212,8 @@ private fun GoalSelectorPreview() {
             onUnitSelected = {},
             otherUnitInput = "",
             onOtherUnitInputChange = {},
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            habitTypeSelected = HabitType.YesNo
         )
     }
 }

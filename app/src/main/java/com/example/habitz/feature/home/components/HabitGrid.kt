@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.habitz.core.database.entity.HomeHabit
+import com.example.habitz.core.database.entity.HabitType
+import com.example.habitz.core.uiEntities.HomeHabit
 
 @Composable
 fun HabitGrid(
     habits: List<HomeHabit>,
     modifier: Modifier = Modifier,
+    onHabitCardClick: (habit: HomeHabit) -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -28,6 +30,7 @@ fun HabitGrid(
                     HabitCard(
                         habit = habit,
                         modifier = Modifier.weight(1f),
+                        onHabitCardClick = onHabitCardClick
                     )
                 }
                 if (rowHabits.size == 1) {

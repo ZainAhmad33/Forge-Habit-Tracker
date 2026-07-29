@@ -2,6 +2,8 @@ package com.example.habitz.feature.upserthabit
 
 import androidx.lifecycle.ViewModel
 import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HabitFrequency
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.services.interfaces.IHabitsService
 import com.example.habitz.core.uiEntities.CategoryPill
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +26,7 @@ class UpsertHabitViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     fun onTitleChange(newTitle: String) {
-        _uiState.update { it.copy(title = newTitle) }
+        _uiState.update { it.copy(title = newTitle, titleError = false) }
     }
 
     fun onEmojiChange(newEmoji: String) {
@@ -36,7 +38,9 @@ class UpsertHabitViewModel @Inject constructor(
     }
 
     fun onTypeChange(newType: HabitType) {
-        _uiState.update { it.copy(selectedType = newType) }
+        _uiState.update { it.copy(
+            selectedType = newType
+        ) }
     }
 
     fun onGoalChange(newGoal: Int) {
@@ -48,18 +52,18 @@ class UpsertHabitViewModel @Inject constructor(
     }
 
     fun onFrequencyChange(newFrequency: HabitFrequency) {
-        _uiState.update { it.copy(selectedFrequency = newFrequency) }
+        _uiState.update { it.copy(selectedFrequency = newFrequency, specificDaysError = false) }
     }
 
     fun toggleDay(dayIndex: Int) {
         _uiState.update { state ->
-            val newDays = state.specificDays.toMutableSet()
+            var newDays = state.specificDays
             if (newDays.contains(dayIndex)) {
-                newDays.remove(dayIndex)
+                newDays = newDays - dayIndex
             } else {
-                newDays.add(dayIndex)
+                newDays = newDays + dayIndex
             }
-            state.copy(specificDays = newDays)
+            state.copy(specificDays = newDays, specificDaysError = false)
         }
     }
 
@@ -70,7 +74,7 @@ class UpsertHabitViewModel @Inject constructor(
     fun addReminder(time: LocalTime) {
         if (!_uiState.value.reminders.contains(time)){
             _uiState.update { state ->
-                state.copy(reminders = state.reminders + time)
+                state.copy(reminders = state.reminders + time, remindersError = false)
             }
         }
     }
@@ -82,16 +86,46 @@ class UpsertHabitViewModel @Inject constructor(
     }
 
     fun onRemindersEnabledChange(enabled: Boolean) {
-        _uiState.update { it.copy(remindersEnabled = enabled) }
+        _uiState.update { it.copy(remindersEnabled = enabled, remindersError = false) }
     }
 
     fun onOtherUnitInputChange(unitInput: String){
-        _uiState.update { it.copy(otherUnitInput = unitInput) }
+        _uiState.update { it.copy(otherUnitInput = unitInput, otherUnitError = false) }
+    }
+
+    fun onCreateHabitClick(): Boolean {
+        if (validate()) {
+            habitsService.createHabit(_uiState.value)
+            return true
+        }
+        return false
+    }
+
+    private fun validate(): Boolean {
+        val titleError = _uiState.value.title.isBlank()
+        val specificDaysError = _uiState.value.selectedFrequency == HabitFrequency.SpecificDays &&
+                _uiState.value.specificDays.isEmpty()
+        val otherUnitError = _uiState.value.selectedType == HabitType.Quantity &&
+                _uiState.value.selectedUnit == "Other" &&
+                _uiState.value.otherUnitInput.isBlank()
+        val remindersError = _uiState.value.remindersEnabled && _uiState.value.reminders.isEmpty()
+
+        _uiState.update {
+            it.copy(
+                titleError = titleError,
+                specificDaysError = specificDaysError,
+                otherUnitError = otherUnitError,
+                remindersError = remindersError
+            )
+        }
+
+        return !titleError && !specificDaysError && !otherUnitError && !remindersError
     }
 }
 
 data class UpsertHabitUiState(
     val title: String = "",
+    val titleError: Boolean = false,
     val selectedEmoji: String = "💧",
     val selectedCategory: HabitCategory = HabitCategory.Health,
     val categories: List<CategoryPill> = emptyList(),
@@ -99,23 +133,15 @@ data class UpsertHabitUiState(
     val dailyGoal: Int = 1,
     val selectedUnit: String = "Liters",
     val selectedFrequency: HabitFrequency = HabitFrequency.EveryDay,
-    val specificDays: Set<Int> = emptySet(), // 0-6 for Mon-Sun
+    val specificDays: List<Int> = listOf(), // 0-6 for Mon-Sun
+    val specificDaysError: Boolean = false,
     val daysPerWeek: Int = 1,
     val remindersEnabled: Boolean = false,
     val reminders: List<LocalTime> = listOf(),
+    val remindersError: Boolean = false,
     val otherUnitInput: String = "",
+    val otherUnitError: Boolean = false,
     val popularEmojis: List<String> = listOf("💧", "🏃", "📖", "🧘", "🙏", "🍎", "😴"),
-    val availableUnits: List<String> = listOf("Liters", "Minutes", "Hours", "Pages", "Glasses", "Kilometers", "Miles", "Other...")
+    val availableUnits: List<String> = listOf("Liters", "Minutes", "Hours", "Pages", "Glasses", "Kilometers", "Miles", "Other")
 )
 
-enum class HabitType(val label: String, val subLabel: String) {
-    YesNo("Yes / No", "Once a day"),
-    Quantity("Quantity", "e.g. 3 L water"),
-    Count("Count", "e.g. Pray 5x")
-}
-
-enum class HabitFrequency(val label: String) {
-    EveryDay("Every day"),
-    SpecificDays("Specific days"),
-    DaysPerWeek("Days a week")
-}

@@ -1,16 +1,22 @@
 package com.example.habitz.feature.upserthabit.screen
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -28,8 +34,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,8 +47,8 @@ import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.feature.home.components.HabitCategoryChips
 import com.example.habitz.core.uiEntities.CategoryPill
-import com.example.habitz.feature.upserthabit.HabitFrequency
-import com.example.habitz.feature.upserthabit.HabitType
+import com.example.habitz.core.database.entity.HabitFrequency
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.feature.upserthabit.UpsertHabitUiState
 import com.example.habitz.feature.upserthabit.UpsertHabitViewModel
 import com.example.habitz.feature.upserthabit.components.CreateHabitButton
@@ -74,7 +84,11 @@ fun NewHabitRoute(
         onRemindersEnabledChange = viewModel::onRemindersEnabledChange,
         onRemoveReminder = viewModel::removeReminder,
         onAddReminderClick = viewModel::addReminder,
-        onCreateHabitClick = { /* Save habit */ },
+        onCreateHabitClick = {
+            if (viewModel.onCreateHabitClick()) {
+                onBackClick()
+            }
+        },
         onOtherUnitInputChange = viewModel::onOtherUnitInputChange,
         modifier = modifier
     )
@@ -102,8 +116,16 @@ fun NewHabitScreen(
     onOtherUnitInputChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             CenterAlignedTopAppBar(
@@ -137,6 +159,8 @@ fun NewHabitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -162,9 +186,21 @@ fun NewHabitScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Name") },
                 shape = RoundedCornerShape(12.dp),
+                isError = uiState.titleError,
+                supportingText = if (uiState.titleError) {
+                    { Text("Habit name cannot be empty") }
+                } else null,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                ),
+                singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     unfocusedBorderColor = Color.Transparent,
                     focusedBorderColor = MaterialTheme.colorScheme.primary
                 )
@@ -173,7 +209,7 @@ fun NewHabitScreen(
             // 4. Category Picker
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "CATEGORY",
+                    text = "Category",
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -190,7 +226,7 @@ fun NewHabitScreen(
             // 5. Habit Type Selection
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "HOW DO YOU WANT TO TRACK IT?",
+                    text = "How do you want to track it?",
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -213,7 +249,9 @@ fun NewHabitScreen(
                 otherUnitInput = uiState.otherUnitInput,
                 onOtherUnitInputChange = onOtherUnitInputChange,
                 onUnitSelected = onUnitSelected,
-                showCounter = uiState.selectedType != HabitType.YesNo
+                showCounter = uiState.selectedType != HabitType.YesNo,
+                isOtherUnitError = uiState.otherUnitError,
+                habitTypeSelected = uiState.selectedType
             )
 
             // 7 & 8. Frequency Selector
@@ -223,7 +261,8 @@ fun NewHabitScreen(
                 specificDays = uiState.specificDays,
                 onDayToggle = onDayToggle,
                 daysPerWeek = uiState.daysPerWeek,
-                onDaysPerWeekChange = onDaysPerWeekChange
+                onDaysPerWeekChange = onDaysPerWeekChange,
+                isError = uiState.specificDaysError
             )
 
             // 9. Reminders
@@ -232,7 +271,8 @@ fun NewHabitScreen(
                 onRemindersEnabledChange = onRemindersEnabledChange,
                 reminders = uiState.reminders,
                 onRemoveReminder = onRemoveReminder,
-                onAddReminderClick = onAddReminderClick
+                onAddReminderClick = onAddReminderClick,
+                isError = uiState.remindersError
             )
         }
     }

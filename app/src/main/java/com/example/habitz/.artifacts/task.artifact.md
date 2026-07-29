@@ -1,0 +1,11 @@
+- [x] Refactor `IHabitRepository` to use Flow
+    - [x] Update `IHabitRepository.kt` interface
+    - [x] Update `InMemoryIHabitRepository.kt` implementation
+- [x] Refactor `IHomeService` to use Flow
+    - [x] Update `IHomeService.kt` interface
+    - [x] Update `HomeService.kt` implementation
+- [x] Refactor `HomeViewModel` to be reactive
+    - [x] Update `HomeViewModel.kt` to collect from service flows
+- [x] Verification
+    - [x] Build the project
+    - [x] (Optional) Update unit tests if applicable

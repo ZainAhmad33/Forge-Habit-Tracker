@@ -71,6 +71,7 @@ fun CustomShapeProgress(
     trackerSize: Dp = 100.dp,
     strokeWidth: Dp = 6.dp,
     startAngle: Float = 0f, // 0f = Top, 90f = Right, 180f = Bottom, -90f = Left
+    showCheckMark: Boolean = false,
     label: String = "${(progress * 100).toInt()}%"
 ) {
     val animatedProgress by animateFloatAsState(
@@ -121,7 +122,7 @@ fun CustomShapeProgress(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(strokeWidth / 2)
+                .padding(strokeWidth / 5)
         ) {
             fullPath.reset()
             segmentPath.reset()
@@ -190,51 +191,54 @@ fun CustomShapeProgress(
         )
 
         // 4. Tick Badge at rotated position (Icon stays upright - No Rotation)
-        AnimatedVisibility(
-            visible = isCompleted && startPoint != Offset.Zero,
-            enter = fadeIn() + scaleIn(initialScale = 0.5f),
-            exit = fadeOut() + scaleOut(targetScale = 0.5f),
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset {
-                    IntOffset(
-                        x = (startPoint.x + with(density) { (strokeWidth / 2).toPx() }).roundToInt(),
-                        y = (startPoint.y + with(density) { (strokeWidth / 2).toPx() }).roundToInt()
-                    )
-                }
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = progressColor,
-                shadowElevation = 3.dp,
+        if(showCheckMark){
+            AnimatedVisibility(
+                visible = isCompleted && startPoint != Offset.Zero,
+                enter = fadeIn() + scaleIn(initialScale = 0.5f),
+                exit = fadeOut() + scaleOut(targetScale = 0.5f),
                 modifier = Modifier
-                    .size(badgeSize)
-                    .offset(x = -badgeRadius, y = -badgeRadius)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    // Checkmark Canvas (Unrotated)
-                    Canvas(
-                        modifier = Modifier.size(if (trackerSize < 75.dp) 12.dp else 16.dp)
-                    ) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.15f, size.height * 0.5f)
-                            lineTo(size.width * 0.42f, size.height * 0.78f)
-                            lineTo(size.width * 0.85f, size.height * 0.25f)
-                        }
-
-                        drawPath(
-                            path = path,
-                            color = checkColor,
-                            style = Stroke(
-                                width = 3.dp.toPx(),
-                                cap = StrokeCap.Round,
-                                join = StrokeJoin.Round
-                            )
+                    .align(Alignment.TopStart)
+                    .offset {
+                        IntOffset(
+                            x = (startPoint.x + with(density) { (strokeWidth / 2).toPx() }).roundToInt(),
+                            y = (startPoint.y + with(density) { (strokeWidth / 2).toPx() }).roundToInt()
                         )
+                    }
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = progressColor,
+                    shadowElevation = 3.dp,
+                    modifier = Modifier
+                        .size(badgeSize)
+                        .offset(x = -badgeRadius, y = -badgeRadius)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        // Checkmark Canvas (Unrotated)
+                        Canvas(
+                            modifier = Modifier.size(if (trackerSize < 75.dp) 12.dp else 16.dp)
+                        ) {
+                            val path = Path().apply {
+                                moveTo(size.width * 0.15f, size.height * 0.5f)
+                                lineTo(size.width * 0.42f, size.height * 0.78f)
+                                lineTo(size.width * 0.85f, size.height * 0.25f)
+                            }
+
+                            drawPath(
+                                path = path,
+                                color = checkColor,
+                                style = Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = StrokeCap.Round,
+                                    join = StrokeJoin.Round
+                                )
+                            )
+                        }
                     }
                 }
             }
         }
+
     }
 }
 
