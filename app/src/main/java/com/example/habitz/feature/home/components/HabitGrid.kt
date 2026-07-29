@@ -16,6 +16,7 @@ fun HabitGrid(
     habits: List<HomeHabit>,
     modifier: Modifier = Modifier,
     onHabitCardClick: (habit: HomeHabit) -> Unit,
+    onHabitDetailsClick: (habitId: String) -> Unit = {},
 ) {
     Column(
         modifier = modifier,
@@ -30,7 +31,8 @@ fun HabitGrid(
                     HabitCard(
                         habit = habit,
                         modifier = Modifier.weight(1f),
-                        onHabitCardClick = onHabitCardClick
+                        onHabitCardClick = onHabitCardClick,
+                        onDetailsClick = { onHabitDetailsClick(habit.id) }
                     )
                 }
                 if (rowHabits.size == 1) {

@@ -156,6 +156,7 @@ fun HabitCard(
             ) {
                 // Details Link
                 Surface(
+                    onClick = onDetailsClick,
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     shape = CircleShape
                 ) {
@@ -165,7 +166,6 @@ fun HabitCard(
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
-                            .clip(CircleShape)
                             .padding(horizontal = 10.dp, vertical = 2.dp)
                     )
                 }

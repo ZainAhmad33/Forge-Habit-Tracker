@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.habitz.core.designsystem.theme.HabitzTheme
+import com.example.habitz.feature.habits.presentation.screen.HabitDetailRoute
 import com.example.habitz.feature.home.screen.HomeRoute
 import com.example.habitz.feature.upserthabit.screen.NewHabitRoute
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,7 +48,19 @@ fun HabitzApp() {
     ) {
         composable("home") {
             HomeRoute(
-                onAddHabitClick = { navController.navigate("new_habit") }
+                onAddHabitClick = { navController.navigate("new_habit") },
+                onHabitDetailsClick = { habitId ->
+                    navController.navigate("habit_detail/$habitId")
+                }
+            )
+        }
+        composable("habit_detail/{habitId}") {
+            HabitDetailRoute(
+                onBackClick = { navController.popBackStack() },
+                onEditClick = { habitId ->
+                    // Navigate to edit screen if available
+                    // navController.navigate("edit_habit/$habitId")
+                }
             )
         }
         composable(

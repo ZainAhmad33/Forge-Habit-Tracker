@@ -64,6 +64,7 @@ import java.util.Locale
 @Composable
 fun HomeRoute(
     onAddHabitClick: () -> Unit,
+    onHabitDetailsClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -76,6 +77,7 @@ fun HomeRoute(
         selectedHabitForLogging = selectedHabit,
         onCategorySelected = viewModel::onCategorySelected,
         onAddHabitClick = onAddHabitClick,
+        onHabitDetailsClick = onHabitDetailsClick,
         modifier = modifier,
         searchHabits = viewModel::searchHabits,
         onHabitCardClick = viewModel::onHabitClick,
@@ -92,6 +94,7 @@ fun HomeScreen(
     onCategorySelected: (HabitCategory) -> Unit,
     searchHabits: (String) -> Unit,
     onAddHabitClick: () -> Unit,
+    onHabitDetailsClick: (String) -> Unit,
     onHabitCardClick: (habit: HomeHabit) -> Unit,
     onLogProgress: (String, Int) -> Unit,
     onDismissBottomSheet: () -> Unit,
@@ -172,7 +175,8 @@ fun HomeScreen(
                     )
                     HabitGrid(
                         habits = uiState.todaysHabits,
-                        onHabitCardClick = onHabitCardClick
+                        onHabitCardClick = onHabitCardClick,
+                        onHabitDetailsClick = onHabitDetailsClick
                     )
 
                     if (uiState.otherHabits.isNotEmpty()) {
@@ -182,7 +186,8 @@ fun HomeScreen(
                         )
                         HabitGrid(
                             habits = uiState.otherHabits,
-                            onHabitCardClick = onHabitCardClick
+                            onHabitCardClick = onHabitCardClick,
+                            onHabitDetailsClick = onHabitDetailsClick
                         )
                     }
                 }
@@ -277,6 +282,7 @@ private fun HomeScreenPreview() {
             onCategorySelected = {},
             searchHabits = {},
             onAddHabitClick = {},
+            onHabitDetailsClick = {},
             onHabitCardClick = {},
             onLogProgress = { _, _ -> },
             onDismissBottomSheet = {}

@@ -3,8 +3,10 @@ package com.example.habitz.core.di
 import com.example.habitz.core.services.implementations.HabitActivityService
 import com.example.habitz.core.services.implementations.HabitsService
 import com.example.habitz.core.services.implementations.HomeService
+import com.example.habitz.core.services.implementations.HabitStatsService
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitsService
+import com.example.habitz.core.services.interfaces.IHabitStatsService
 import com.example.habitz.core.services.interfaces.IHomeService
 import dagger.Binds
 import dagger.Module
@@ -33,4 +35,10 @@ abstract class ServiceModule {
     abstract fun bindHabitActivityService(
         impl: HabitActivityService
     ): IHabitActivityService
+
+    @Binds
+    @Singleton
+    abstract fun bindHabitStatsService(
+        impl: HabitStatsService
+    ): IHabitStatsService
 }
