@@ -1,36 +1,127 @@
 package com.example.habitz.feature.habits.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.EventRepeat
+import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.habitz.core.database.entity.Habit
+import com.example.habitz.core.database.entity.HabitCategory
+import com.example.habitz.core.database.entity.HabitFrequency
+import com.example.habitz.core.database.entity.HabitType
+import com.example.habitz.core.designsystem.theme.HabitzTheme
+import com.example.habitz.core.uiEntities.ProgressShape
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AdditionalDetailsSection(habit: Habit) {
-    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        DetailRow("Frequency", habit.frequencyType.label)
-        if (habit.reminders.isNotEmpty()) {
-            DetailRow("Reminders", habit.reminders.joinToString(", "))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Additional details",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight(700)
+        )
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),// The gap between segmented items
+        ) {
+            val dayNames = listOf(
+                "Mon",    // 0
+                "Tue",   // 1
+                "Wed", // 2
+                "Thu",  // 3
+                "Fri",    // 4
+                "Sat",  // 5
+                "Sun"     // 6
+            )
+            var frequency: String
+            if (habit.frequencyType == HabitFrequency.EveryDay){
+                frequency = "Every day"
+            }
+            else if (habit.frequencyType == HabitFrequency.DaysPerWeek){
+                frequency = "${habit.numberOfTrackedDays} days per week"
+            }
+            else{
+                frequency = habit.trackedDays.map { dayNames[it] }.joinToString(", ")
+            }
+            val formatter = DateTimeFormatter.ofPattern("h:mm a")
+            val reminders = habit.reminders.map { it.format(formatter) }.joinToString(", ")
+            DetailRow(Icons.Rounded.Flag, "Target", "${habit.completionTargetPerDay} ${habit.targetUnit}", 0, 4)
+            DetailRow(Icons.Rounded.EventRepeat, "Frequency", "$frequency", 1, 4)
+            if (habit.reminders.isNotEmpty()){
+                DetailRow(Icons.Rounded.Notifications, "Reminders", "$reminders", 2, 4)
+            }
+            val formatterDT = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
+            DetailRow(Icons.Rounded.CalendarMonth, "Created On", "${habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).format(formatterDT)}", 3, 4)
         }
-        DetailRow("Started On", dateFormat.format(habit.createdAt))
-        DetailRow("Daily Goal", "${habit.completionTargetPerDay} ${habit.targetUnit}")
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+fun DetailRow(icon: ImageVector, label: String, value: String, index: Int, totalItems: Int) {
+    SegmentedListItem(
+        selected = false,
+        enabled = true,
+        onClick = {},
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = totalItems),
+        leadingContent = { Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        ) },
+        trailingContent = { Text(text = value) },
+        content = { Text( text = label) },
+    )
+}
+
+
+@Preview
+@Composable
+fun additionalDetailsPreview(){
+    val habit = com.example.habitz.core.database.entity.Habit(
+        id = UUID.randomUUID(),
+        title = "Morning Meditation",
+        category = HabitCategory.Mindfulness,
+        emoji = "🧘",
+        habitType = HabitType.YesNo,
+        reminders = listOf(
+            LocalTime.of(17, 0),
+            LocalTime.of(22, 0)
+        ),
+        frequencyType = HabitFrequency.EveryDay,
+        numberOfTrackedDays = 7,
+        completionTargetPerDay = 1,
+        targetUnit = "Per Day",
+        progressShape = ProgressShape.Pill,
+        createdAt = Date(),
+        updatedAt = Date()
+    )
+    HabitzTheme{
+        AdditionalDetailsSection(habit)
     }
 }

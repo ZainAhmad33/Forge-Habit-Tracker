@@ -143,12 +143,8 @@ fun HabitDetailScreen(
                 CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit)
 
                 QuarterlyProgressCards(stats.quarterlyCompletionRates)
-                
-                HorizontalDivider()
 
                 AdditionalDetailsSection(habit)
-                
-                HorizontalDivider()
 
                 LogsSection(
                     todayLogs = uiState.todayLogs,
