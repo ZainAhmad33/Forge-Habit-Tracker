@@ -157,7 +157,10 @@ fun HabitCard(
             ) {
                 // Details Link
                 Surface(
-                    onClick = onDetailsClick,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDetailsClick()
+                    },
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     shape = CircleShape
                 ) {

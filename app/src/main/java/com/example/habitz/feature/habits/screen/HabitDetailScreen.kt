@@ -148,10 +148,10 @@ fun HabitDetailScreen(
 
                 LogsSection(
                     todayLogs = uiState.todayLogs,
-                    historicalLogs = uiState.historicalLogs,
-                    onDeleteLog = onDeleteLog
+                    onDeleteLog = onDeleteLog,
+                    unit = if (habit.habitType == HabitType.Quantity) habit.targetUnit else ""
                 )
-                
+
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs
             }
         }
