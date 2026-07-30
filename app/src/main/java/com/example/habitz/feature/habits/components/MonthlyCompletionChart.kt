@@ -187,11 +187,14 @@ fun MonthlyCompletionChart(
                 val targetRatio = (target.toFloat() / yMax).coerceIn(0f, 1f)
                 val targetBarHeight = chartHeight * targetRatio
                 val targetBarTop = chartHeight - targetBarHeight
+
+                val today = LocalDate.now().dayOfMonth
                 
                 data.forEachIndexed { index, item ->
                     val isBelowGoal = item.completedQuantity < target
+                    val isFutureItem = item.day > today
                     val barColor = when {
-                        item.isSkipDay -> skipColor
+                        isFutureItem || item.isSkipDay -> skipColor
                         isBelowGoal -> errorColor
                         else -> successColor
                     }
