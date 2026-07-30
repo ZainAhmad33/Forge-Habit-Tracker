@@ -149,21 +149,21 @@ class HabitStatsService @Inject constructor(
         val result = mutableListOf<MonthlyRate>()
         val habitStart = habit.createdAt.toLocalDate()
         val target = habit.completionTargetPerDay
-        var currentMonthDate = LocalDate.now().withDayOfMonth(1)
+        var lastMonthDate = LocalDate.now().withDayOfMonth(1).minusMonths(1)
 
         repeat(3) {
-            if (currentMonthDate.isAfter(habitStart.withDayOfMonth(1)) || currentMonthDate == habitStart.withDayOfMonth(1)) {
-                val daysInMonth = currentMonthDate.lengthOfMonth()
-                val monthName = currentMonthDate.month.name.take(3)
+            if (lastMonthDate.isAfter(habitStart.withDayOfMonth(1)) || lastMonthDate == habitStart.withDayOfMonth(1)) {
+                val daysInMonth = lastMonthDate.lengthOfMonth()
+                val monthName = lastMonthDate.month.name.take(3)
 
                 val successfulDays = (1..daysInMonth).count { day ->
-                    val date = currentMonthDate.withDayOfMonth(day)
+                    val date = lastMonthDate.withDayOfMonth(day)
                     (dailyTotals[date] ?: 0) >= target
                 }
 
                 result.add(MonthlyRate(monthName, if (daysInMonth > 0) successfulDays.toFloat() / daysInMonth else 0f))
             }
-            currentMonthDate = currentMonthDate.minusMonths(1)
+            lastMonthDate = lastMonthDate.minusMonths(1)
         }
 
         return result.reversed()
