@@ -11,8 +11,7 @@ data class HabitStats(
     val bestStreak: Int,
     val overallCompletionRate: Float,
     val monthlyCompletionData: List<DailyCompletion>,
-    val quarterlyCompletionRates: List<MonthlyRate>,
-    val rewards: List<Reward>
+    val quarterlyCompletionRates: List<MonthlyRate>
 )
 
 data class DailyCompletion(

@@ -3,16 +3,20 @@ package com.example.habitz.core.services.implementations
 import com.example.habitz.core.database.entity.Habit
 import com.example.habitz.core.database.entity.HabitActivity
 import com.example.habitz.core.database.entity.HabitFrequency
-import com.example.habitz.core.database.entity.Reward
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.DailyCompletion
 import com.example.habitz.core.services.interfaces.HabitStats
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
 import com.example.habitz.core.services.interfaces.MonthlyRate
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import java.util.Calendar
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.TemporalAdjusters
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
@@ -23,200 +27,149 @@ class HabitStatsService @Inject constructor(
 ) : IHabitStatsService {
 
     override fun getHabitStats(habitId: UUID): Flow<HabitStats> {
+        // Recommend changing activityService to fetch ONLY this habit's activities:
+        // activityService.getActivitiesForHabit(habitId)
         return activityService.getAllActivities().map { allActivities ->
-            val habit = habitRepository.getHabitById(habitId) ?: return@map HabitStats(0, 0, 0f, emptyList(), emptyList(), emptyList())
-            val habitActivities = allActivities.filter { it.habitId == habitId }.sortedByDescending { it.createdAt }
+            val habit = habitRepository.getHabitById(habitId)
+                ?: return@map HabitStats(0, 0, 0f, emptyList(), emptyList())
 
-            val currentStreak = calculateCurrentStreak(habitActivities, habit.completionTargetPerDay)
-            val bestStreak = calculateBestStreak(habitActivities, habit.completionTargetPerDay)
-            val overallRate = calculateOverallRate(habitActivities, habit.completionTargetPerDay, habit.createdAt)
-            
-            val monthlyData = calculateMonthlyCompletion(habitActivities, habit)
-            val quarterlyData = calculateQuarterlyRates(habitActivities, habit.completionTargetPerDay)
-            val rewards = generateRewards(currentStreak, bestStreak)
+            val habitActivities = allActivities
+                .filter { it.habitId == habitId }
+                .sortedByDescending { it.createdAt }
+
+            // Pre-process quantities per date using modern LocalDate
+            val dailyQuantities: Map<LocalDate, Int> = habitActivities
+                .groupBy { it.createdAt.toLocalDate() }
+                .mapValues { entry -> entry.value.sumOf { it.quantity } }
+
+            val target = habit.completionTargetPerDay
+
+            val currentStreak = calculateCurrentStreak(dailyQuantities, target)
+            val bestStreak = calculateBestStreak(dailyQuantities, target)
+            val overallRate = calculateOverallRate(dailyQuantities, target, habit.createdAt.toLocalDate())
+
+            val monthlyData = calculateMonthlyCompletion(dailyQuantities, habit)
+            val quarterlyData = calculateQuarterlyRates(habit, dailyQuantities)
 
             HabitStats(
                 currentStreak = currentStreak,
                 bestStreak = bestStreak,
                 overallCompletionRate = overallRate,
                 monthlyCompletionData = monthlyData,
-                quarterlyCompletionRates = quarterlyData,
-                rewards = rewards
+                quarterlyCompletionRates = quarterlyData
             )
-        }
+        }.flowOn(Dispatchers.IO) // 👈 Critical: Shift calculations off the main thread
     }
 
-    private fun calculateCurrentStreak(activities: List<HabitActivity>, target: Int): Int {
-        val activitiesByDay = activities.groupBy { truncateDate(it.createdAt) }
+    private fun calculateCurrentStreak(dailyTotals: Map<LocalDate, Int>, target: Int): Int {
+        val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
+
+        var current = if ((dailyTotals[today] ?: 0) >= target) today else yesterday
         var streak = 0
-        val cal = Calendar.getInstance()
-        
-        // Start from today or yesterday
-        val today = truncateDate(Date())
-        val yesterday = Calendar.getInstance().apply { time = today; add(Calendar.DATE, -1) }.time
-        
-        var current = if (activitiesByDay[today]?.sumOf { it.quantity } ?: 0 >= target) today else yesterday
-        
-        while (true) {
-            val dailySum = activitiesByDay[current]?.sumOf { it.quantity } ?: 0
-            if (dailySum >= target) {
-                streak++
-                val nextCal = Calendar.getInstance().apply { time = current; add(Calendar.DATE, -1) }
-                current = nextCal.time
-            } else {
-                break
-            }
+
+        while ((dailyTotals[current] ?: 0) >= target) {
+            streak++
+            current = current.minusDays(1)
         }
         return streak
     }
 
-    private fun calculateBestStreak(activities: List<HabitActivity>, target: Int): Int {
-        val activitiesByDay = activities.groupBy { truncateDate(it.createdAt) }.toSortedMap()
-        if (activitiesByDay.isEmpty()) return 0
-        
+    private fun calculateBestStreak(dailyTotals: Map<LocalDate, Int>, target: Int): Int {
+        if (dailyTotals.isEmpty()) return 0
+
+        val firstDate = dailyTotals.keys.minOrNull() ?: return 0
+        val lastDate = LocalDate.now()
+
         var maxStreak = 0
         var currentStreak = 0
-        
-        val firstDate = activitiesByDay.firstKey()
-        val lastDate = truncateDate(Date())
-        
-        val cal = Calendar.getInstance()
-        cal.time = firstDate
-        
-        while (!cal.time.after(lastDate)) {
-            val dailySum = activitiesByDay[cal.time]?.sumOf { it.quantity } ?: 0
-            if (dailySum >= target) {
+        var current = firstDate
+
+        while (!current.isAfter(lastDate)) {
+            if ((dailyTotals[current] ?: 0) >= target) {
                 currentStreak++
                 maxStreak = maxOf(maxStreak, currentStreak)
             } else {
                 currentStreak = 0
             }
-            cal.add(Calendar.DATE, 1)
+            current = current.plusDays(1)
         }
-        
+
         return maxStreak
     }
 
-    private fun calculateOverallRate(activities: List<HabitActivity>, target: Int, createdAt: Date): Float {
-        val daysSinceCreation = ((Date().time - createdAt.time) / (1000 * 60 * 60 * 24)).toInt() + 1
-        val successfulDays = activities.groupBy { truncateDate(it.createdAt) }
-            .count { it.value.sumOf { activity -> activity.quantity } >= target }
-        
-        return if (daysSinceCreation > 0) successfulDays.toFloat() / daysSinceCreation else 0f
+    private fun calculateOverallRate(dailyTotals: Map<LocalDate, Int>, target: Int, createdDate: LocalDate): Float {
+        val today = LocalDate.now()
+        val totalDays = (today.toEpochDay() - createdDate.toEpochDay() + 1).toInt()
+        if (totalDays <= 0) return 0f
+
+        val successfulDays = dailyTotals.count { it.value >= target }
+        return successfulDays.toFloat() / totalDays
     }
 
-    private fun calculateMonthlyCompletion(activities: List<HabitActivity>, habit: Habit): List<DailyCompletion> {
+    private fun calculateMonthlyCompletion(dailyTotals: Map<LocalDate, Int>, habit: Habit): List<DailyCompletion> {
+        val today = LocalDate.now()
+        val daysInMonth = today.lengthOfMonth()
         val target = habit.completionTargetPerDay
-        val cal = Calendar.getInstance()
-        val currentMonth = cal.get(Calendar.MONTH)
-        val currentYear = cal.get(Calendar.YEAR)
-        
-        val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-        
-        val activitiesByDate = activities.groupBy { truncateDate(it.createdAt) }
-        val successfulDaysByDate = activitiesByDate.filter { it.value.sumOf { a -> a.quantity } >= target }.keys
+
+        val successfulDates = dailyTotals.filter { it.value >= target }.keys
 
         return (1..daysInMonth).map { day ->
-            val dateCal = Calendar.getInstance().apply {
-                set(Calendar.YEAR, currentYear)
-                set(Calendar.MONTH, currentMonth)
-                set(Calendar.DAY_OF_MONTH, day)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val currentDate = dateCal.time
-            val sum = activitiesByDate[currentDate]?.sumOf { it.quantity } ?: 0
+            val date = LocalDate.of(today.year, today.month, day)
+            val sum = dailyTotals[date] ?: 0
             val isCompleted = sum >= target
-            
-            var isSkipDay = false
-            when (habit.frequencyType) {
-                HabitFrequency.EveryDay -> {
-                    isSkipDay = false
-                }
+
+            val isSkipDay = when (habit.frequencyType) {
+                HabitFrequency.EveryDay -> false
                 HabitFrequency.SpecificDays -> {
-                    // app day: 0=Mon, ..., 6=Sun
-                    val dayOfWeek = (dateCal.get(Calendar.DAY_OF_WEEK) + 5) % 7
-                    isSkipDay = !habit.trackedDays.contains(dayOfWeek)
+                    // Convert DayOfWeek (1=Mon..7=Sun) to app format (0=Mon..6=Sun)
+                    val dayOfWeekIdx = date.dayOfWeek.value - 1
+                    !habit.trackedDays.contains(dayOfWeekIdx)
                 }
                 HabitFrequency.DaysPerWeek -> {
-                    val weekCal = Calendar.getInstance().apply {
-                        time = currentDate
-                        firstDayOfWeek = Calendar.MONDAY
-                        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                    val startOfWeek = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                    val endOfWeek = startOfWeek.plusDays(6)
+
+                    var count = 0
+                    var d = startOfWeek
+                    while (!d.isAfter(endOfWeek)) {
+                        if (successfulDates.contains(d)) count++
+                        d = d.plusDays(1)
                     }
-                    val startOfWeek = truncateDate(weekCal.time)
-                    weekCal.add(Calendar.DATE, 6)
-                    val endOfWeek = truncateDate(weekCal.time)
-                    
-                    var weekCount = 0
-                    val countCal = Calendar.getInstance().apply { time = startOfWeek }
-                    while (!countCal.time.after(endOfWeek)) {
-                        if (successfulDaysByDate.contains(truncateDate(countCal.time))) {
-                            weekCount++
-                        }
-                        countCal.add(Calendar.DATE, 1)
-                    }
-                    
-                    if (weekCount == habit.numberOfTrackedDays && !isCompleted) {
-                        isSkipDay = true
-                    }
+
+                    count == habit.numberOfTrackedDays && !isCompleted
                 }
             }
-            
+
             DailyCompletion(day, sum, isSkipDay)
         }
     }
 
-    private fun calculateQuarterlyRates(activities: List<HabitActivity>, target: Int): List<MonthlyRate> {
+    private fun calculateQuarterlyRates(habit: Habit, dailyTotals: Map<LocalDate, Int>): List<MonthlyRate> {
         val result = mutableListOf<MonthlyRate>()
-        val cal = Calendar.getInstance()
-        
+        val habitStart = habit.createdAt.toLocalDate()
+        val target = habit.completionTargetPerDay
+        var currentMonthDate = LocalDate.now().withDayOfMonth(1)
+
         repeat(3) {
-            val month = cal.get(Calendar.MONTH)
-            val year = cal.get(Calendar.YEAR)
-            val monthName = cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, java.util.Locale.getDefault()) ?: ""
-            
-            val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-            val monthActivities = activities.filter {
-                val c = Calendar.getInstance().apply { time = it.createdAt }
-                c.get(Calendar.MONTH) == month && c.get(Calendar.YEAR) == year
+            if (currentMonthDate.isAfter(habitStart.withDayOfMonth(1)) || currentMonthDate == habitStart.withDayOfMonth(1)) {
+                val daysInMonth = currentMonthDate.lengthOfMonth()
+                val monthName = currentMonthDate.month.name.take(3)
+
+                val successfulDays = (1..daysInMonth).count { day ->
+                    val date = currentMonthDate.withDayOfMonth(day)
+                    (dailyTotals[date] ?: 0) >= target
+                }
+
+                result.add(MonthlyRate(monthName, if (daysInMonth > 0) successfulDays.toFloat() / daysInMonth else 0f))
             }
-            
-            val successfulDays = monthActivities.groupBy { truncateDate(it.createdAt) }
-                .count { it.value.sumOf { a -> a.quantity } >= target }
-            
-            result.add(MonthlyRate(monthName, if (daysInMonth > 0) successfulDays.toFloat() / daysInMonth else 0f))
-            cal.add(Calendar.MONTH, -1)
+            currentMonthDate = currentMonthDate.minusMonths(1)
         }
-        
+
         return result.reversed()
     }
 
-    private fun generateRewards(currentStreak: Int, bestStreak: Int): List<Reward> {
-        val milestones = listOf(3, 7, 15, 30, 50, 100)
-        val titles = listOf("Starter", "Consistent", "Dedicated", "Master", "Legend", "Immortal")
-        val emojis = listOf("🥉", "🥈", "🥇", "💎", "👑", "🔥")
-        
-        return milestones.mapIndexed { index, milestone ->
-            Reward(
-                title = titles[index],
-                description = "$milestone day streak",
-                emoji = emojis[index],
-                requiredStreak = milestone,
-                isUnlocked = bestStreak >= milestone
-            )
-        }
-    }
-
-    private fun truncateDate(date: Date): Date {
-        val cal = Calendar.getInstance()
-        cal.time = date
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.time
+    private fun Date.toLocalDate(): LocalDate {
+        return this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
     }
 }

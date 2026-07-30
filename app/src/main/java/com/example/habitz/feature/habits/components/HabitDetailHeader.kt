@@ -112,8 +112,7 @@ fun HabitDetailHeaderPreview() {
             bestStreak = 12,
             overallCompletionRate = 0.85f,
             monthlyCompletionData = emptyList(),
-            quarterlyCompletionRates = emptyList(),
-            rewards = emptyList()
+            quarterlyCompletionRates = emptyList()
         )
         HabitDetailHeader(habit = habit, stats = stats)
     }

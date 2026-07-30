@@ -9,7 +9,7 @@ import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.IHabitsService
 import com.example.habitz.core.uiEntities.CategoryPill
 import com.example.habitz.core.uiEntities.ProgressShape
-import com.example.habitz.feature.upserthabit.UpsertHabitUiState
+import com.example.habitz.feature.upserthabit.state.UpsertHabitUiState
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
@@ -61,6 +61,7 @@ class HabitsService @Inject constructor(
             habitForm.dailyGoal,
             unit,
             ProgressShape.getRandom(),
+            0,
             Date(),
             Date(),
         )

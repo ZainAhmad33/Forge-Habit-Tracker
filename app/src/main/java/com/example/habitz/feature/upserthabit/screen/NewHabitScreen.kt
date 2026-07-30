@@ -34,7 +34,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -49,8 +48,8 @@ import com.example.habitz.feature.home.components.HabitCategoryChips
 import com.example.habitz.core.uiEntities.CategoryPill
 import com.example.habitz.core.database.entity.HabitFrequency
 import com.example.habitz.core.database.entity.HabitType
-import com.example.habitz.feature.upserthabit.UpsertHabitUiState
-import com.example.habitz.feature.upserthabit.UpsertHabitViewModel
+import com.example.habitz.feature.upserthabit.state.UpsertHabitUiState
+import com.example.habitz.feature.upserthabit.viewmodel.UpsertHabitViewModel
 import com.example.habitz.feature.upserthabit.components.CreateHabitButton
 import com.example.habitz.feature.upserthabit.components.EmojiPreviewCard
 import com.example.habitz.feature.upserthabit.components.EmojiSelectorBar

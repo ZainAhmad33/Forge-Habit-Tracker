@@ -1,11 +1,11 @@
-package com.example.habitz.feature.upserthabit
+package com.example.habitz.feature.upserthabit.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HabitFrequency
 import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.services.interfaces.IHabitsService
-import com.example.habitz.core.uiEntities.CategoryPill
+import com.example.habitz.feature.upserthabit.state.UpsertHabitUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -122,26 +122,4 @@ class UpsertHabitViewModel @Inject constructor(
         return !titleError && !specificDaysError && !otherUnitError && !remindersError
     }
 }
-
-data class UpsertHabitUiState(
-    val title: String = "",
-    val titleError: Boolean = false,
-    val selectedEmoji: String = "💧",
-    val selectedCategory: HabitCategory = HabitCategory.Health,
-    val categories: List<CategoryPill> = emptyList(),
-    val selectedType: HabitType = HabitType.YesNo,
-    val dailyGoal: Int = 1,
-    val selectedUnit: String = "Liters",
-    val selectedFrequency: HabitFrequency = HabitFrequency.EveryDay,
-    val specificDays: List<Int> = listOf(), // 0-6 for Mon-Sun
-    val specificDaysError: Boolean = false,
-    val daysPerWeek: Int = 1,
-    val remindersEnabled: Boolean = false,
-    val reminders: List<LocalTime> = listOf(),
-    val remindersError: Boolean = false,
-    val otherUnitInput: String = "",
-    val otherUnitError: Boolean = false,
-    val popularEmojis: List<String> = listOf("💧", "🏃", "📖", "🧘", "🙏", "🍎", "😴"),
-    val availableUnits: List<String> = listOf("Liters", "Minutes", "Hours", "Pages", "Glasses", "Kilometers", "Miles", "Other")
-)
 

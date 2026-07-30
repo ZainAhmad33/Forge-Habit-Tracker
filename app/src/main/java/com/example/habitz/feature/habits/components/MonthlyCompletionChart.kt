@@ -75,7 +75,7 @@ fun CurrentMonthCompletion(
                     fontWeight = FontWeight(700)
                 )
                 Text(
-                    text = "Your daily completion vs ${target} ${unit} goal.",
+                    text = "Your daily completion vs ${target} ${unit} goal",
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -83,7 +83,7 @@ fun CurrentMonthCompletion(
             val totalCompletion = data.filter { it.completedQuantity >= target }.size
             val effectiveDays = data.count { !it.isSkipDay }
             Text(
-                text = "$totalCompletion/$effectiveDays days on goal.",
+                text = "$totalCompletion/$effectiveDays days on goal",
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -243,7 +243,7 @@ fun MonthlyCompletionChart(
                     end = Offset(chartWidth, targetBarTop),
                     strokeWidth = 2.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(
-                        intervals = floatArrayOf(12.dp.toPx(), 8.dp.toPx()),
+                        intervals = floatArrayOf(6.dp.toPx(), 4.dp.toPx()),
                         phase = 0f
                     )
                 )

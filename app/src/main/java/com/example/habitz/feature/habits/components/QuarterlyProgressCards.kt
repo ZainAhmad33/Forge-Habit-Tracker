@@ -1,15 +1,22 @@
 package com.example.habitz.feature.habits.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialShapes.Companion.Cookie12Sided
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.habitz.core.designsystem.component.CustomShapeProgress
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.core.services.interfaces.MonthlyRate
+import com.example.habitz.core.uiEntities.ProgressShape
+import com.example.habitz.core.uiEntities.ProgressShapeEnumResolver
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun QuarterlyProgressCards(rates: List<MonthlyRate>) {
     Row(
@@ -18,27 +25,28 @@ fun QuarterlyProgressCards(rates: List<MonthlyRate>) {
     ) {
         rates.forEach { rate ->
             Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+                modifier = Modifier
+                    .weight(1f, fill = false) // fill = false lets it be smaller than available weight space
+                    .widthIn(max = 120.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+//                    modifier = Modifier
+//                        .padding(0.dp, 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(text = rate.monthName, style = MaterialTheme.typography.labelMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box(contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            progress = { rate.rate },
-                            modifier = Modifier.size(40.dp),
-                            strokeWidth = 4.dp,
-                            color = HabitzTheme.colors.success
-                        )
-                        Text(
-                            text = "${(rate.rate * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+                    Spacer(Modifier.size(8.dp))
+                    Text(text = rate.monthName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight(700))
+                    val shape =  ProgressShapeEnumResolver[ProgressShape.getRandom()] ?: Cookie12Sided.toShape()
+                    val successColor = HabitzTheme.colors.success
+                    val errorColor = MaterialTheme.colorScheme.error
+                    val color = if (rate.rate >= 0.90f) successColor else errorColor
+                    CustomShapeProgress(
+                        progress = rate.rate,
+                        shape = shape,
+                        progressColor = color,
+                        strokeWidth = 8.dp
+                    )
                 }
             }
         }
@@ -50,9 +58,9 @@ fun QuarterlyProgressCards(rates: List<MonthlyRate>) {
 fun QuarterlyProgressCardsPreview() {
     HabitzTheme {
         val rates = listOf(
-            MonthlyRate("May", 0.75f),
-            MonthlyRate("Jun", 0.90f),
-            MonthlyRate("Jul", 0.60f)
+            MonthlyRate("May", 0.96f),
+            MonthlyRate("June", 0.90f),
+//            MonthlyRate("July", 0.60f)
         )
         QuarterlyProgressCards(rates = rates)
     }
