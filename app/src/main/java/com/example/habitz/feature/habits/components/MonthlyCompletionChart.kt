@@ -54,7 +54,6 @@ fun CurrentMonthCompletion(
     data: List<DailyCompletion>,
     target: Int,
     unit: String,
-    totalDays: Int,
     modifier: Modifier = Modifier
 ){
     Column(
@@ -82,8 +81,9 @@ fun CurrentMonthCompletion(
                 )
             }
             val totalCompletion = data.filter { it.completedQuantity >= target }.size
+            val effectiveDays = data.count { !it.isSkipDay }
             Text(
-                text = "${totalCompletion}/${totalDays} days on goal.",
+                text = "$totalCompletion/$effectiveDays days on goal.",
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -126,6 +126,7 @@ fun MonthlyCompletionChart(
                 ) {
                     LegendItem(color = HabitzTheme.colors.success, label = "On Goal")
                     LegendItem(color = MaterialTheme.colorScheme.error, label = "Below Goal")
+                    LegendItem(color = MaterialTheme.colorScheme.outlineVariant, label = "Skip Day")
                 }
             }
 
@@ -137,6 +138,7 @@ fun MonthlyCompletionChart(
 
             val successColor = HabitzTheme.colors.success
             val errorColor = MaterialTheme.colorScheme.error
+            val skipColor = MaterialTheme.colorScheme.outlineVariant
             val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
             val targetLineColor = MaterialTheme.colorScheme.outline
             val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
@@ -181,21 +183,29 @@ fun MonthlyCompletionChart(
                 // 3. Draw Bars and X-Axis Labels
                 val lastDay: Int = YearMonth.now().lengthOfMonth()
                 val markerDays = listOf(1, 5, 10, 15, 20, 25, lastDay).distinct()
+
+                val targetRatio = (target.toFloat() / yMax).coerceIn(0f, 1f)
+                val targetBarHeight = chartHeight * targetRatio
+                val targetBarTop = chartHeight - targetBarHeight
                 
                 data.forEachIndexed { index, item ->
                     val isBelowGoal = item.completedQuantity < target
-                    val barColor = if (isBelowGoal) errorColor else successColor
+                    val barColor = when {
+                        item.isSkipDay -> skipColor
+                        isBelowGoal -> errorColor
+                        else -> successColor
+                    }
                     val xOffset = index * (barWidth + spacingPx)
 
                     val ratio = (item.completedQuantity.toFloat() / yMax).coerceIn(0f, 1f)
                     val barHeight = (chartHeight * ratio).coerceAtLeast(4.dp.toPx())
                     val barTop = chartHeight - barHeight
 
-                    // Track
+                    // Track (Capped at Goal height)
                     drawRoundRect(
                         color = trackColor,
-                        topLeft = Offset(xOffset, 0f),
-                        size = Size(barWidth, chartHeight),
+                        topLeft = Offset(xOffset, targetBarTop),
+                        size = Size(barWidth, targetBarHeight),
                         cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
                     )
 
@@ -224,13 +234,10 @@ fun MonthlyCompletionChart(
                 }
 
                 // 4. Target Line and Goal Marker
-                val targetRatio = (target.toFloat() / yMax).coerceIn(0f, 1f)
-                val targetY = chartHeight - (chartHeight * targetRatio)
-
                 drawLine(
                     color = targetLineColor,
-                    start = Offset(0f, targetY),
-                    end = Offset(chartWidth, targetY),
+                    start = Offset(0f, targetBarTop),
+                    end = Offset(chartWidth, targetBarTop),
                     strokeWidth = 2.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(
                         intervals = floatArrayOf(12.dp.toPx(), 8.dp.toPx()),
@@ -248,7 +255,7 @@ fun MonthlyCompletionChart(
                     textLayoutResult = goalLayoutResult,
                     topLeft = Offset(
                         x = chartWidth - goalLayoutResult.size.width - 4.dp.toPx(),
-                        y = targetY - goalLayoutResult.size.height - 6.dp.toPx()
+                        y = targetBarTop - goalLayoutResult.size.height - 6.dp.toPx()
                     )
                 )
             }
@@ -284,9 +291,10 @@ fun CurrentMonthCompletionPreview() {
         val data = (1..lastDay).map { day ->
             DailyCompletion(
                 day = day,
-                completedQuantity = Random.nextInt(from = 2400, until = 2701),
+                completedQuantity = Random.nextInt(from = 2000, until = 2501),
+                isSkipDay = Random.nextInt(0, 20) > 15
             )
         }
-        CurrentMonthCompletion(data = data, target, "ML", 31)
+        CurrentMonthCompletion(data = data, target, "ML")
     }
 }

@@ -17,7 +17,8 @@ data class HabitStats(
 
 data class DailyCompletion(
     val day: Int,
-    val completedQuantity: Int
+    val completedQuantity: Int,
+    val isSkipDay: Boolean = false
 )
 
 data class MonthlyRate(

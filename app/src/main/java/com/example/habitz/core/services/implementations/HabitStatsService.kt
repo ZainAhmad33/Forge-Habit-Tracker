@@ -1,6 +1,8 @@
 package com.example.habitz.core.services.implementations
 
+import com.example.habitz.core.database.entity.Habit
 import com.example.habitz.core.database.entity.HabitActivity
+import com.example.habitz.core.database.entity.HabitFrequency
 import com.example.habitz.core.database.entity.Reward
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.DailyCompletion
@@ -29,7 +31,7 @@ class HabitStatsService @Inject constructor(
             val bestStreak = calculateBestStreak(habitActivities, habit.completionTargetPerDay)
             val overallRate = calculateOverallRate(habitActivities, habit.completionTargetPerDay, habit.createdAt)
             
-            val monthlyData = calculateMonthlyCompletion(habitActivities, habit.completionTargetPerDay)
+            val monthlyData = calculateMonthlyCompletion(habitActivities, habit)
             val quarterlyData = calculateQuarterlyRates(habitActivities, habit.completionTargetPerDay)
             val rewards = generateRewards(currentStreak, bestStreak)
 
@@ -103,22 +105,67 @@ class HabitStatsService @Inject constructor(
         return if (daysSinceCreation > 0) successfulDays.toFloat() / daysSinceCreation else 0f
     }
 
-    private fun calculateMonthlyCompletion(activities: List<HabitActivity>, target: Int): List<DailyCompletion> {
+    private fun calculateMonthlyCompletion(activities: List<HabitActivity>, habit: Habit): List<DailyCompletion> {
+        val target = habit.completionTargetPerDay
         val cal = Calendar.getInstance()
         val currentMonth = cal.get(Calendar.MONTH)
         val currentYear = cal.get(Calendar.YEAR)
         
         val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-        val activitiesByDay = activities.groupBy { 
-            val c = Calendar.getInstance().apply { time = it.createdAt }
-            if (c.get(Calendar.MONTH) == currentMonth && c.get(Calendar.YEAR) == currentYear) {
-                c.get(Calendar.DAY_OF_MONTH)
-            } else -1
-        }
+        
+        val activitiesByDate = activities.groupBy { truncateDate(it.createdAt) }
+        val successfulDaysByDate = activitiesByDate.filter { it.value.sumOf { a -> a.quantity } >= target }.keys
 
         return (1..daysInMonth).map { day ->
-            val sum = activitiesByDay[day]?.sumOf { it.quantity } ?: 0
-            DailyCompletion(day, sum)
+            val dateCal = Calendar.getInstance().apply {
+                set(Calendar.YEAR, currentYear)
+                set(Calendar.MONTH, currentMonth)
+                set(Calendar.DAY_OF_MONTH, day)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val currentDate = dateCal.time
+            val sum = activitiesByDate[currentDate]?.sumOf { it.quantity } ?: 0
+            val isCompleted = sum >= target
+            
+            var isSkipDay = false
+            when (habit.frequencyType) {
+                HabitFrequency.EveryDay -> {
+                    isSkipDay = false
+                }
+                HabitFrequency.SpecificDays -> {
+                    // app day: 0=Mon, ..., 6=Sun
+                    val dayOfWeek = (dateCal.get(Calendar.DAY_OF_WEEK) + 5) % 7
+                    isSkipDay = !habit.trackedDays.contains(dayOfWeek)
+                }
+                HabitFrequency.DaysPerWeek -> {
+                    val weekCal = Calendar.getInstance().apply {
+                        time = currentDate
+                        firstDayOfWeek = Calendar.MONDAY
+                        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                    }
+                    val startOfWeek = truncateDate(weekCal.time)
+                    weekCal.add(Calendar.DATE, 6)
+                    val endOfWeek = truncateDate(weekCal.time)
+                    
+                    var weekCount = 0
+                    val countCal = Calendar.getInstance().apply { time = startOfWeek }
+                    while (!countCal.time.after(endOfWeek)) {
+                        if (successfulDaysByDate.contains(truncateDate(countCal.time))) {
+                            weekCount++
+                        }
+                        countCal.add(Calendar.DATE, 1)
+                    }
+                    
+                    if (weekCount == habit.numberOfTrackedDays && !isCompleted) {
+                        isSkipDay = true
+                    }
+                }
+            }
+            
+            DailyCompletion(day, sum, isSkipDay)
         }
     }
 

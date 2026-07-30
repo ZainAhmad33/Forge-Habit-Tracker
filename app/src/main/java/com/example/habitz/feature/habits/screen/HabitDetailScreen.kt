@@ -50,8 +50,7 @@ fun HabitDetailRoute(
         onBackClick = onBackClick,
         onEditClick = { uiState.habit?.id?.let { onEditClick(it.toString()) } },
         onMarkCompleted = { viewModel.markCompleted() },
-        onDeleteLog = { viewModel.deleteLog(it) },
-        activeDays = viewModel.totalActiveDays()
+        onDeleteLog = { viewModel.deleteLog(it) }
     )
 }
 
@@ -62,8 +61,7 @@ fun HabitDetailScreen(
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onMarkCompleted: () -> Unit,
-    onDeleteLog: (UUID) -> Unit,
-    activeDays: Int = 0
+    onDeleteLog: (UUID) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -124,7 +122,7 @@ fun HabitDetailScreen(
 
                 RewardsSection(stats.rewards)
 
-                CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit, activeDays)
+                CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit)
 
                 QuarterlyProgressCards(stats.quarterlyCompletionRates)
                 
