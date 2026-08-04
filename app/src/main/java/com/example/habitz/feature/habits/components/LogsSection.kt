@@ -2,6 +2,7 @@ package com.example.habitz.feature.habits.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -51,13 +52,19 @@ fun LogsSection(
                 modifier = Modifier.selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),// The gap between segmented items
             ) {
+
                 todayLogs.forEachIndexed { index, log ->
+                    val itemShapes = if (todayLogs.size == 1) {
+                        ListItemDefaults.shapes(shape = RoundedCornerShape(16.dp))
+                    } else {
+                        ListItemDefaults.segmentedShapes(index = index, count = todayLogs.size)
+                    }
                     SegmentedListItem(
                         selected = false,
                         enabled = true,
                         onClick = {},
                         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        shapes = ListItemDefaults.segmentedShapes(index = index, count = todayLogs.size),
+                        shapes = itemShapes,
                         leadingContent = { Icon(
                             imageVector = Icons.Rounded.CheckCircle,
                             contentDescription = null,

@@ -185,6 +185,9 @@ class HomeService @Inject constructor(
                     break
                 }
             }
+            else{
+                streak++
+            }
             date = date.minusDays(1)
         }
 

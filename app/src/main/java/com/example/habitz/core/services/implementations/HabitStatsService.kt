@@ -40,8 +40,8 @@ class HabitStatsService @Inject constructor(
 
             val target = habit.completionTargetPerDay
 
-            val currentStreak = calculateCurrentStreak(dailyQuantities, target)
-            val bestStreak = calculateBestStreak(dailyQuantities, target)
+            val currentStreak = calculateCurrentStreak(habit, dailyQuantities, target)
+            val bestStreak = calculateBestStreak(habit, dailyQuantities, target)
             val overallRate = calculateOverallRate(dailyQuantities, target, habit.createdAt.toLocalDate())
 
             val monthlyData = calculateMonthlyCompletion(dailyQuantities, habit)
@@ -94,21 +94,31 @@ class HabitStatsService @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
-    private fun calculateCurrentStreak(dailyTotals: Map<LocalDate, Int>, target: Int): Int {
-        val today = LocalDate.now()
-        val yesterday = today.minusDays(1)
+    private fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int): Int {
+        val firstDate = dailyTotals.keys.minOrNull() ?: return 0
+        val lastDate = LocalDate.now()
 
-        var current = if ((dailyTotals[today] ?: 0) >= target) today else yesterday
+        //var current = if ((dailyTotals[today] ?: 0) >= target) today else yesterday
         var streak = 0
 
-        while ((dailyTotals[current] ?: 0) >= target) {
-            streak++
+        var current = lastDate
+        while (!current.isBefore(firstDate)) {
+            if(isScheduledForDate(habit, current)) {
+                if ((dailyTotals[current] ?: 0) >= target) {
+                    streak++
+                } else {
+                    return streak
+                }
+            }
+            else{
+                streak++
+            }
             current = current.minusDays(1)
         }
         return streak
     }
 
-    private fun calculateBestStreak(dailyTotals: Map<LocalDate, Int>, target: Int): Int {
+    private fun calculateBestStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int): Int {
         if (dailyTotals.isEmpty()) return 0
 
         val firstDate = dailyTotals.keys.minOrNull() ?: return 0
@@ -119,16 +129,31 @@ class HabitStatsService @Inject constructor(
         var current = firstDate
 
         while (!current.isAfter(lastDate)) {
-            if ((dailyTotals[current] ?: 0) >= target) {
+            if(isScheduledForDate(habit, current)) {
+                if ((dailyTotals[current] ?: 0) >= target) {
+                    currentStreak++
+                    maxStreak = maxOf(maxStreak, currentStreak)
+                } else {
+                    currentStreak = 0
+                }
+            }
+            else{
                 currentStreak++
-                maxStreak = maxOf(maxStreak, currentStreak)
-            } else {
-                currentStreak = 0
             }
             current = current.plusDays(1)
         }
 
         return maxStreak
+    }
+
+    private fun isScheduledForDate(habit: Habit, date: LocalDate): Boolean {
+        val habitStartDate = habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        if (date.isBefore(habitStartDate)) return false
+
+        return when (habit.frequencyType) {
+            HabitFrequency.EveryDay, HabitFrequency.DaysPerWeek -> true
+            HabitFrequency.SpecificDays -> habit.trackedDays.contains(date.dayOfWeek.value - 1)
+        }
     }
 
     private fun calculateOverallRate(dailyTotals: Map<LocalDate, Int>, target: Int, createdDate: LocalDate): Float {
