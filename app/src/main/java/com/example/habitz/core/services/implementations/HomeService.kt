@@ -159,7 +159,7 @@ class HomeService @Inject constructor(
 
         return when (habit.frequencyType) {
             HabitFrequency.EveryDay, HabitFrequency.DaysPerWeek -> true
-            HabitFrequency.SpecificDays -> habit.trackedDays.contains(date.dayOfWeek.value)
+            HabitFrequency.SpecificDays -> habit.trackedDays.contains(date.dayOfWeek.value - 1)
         }
     }
 

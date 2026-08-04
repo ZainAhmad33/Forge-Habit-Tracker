@@ -29,15 +29,9 @@ class HabitStatsService @Inject constructor(
 ) : IHabitStatsService {
 
     override fun getHabitStats(habitId: UUID): Flow<HabitStats> {
-        // Recommend changing activityService to fetch ONLY this habit's activities:
-        // activityService.getActivitiesForHabit(habitId)
-        return activityService.getAllActivities().map { allActivities ->
+        return activityService.getActivitiesForHabit(habitId).map { habitActivities ->
             val habit = habitRepository.getHabitById(habitId)
                 ?: return@map HabitStats(0, 0, 0f, emptyList(), emptyList())
-
-            val habitActivities = allActivities
-                .filter { it.habitId == habitId }
-                .sortedByDescending { it.createdAt }
 
             // Pre-process quantities per date using modern LocalDate
             val dailyQuantities: Map<LocalDate, Int> = habitActivities

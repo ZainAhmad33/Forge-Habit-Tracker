@@ -10,7 +10,6 @@ data class HabitDetailUiState(
     val habit: Habit? = null,
     val stats: HabitStats? = null,
     val todayLogs: List<HabitActivity> = emptyList(),
-    val historicalLogs: List<HabitActivity> = emptyList(),
     val monthlyCalendarData: List<ActivityData> = emptyList(),
     val selectedCalendarMonth: YearMonth = YearMonth.now(),
     val isLoading: Boolean = true,

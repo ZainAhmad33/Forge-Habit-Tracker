@@ -27,6 +27,10 @@ class HabitActivityService @Inject constructor(
         return activityRepository.getActivitiesForHabits(habitIds, from, to)
     }
 
+    override fun getActivitiesForHabit(habitId: UUID): Flow<List<HabitActivity>> {
+        return activityRepository.getActivitiesForHabit(habitId)
+    }
+
     override fun getActivitiesForToday(habitIds: List<UUID>): Flow<List<HabitActivity>> {
         val calendar = Calendar.getInstance()
         

@@ -3,8 +3,6 @@ package com.example.habitz.feature.habits.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.habitz.core.database.entity.HabitFrequency
-import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
@@ -21,8 +19,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.time.YearMonth
-import java.util.Calendar
-import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
@@ -57,17 +53,12 @@ class HabitDetailViewModel @Inject constructor(
 
         combine(
             statsService.getHabitStats(habitId),
-            activityService.getActivitiesForToday(listOf(habitId)),
-            activityService.getActivitiesForHabits(listOf(habitId), habit.createdAt, Date())
-        ) { stats, todayLogs, allLogs ->
-            val historicalLogs = allLogs.filter { it.createdAt.time < getStartOfToday().time }
-                .sortedByDescending { it.createdAt }
-
+            activityService.getActivitiesForToday(listOf(habitId))
+        ) { stats, todayLogs ->
             _uiState.value = _uiState.value.copy(
                 habit = habit,
                 stats = stats,
                 todayLogs = todayLogs,
-                historicalLogs = historicalLogs,
                 isLoading = false
             )
         }.launchIn(viewModelScope)
@@ -105,41 +96,5 @@ class HabitDetailViewModel @Inject constructor(
         viewModelScope.launch {
             activityService.logHabitActivity(habitId, habit.completionTargetPerDay)
         }
-    }
-
-    private fun getStartOfToday(): Date {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.time
-    }
-
-    fun totalActiveDays(): Int{
-        val habit = _uiState.value.habit
-        if (habit?.frequencyType == HabitFrequency.EveryDay){
-            return YearMonth.now().lengthOfMonth()
-        }
-        else if(habit?.frequencyType == HabitFrequency.DaysPerWeek){
-            return (YearMonth.now().lengthOfMonth().toFloat()/7 * habit.numberOfTrackedDays.toFloat()).toInt()
-        }
-        else{
-            val daysTracked = habit?.trackedDays ?: listOf()
-            val currentYearMonth = YearMonth.now() // e.g., current month & year
-            val daysInMonth = currentYearMonth.lengthOfMonth() // e.g., 30, 31, 28, 29
-
-            // Convert list to Set for O(1) fast lookup
-            val trackedSet = daysTracked.toSet()
-
-            // Count how many days in the month fall on a tracked day
-            return (1..daysInMonth).count { day ->
-                val date = currentYearMonth.atDay(day)
-                // date.dayOfWeek.value returns 1 (Mon) through 7 (Sun)
-                date.dayOfWeek.value in trackedSet
-            }
-        }
-
-        return 0
     }
 }

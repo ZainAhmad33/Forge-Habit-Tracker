@@ -32,6 +32,12 @@ class InMemoryHabitActivityRepository @Inject constructor() : IHabitActivityRepo
         }
     }
 
+    override fun getActivitiesForHabit(habitId: UUID): Flow<List<HabitActivity>> {
+        return _activities.asStateFlow().map { list ->
+            list.filter { it.habitId == habitId }
+        }
+    }
+
     override fun getAllActivities(): Flow<List<HabitActivity>> {
         return _activities.asStateFlow()
     }
