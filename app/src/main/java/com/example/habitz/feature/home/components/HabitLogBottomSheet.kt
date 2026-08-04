@@ -83,7 +83,7 @@ fun HabitLogBottomSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Goal: ${habit.scheduleLabel}",
+                        text = "${habit.quantityLoggedToday} / ${habit.scheduleLabel}",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
