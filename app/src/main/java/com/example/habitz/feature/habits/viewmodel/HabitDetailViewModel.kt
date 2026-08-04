@@ -10,11 +10,15 @@ import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
 import com.example.habitz.feature.habits.state.HabitDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.util.Calendar
@@ -22,6 +26,7 @@ import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -36,8 +41,11 @@ class HabitDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HabitDetailUiState())
     val uiState: StateFlow<HabitDetailUiState> = _uiState.asStateFlow()
 
+    private val _selectedMonth = MutableStateFlow(YearMonth.now())
+
     init {
         loadHabitData()
+        observeMonthlyData()
     }
 
     private fun loadHabitData() {
@@ -63,6 +71,27 @@ class HabitDetailViewModel @Inject constructor(
                 isLoading = false
             )
         }.launchIn(viewModelScope)
+    }
+
+    private fun observeMonthlyData() {
+        _selectedMonth
+            .flatMapLatest { month ->
+                // Fetch 4 months ending at the selected month
+                val startMonth = month.minusMonths(3)
+                statsService.getRangeActivityData(habitId, startMonth, 4)
+                    .map { data -> month to data }
+            }
+            .onEach { (month, data) ->
+                _uiState.value = _uiState.value.copy(
+                    selectedCalendarMonth = month,
+                    monthlyCalendarData = data
+                )
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onMonthChanged(month: YearMonth) {
+        _selectedMonth.value = month
     }
 
     fun deleteLog(activityId: UUID) {

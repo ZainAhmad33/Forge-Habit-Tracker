@@ -9,12 +9,14 @@ import com.example.habitz.core.services.interfaces.HabitStats
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
 import com.example.habitz.core.services.interfaces.MonthlyRate
+import com.example.habitz.core.uiEntities.ActivityData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import java.util.Date
@@ -59,6 +61,43 @@ class HabitStatsService @Inject constructor(
                 quarterlyCompletionRates = quarterlyData
             )
         }.flowOn(Dispatchers.IO) // 👈 Critical: Shift calculations off the main thread
+    }
+
+    override fun getMonthlyActivityData(habitId: UUID, yearMonth: YearMonth): Flow<List<ActivityData>> {
+        return getRangeActivityData(habitId, yearMonth, 1)
+    }
+
+    override fun getRangeActivityData(habitId: UUID, startMonth: YearMonth, monthCount: Int): Flow<List<ActivityData>> {
+        val startDate = startMonth.atDay(1)
+        val endDate = startMonth.plusMonths(monthCount.toLong() - 1).atEndOfMonth()
+
+        val startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+        val endInstant = endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
+
+        return activityService.getActivitiesForHabits(
+            habitIds = listOf(habitId),
+            from = Date.from(startInstant),
+            to = Date.from(endInstant)
+        ).map { activities ->
+            val habit = habitRepository.getHabitById(habitId) ?: return@map emptyList()
+            val target = habit.completionTargetPerDay
+
+            val dailyQuantities = activities
+                .groupBy { it.createdAt.toLocalDate() }
+                .mapValues { it.value.sumOf { act -> act.quantity } }
+
+            val allData = mutableListOf<ActivityData>()
+            for (i in 0 until monthCount) {
+                val currentMonth = startMonth.plusMonths(i.toLong())
+                (1..currentMonth.lengthOfMonth()).forEach { day ->
+                    val date = currentMonth.atDay(day)
+                    val quantity = dailyQuantities[date] ?: 0
+                    val percentage = if (target > 0) (quantity * 100) / target else 0
+                    allData.add(ActivityData(date, percentage))
+                }
+            }
+            allData
+        }.flowOn(Dispatchers.IO)
     }
 
     private fun calculateCurrentStreak(dailyTotals: Map<LocalDate, Int>, target: Int): Int {

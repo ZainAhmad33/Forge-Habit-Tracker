@@ -37,6 +37,7 @@ import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HabitFrequency
 import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.database.entity.Reward
+import com.example.habitz.core.designsystem.component.ActivityMonthlyPager
 import com.example.habitz.core.designsystem.theme.HabitzTheme
 import com.example.habitz.core.services.interfaces.DailyCompletion
 import com.example.habitz.core.services.interfaces.HabitStats
@@ -45,6 +46,7 @@ import com.example.habitz.core.uiEntities.ProgressShape
 import com.example.habitz.feature.habits.components.AdditionalDetailsSection
 import com.example.habitz.feature.habits.components.CurrentMonthCompletion
 import com.example.habitz.feature.habits.components.HabitDetailHeader
+import com.example.habitz.feature.habits.components.HistoricalActivitiesSection
 import com.example.habitz.feature.habits.components.LogsSection
 import com.example.habitz.feature.habits.components.QuarterlyProgressCards
 import com.example.habitz.feature.habits.components.SkipDaysInfoSection
@@ -68,7 +70,8 @@ fun HabitDetailRoute(
         onBackClick = onBackClick,
         onEditClick = { uiState.habit?.id?.let { onEditClick(it.toString()) } },
         onMarkCompleted = { viewModel.markCompleted() },
-        onDeleteLog = { viewModel.deleteLog(it) }
+        onDeleteLog = { viewModel.deleteLog(it) },
+        onMonthChanged = { viewModel.onMonthChanged(it) }
     )
 }
 
@@ -79,7 +82,8 @@ fun HabitDetailScreen(
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onMarkCompleted: () -> Unit,
-    onDeleteLog: (UUID) -> Unit
+    onDeleteLog: (UUID) -> Unit,
+    onMonthChanged: (YearMonth) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -152,6 +156,12 @@ fun HabitDetailScreen(
                     unit = if (habit.habitType == HabitType.Quantity) habit.targetUnit else ""
                 )
 
+                HistoricalActivitiesSection(
+                    currentMonth = uiState.selectedCalendarMonth,
+                    monthlyActivities = uiState.monthlyCalendarData,
+                    onMonthChanged = onMonthChanged
+                )
+
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs
             }
         }
@@ -207,7 +217,8 @@ fun HabitDetailScreenPreview() {
             onBackClick = {},
             onEditClick = {},
             onMarkCompleted = {},
-            onDeleteLog = {}
+            onDeleteLog = {},
+            onMonthChanged = {}
         )
     }
 }
