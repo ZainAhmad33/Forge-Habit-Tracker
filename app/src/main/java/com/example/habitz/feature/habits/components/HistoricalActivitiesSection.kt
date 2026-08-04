@@ -9,10 +9,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.habitz.core.designsystem.component.ActivityMonthlyPager
 import com.example.habitz.core.uiEntities.ActivityData
+import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
 fun HistoricalActivitiesSection(
+    startDate: LocalDate,
     currentMonth: YearMonth,
     monthlyActivities: List<ActivityData>,
     onMonthChanged: (YearMonth) -> Unit
@@ -26,10 +28,12 @@ fun HistoricalActivitiesSection(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight(700)
         )
+
+        ActivityMonthlyPager(
+            startDate = startDate,
+            currentMonth = currentMonth,
+            monthlyActivities = monthlyActivities,
+            onMonthChanged = onMonthChanged
+        )
     }
-    ActivityMonthlyPager(
-        currentMonth,
-        monthlyActivities,
-        onMonthChanged
-    )
 }

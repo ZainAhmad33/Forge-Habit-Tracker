@@ -56,6 +56,7 @@ fun ActivityCalendar(
     activities: List<ActivityData>,
     modifier: Modifier = Modifier,
     showLabels: Boolean = true,
+    minDate: LocalDate? = null,
     maxDate: LocalDate? = null
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -161,6 +162,7 @@ fun ActivityCalendar(
 
                     if (yearMonths.none { YearMonth.from(date) == it }) continue
                     if (maxDate != null && date.isAfter(maxDate)) continue
+                    if (minDate != null && date.isBefore(minDate)) continue
 
                     val activity = activityMap[date]
                     val color = if (activity != null && activity.percentage > 0) {
@@ -205,20 +207,34 @@ fun ActivityCalendar(
  */
 @Composable
 fun ActivityMonthlyPager(
+    startDate: LocalDate,
     currentMonth: YearMonth,
     monthlyActivities: List<ActivityData>,
     onMonthChanged: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
     monthsPerPage: Int = 3
 ) {
-    // We'll use a large number of pages and map the center to currentMonth
-    val initialMonth = remember { currentMonth }
-    val pageCount = 240 // 20 years
-    val initialPage = pageCount / 2
+    val today = remember { LocalDate.now() }
+    val todayMonth = remember { YearMonth.now() }
+    
+    val totalMonths = remember(startDate, todayMonth) {
+        ChronoUnit.MONTHS.between(
+            startDate.withDayOfMonth(1),
+            todayMonth.atDay(1)
+        ).toInt() + 1
+    }
+    
+    val pageCount = remember(totalMonths, monthsPerPage) {
+        (totalMonths + monthsPerPage - 1) / monthsPerPage
+    }
+    
+    val initialPage = remember(pageCount) { (pageCount - 1).coerceAtLeast(0) }
     val pagerState = rememberPagerState(initialPage = initialPage) { pageCount }
 
     LaunchedEffect(pagerState.currentPage) {
-        val selectedMonth = initialMonth.plusMonths((pagerState.currentPage - initialPage).toLong() * monthsPerPage)
+        // We want the last page to end at todayMonth
+        val offsetFromEnd = (pageCount - 1) - pagerState.currentPage
+        val selectedMonth = todayMonth.minusMonths((offsetFromEnd * monthsPerPage).toLong())
         onMonthChanged(selectedMonth)
     }
     Card(
@@ -231,7 +247,8 @@ fun ActivityMonthlyPager(
             pageSpacing = 0.dp, // No spacing for continuous look
             pageSize = PageSize.Fill // Fill width, we'll pass multiple months to one ActivityCalendar
         ) { page ->
-            val endMonth = initialMonth.plusMonths((page - initialPage).toLong() * monthsPerPage)
+            val offsetFromEnd = (pageCount - 1) - page
+            val endMonth = todayMonth.minusMonths((offsetFromEnd * monthsPerPage).toLong())
             val yearMonthsToShow = (0 until monthsPerPage).map {
                 endMonth.minusMonths((monthsPerPage - 1 - it).toLong())
             }
@@ -248,7 +265,8 @@ fun ActivityMonthlyPager(
                 activities = displayActivities,
                 modifier = Modifier.fillMaxWidth(),
                 showLabels = true,
-                maxDate = LocalDate.now()
+                minDate = startDate,
+                maxDate = today
             )
         }
     }
@@ -270,6 +288,7 @@ fun ActivityMonthlyPagerPreview() {
             }
         }
         ActivityMonthlyPager(
+            startDate = currentMonth.minusMonths(6).atDay(1),
             currentMonth = currentMonth,
             monthlyActivities = dummyData,
             onMonthChanged = {},

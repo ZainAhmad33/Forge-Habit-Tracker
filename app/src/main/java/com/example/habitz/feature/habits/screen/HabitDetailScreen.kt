@@ -157,6 +157,7 @@ fun HabitDetailScreen(
                 )
 
                 HistoricalActivitiesSection(
+                    startDate = habit.createdAt.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate(),
                     currentMonth = uiState.selectedCalendarMonth,
                     monthlyActivities = uiState.monthlyCalendarData,
                     onMonthChanged = onMonthChanged
