@@ -265,11 +265,11 @@ private fun HomeScreenPreview() {
             listOf(
                 HomeHabit(
                     "1", "Water", HabitCategory.Health, "2L", 5, 50, false, "💧",
-                    ProgressShape.Circle, HabitType.Quantity, true
+                    ProgressShape.Circle, HabitType.Quantity, true, 1000
                 ),
                 HomeHabit(
                     "2", "Read", HabitCategory.Productivity, "20p", 3, 0, false, "📚",
-                    ProgressShape.Arch, HabitType.Quantity, false
+                    ProgressShape.Arch, HabitType.Quantity, false, 10
                 )
             )
         ),
