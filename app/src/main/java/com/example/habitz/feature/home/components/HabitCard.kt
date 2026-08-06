@@ -1,6 +1,5 @@
 package com.example.habitz.feature.home.components
 
-import android.widget.Toast
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -31,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -43,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.habitz.core.database.ServiceLocator
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.designsystem.component.CustomShapeProgress
@@ -136,7 +133,7 @@ fun HabitCard(
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = habit.scheduleLabel,
+                    text = habit.targetLabel,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -206,7 +203,7 @@ private fun HabitCardPreview() {
                 id = "1",
                 title = "Drink Water",
                 category = HabitCategory.Work, // Adjust based on your enum values
-                scheduleLabel = "Every Day",
+                targetLabel = "Every Day",
                 streakDays = 12,
                 progressPercent = 100,
                 isCompletedToday = false,

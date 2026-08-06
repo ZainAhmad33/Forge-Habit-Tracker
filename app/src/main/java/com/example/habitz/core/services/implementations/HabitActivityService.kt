@@ -5,7 +5,11 @@ import com.example.habitz.core.database.interfaces.IHabitActivityRepository
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.forEach
+import kotlinx.coroutines.flow.toList
 import java.util.Calendar
 import java.util.Date
 import java.util.UUID

@@ -3,7 +3,9 @@ package com.example.habitz.feature.habits.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.habitz.core.database.entity.HabitType
 import com.example.habitz.core.database.interfaces.IHabitRepository
+import com.example.habitz.core.services.implementations.HabitsService
 import com.example.habitz.core.services.interfaces.IHabitActivityService
 import com.example.habitz.core.services.interfaces.IHabitStatsService
 import com.example.habitz.feature.habits.state.HabitDetailUiState
@@ -26,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val habitRepository: IHabitRepository,
+    private val habitsService: HabitsService,
     private val statsService: IHabitStatsService,
     private val activityService: IHabitActivityService
 ) : ViewModel() {
@@ -45,7 +47,7 @@ class HabitDetailViewModel @Inject constructor(
     }
 
     private fun loadHabitData() {
-        val habit = habitRepository.getHabitById(habitId)
+        val habit = habitsService.getHabitById(habitId)
         if (habit == null) {
             _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
             return
@@ -93,8 +95,20 @@ class HabitDetailViewModel @Inject constructor(
 
     fun markCompleted() {
         val habit = _uiState.value.habit ?: return
-        viewModelScope.launch {
-            activityService.logHabitActivity(habitId, habit.completionTargetPerDay)
+        if (habit.habitType == HabitType.YesNo) {
+            if (!habitsService.isHabitCompletedToday(habit.id, habit.completionTargetPerDay)) {
+                viewModelScope.launch {
+                    activityService.logHabitActivity(habit.id, 1)
+                }
+            }
         }
+    }
+    fun onLogProgress(habitId: String, quantity: Int) {
+        viewModelScope.launch {
+            activityService.logHabitActivity(UUID.fromString(habitId), quantity)
+        }
+    }
+    fun getCompletedQuantity(): Int{
+        return habitsService.getTodaysCompletion(_uiState.value.habit?.id!!)
     }
 }

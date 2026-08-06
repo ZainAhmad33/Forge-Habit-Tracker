@@ -237,8 +237,14 @@ fun HomeScreen(
     }
 
     selectedHabitForLogging?.let { habit ->
+        val splitLabel = habit.targetLabel.split(" ")
         HabitLogBottomSheet(
-            habit = habit,
+            habit.image,
+            habit.title,
+            habit.category,
+            habit.quantityLoggedToday,
+            splitLabel.first().toInt(),
+            splitLabel.subList(1, splitLabel.size).joinToString(" "),
             onDismiss = onDismissBottomSheet,
             onLogProgress = { quantity ->
                 onLogProgress(habit.id, quantity)

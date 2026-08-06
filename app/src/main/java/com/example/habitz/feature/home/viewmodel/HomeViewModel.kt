@@ -83,6 +83,7 @@ class HomeViewModel @Inject constructor(
     fun onDismissBottomSheet() {
         _selectedHabitIdForLogging.value = null
     }
+
 }
 
 data class HomeDashboardUIState(

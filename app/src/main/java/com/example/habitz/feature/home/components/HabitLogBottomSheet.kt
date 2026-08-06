@@ -30,13 +30,19 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.designsystem.component.CounterInput
 import com.example.habitz.core.uiEntities.HomeHabit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HabitLogBottomSheet(
-    habit: HomeHabit,
+    emoji: String,
+    title: String,
+    category: HabitCategory,
+    quantityLoggedToday: Int,
+    target: Int,
+    unit: String,
     onDismiss: () -> Unit,
     onLogProgress: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -61,15 +67,15 @@ fun HabitLogBottomSheet(
         ) {
             // Habit Header
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = habit.image, fontSize = 48.sp)
+                Text(text = emoji, fontSize = 48.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = habit.title,
+                    text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = habit.category.label,
+                    text = category.label,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -83,19 +89,19 @@ fun HabitLogBottomSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${habit.quantityLoggedToday} / ${habit.scheduleLabel}",
+                        text = "${quantityLoggedToday} / ${target} ${unit}",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${habit.progressPercent}%",
+                        text = "${"%.2f".format((quantityLoggedToday.toFloat()/target))}%",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 LinearWavyProgressIndicator(
-                    progress = { habit.progressPercent / 100f },
+                    progress = { (quantityLoggedToday.toFloat()/target) },
                     modifier = Modifier
                         .fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,

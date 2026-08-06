@@ -7,7 +7,7 @@ data class HomeHabit(
     val id: String,
     val title: String,
     val category: HabitCategory,
-    val scheduleLabel: String, // target label
+    val targetLabel: String, // target label
     val streakDays: Int,
     val progressPercent: Int,
     val isCompletedToday: Boolean,

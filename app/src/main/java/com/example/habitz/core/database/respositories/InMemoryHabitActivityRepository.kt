@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
@@ -45,5 +47,16 @@ class InMemoryHabitActivityRepository @Inject constructor() : IHabitActivityRepo
     override fun deleteActivity(activityId: UUID) {
         dummyDatabase.activities = dummyDatabase.activities.filter { it.id != activityId }
         _activities.value = dummyDatabase.activities
+    }
+
+    override fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int> {
+        return dummyDatabase.activities
+            .filter { it.habitId == habitId && it.createdAt.after(from) && it.createdAt.before(to) }
+            .groupBy { activity ->
+                activity.createdAt.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+            }
+            .mapValues { (_, activities) -> activities.sumOf { it.quantity } }
     }
 }

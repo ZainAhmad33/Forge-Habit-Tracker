@@ -27,6 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +55,7 @@ import com.example.habitz.feature.habits.components.QuarterlyProgressCards
 import com.example.habitz.feature.habits.components.SkipDaysInfoSection
 import com.example.habitz.feature.habits.state.HabitDetailUiState
 import com.example.habitz.feature.habits.viewmodel.HabitDetailViewModel
+import com.example.habitz.feature.home.components.HabitLogBottomSheet
 import java.time.YearMonth
 import java.util.Date
 import java.util.UUID
@@ -71,7 +75,9 @@ fun HabitDetailRoute(
         onEditClick = { uiState.habit?.id?.let { onEditClick(it.toString()) } },
         onMarkCompleted = { viewModel.markCompleted() },
         onDeleteLog = { viewModel.deleteLog(it) },
-        onMonthChanged = { viewModel.onMonthChanged(it) }
+        onMonthChanged = { viewModel.onMonthChanged(it) },
+        getCompletionQuantity = viewModel::getCompletedQuantity,
+        onLogProgress = viewModel::onLogProgress
     )
 }
 
@@ -83,8 +89,11 @@ fun HabitDetailScreen(
     onEditClick: () -> Unit,
     onMarkCompleted: () -> Unit,
     onDeleteLog: (UUID) -> Unit,
-    onMonthChanged: (YearMonth) -> Unit
+    onMonthChanged: (YearMonth) -> Unit,
+    getCompletionQuantity: () -> Int,
+    onLogProgress: (String, Int) -> Unit
 ) {
+    var showBottomSheet by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -110,7 +119,14 @@ fun HabitDetailScreen(
                     Icon(Icons.Default.Edit, contentDescription = "Edit")
                 }
                 FloatingActionButton(
-                    onClick = onMarkCompleted,
+                    onClick = {
+                        if(uiState.habit!!.habitType != HabitType.YesNo){
+                            showBottomSheet = true
+                        }
+                        else{
+                            onMarkCompleted()
+                        }
+                    },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
@@ -120,11 +136,15 @@ fun HabitDetailScreen(
         }
     ) { padding ->
         if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (uiState.error != null) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(padding), contentAlignment = Alignment.Center) {
                 Text(text = uiState.error, color = MaterialTheme.colorScheme.error)
             }
         } else {
@@ -166,6 +186,22 @@ fun HabitDetailScreen(
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs
             }
         }
+    }
+    if(showBottomSheet){
+        val habit = uiState.habit!!
+        HabitLogBottomSheet(
+            habit.emoji,
+            habit.title,
+            habit.category,
+            getCompletionQuantity(),
+            habit.completionTargetPerDay,
+            habit.targetUnit,
+            onDismiss = { showBottomSheet = false },
+            onLogProgress = { quantity ->
+                onLogProgress(habit.id.toString(), quantity)
+                showBottomSheet = false
+            }
+        )
     }
 }
 
@@ -219,7 +255,9 @@ fun HabitDetailScreenPreview() {
             onEditClick = {},
             onMarkCompleted = {},
             onDeleteLog = {},
-            onMonthChanged = {}
+            onMonthChanged = {},
+            getCompletionQuantity = {100},
+            onLogProgress = {} as (String, Int) -> Unit
         )
     }
 }
