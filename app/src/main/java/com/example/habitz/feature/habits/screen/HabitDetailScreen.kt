@@ -32,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -94,13 +96,17 @@ fun HabitDetailScreen(
     onLogProgress: (String, Int) -> Unit
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Habit Details",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onBackClick()
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -112,7 +118,10 @@ fun HabitDetailScreen(
                 horizontalAlignment = Alignment.End
             ) {
                 SmallFloatingActionButton(
-                    onClick = onEditClick,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onEditClick()
+                    },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ) {
@@ -120,6 +129,7 @@ fun HabitDetailScreen(
                 }
                 FloatingActionButton(
                     onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         if(uiState.habit!!.habitType != HabitType.YesNo){
                             showBottomSheet = true
                         }
