@@ -1,6 +1,7 @@
 package com.example.habitz.feature.upserthabit.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.habitz.core.database.entity.HabitCategory
 import com.example.habitz.core.database.entity.HabitFrequency
 import com.example.habitz.core.database.entity.HabitType
@@ -10,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 import javax.inject.Inject
 
@@ -95,7 +97,9 @@ class UpsertHabitViewModel @Inject constructor(
 
     fun onCreateHabitClick(): Boolean {
         if (validate()) {
-            habitsService.createHabit(_uiState.value)
+            viewModelScope.launch {
+                habitsService.createHabit(_uiState.value)
+            }
             return true
         }
         return false

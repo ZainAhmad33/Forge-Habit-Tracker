@@ -12,6 +12,7 @@ import com.example.habitz.core.services.interfaces.MonthlyRate
 import com.example.habitz.core.uiEntities.ActivityData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
@@ -29,9 +30,11 @@ class HabitStatsService @Inject constructor(
 ) : IHabitStatsService {
 
     override fun getHabitStats(habitId: UUID): Flow<HabitStats> {
-        return activityService.getActivitiesForHabit(habitId).map { habitActivities ->
-            val habit = habitRepository.getHabitById(habitId)
-                ?: return@map HabitStats(0, 0, 0f, emptyList(), emptyList())
+        return combine(
+            activityService.getActivitiesForHabit(habitId),
+            habitRepository.getHabitFlow(habitId)
+        ) { habitActivities, habit ->
+            if (habit == null) return@combine HabitStats(0, 0, 0f, emptyList(), emptyList())
 
             // Pre-process quantities per date using modern LocalDate
             val dailyQuantities: Map<LocalDate, Int> = habitActivities
@@ -68,12 +71,15 @@ class HabitStatsService @Inject constructor(
         val startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
         val endInstant = endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
 
-        return activityService.getActivitiesForHabits(
-            habitIds = listOf(habitId),
-            from = Date.from(startInstant),
-            to = Date.from(endInstant)
-        ).map { activities ->
-            val habit = habitRepository.getHabitById(habitId) ?: return@map emptyList()
+        return combine(
+            activityService.getActivitiesForHabits(
+                habitIds = listOf(habitId),
+                from = Date.from(startInstant),
+                to = Date.from(endInstant)
+            ),
+            habitRepository.getHabitFlow(habitId)
+        ) { activities, habit ->
+            if (habit == null) return@combine emptyList()
             val target = habit.completionTargetPerDay
 
             val dailyQuantities = activities
@@ -126,9 +132,9 @@ class HabitStatsService @Inject constructor(
 
         var maxStreak = 0
         var currentStreak = 0
-        var current = firstDate
+        var current = lastDate
 
-        while (!current.isAfter(lastDate)) {
+        while (!current.isBefore(firstDate)) {
             if(isScheduledForDate(habit, current)) {
                 if ((dailyTotals[current] ?: 0) >= target) {
                     currentStreak++
@@ -139,8 +145,9 @@ class HabitStatsService @Inject constructor(
             }
             else{
                 currentStreak++
+                maxStreak = maxOf(maxStreak, currentStreak)
             }
-            current = current.plusDays(1)
+            current = current.minusDays(1)
         }
 
         return maxStreak

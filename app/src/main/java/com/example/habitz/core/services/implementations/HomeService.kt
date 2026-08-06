@@ -35,9 +35,10 @@ class HomeService @Inject constructor(
     override fun getDashboardData(): Flow<HomeDashboardUIState> {
         return combine(
             habitRepository.getHabits(),
-            activityService.getAllActivities()
-        ) { habits, allActivities ->
-            val user = userRepository.getUserDetails()
+            activityService.getAllActivities(),
+            userRepository.getUserDetails(),
+            categoryRepository.getCategories()
+        ) { habits, allActivities, user, categories ->
             val todayDate = LocalDate.now()
             val zoneId = ZoneId.systemDefault()
 
@@ -72,7 +73,7 @@ class HomeService @Inject constructor(
 
             val totalStreak = calculatePerfectDayStreak(habits, activityMap, todayDate, zoneId)
             val habitSummary = createSummary(homeHabits, totalStreak)
-            val categories = categoryRepository.getCategories().distinct().map {
+            val categoryPills = categories.map {
                 CategoryPill(it, CategoryToImage[it] ?: "❓")
             }
 
@@ -80,10 +81,10 @@ class HomeService @Inject constructor(
 
             HomeDashboardUIState(
                 getDynamicGreeting(),
-                user.firstName,
+                user?.firstName ?: "User",
                 todayDate.format(formatter),
                 habitSummary,
-                categories,
+                categoryPills,
                 homeHabits
             )
         }

@@ -169,15 +169,18 @@ fun HomeScreen(
                         showAllCategoryChip = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    SectionHeader(
-                        title = "Today's habits",
-                        trailingText = "${uiState.todaysHabits.size} shown",
-                    )
-                    HabitGrid(
-                        habits = uiState.todaysHabits,
-                        onHabitCardClick = onHabitCardClick,
-                        onHabitDetailsClick = onHabitDetailsClick
-                    )
+
+                    if (uiState.todaysHabits.isNotEmpty()) {
+                        SectionHeader(
+                            title = "Today's habits",
+                            trailingText = "${uiState.todaysHabits.size} shown",
+                        )
+                        HabitGrid(
+                            habits = uiState.todaysHabits,
+                            onHabitCardClick = onHabitCardClick,
+                            onHabitDetailsClick = onHabitDetailsClick
+                        )
+                    }
 
                     if (uiState.otherHabits.isNotEmpty()) {
                         SectionHeader(

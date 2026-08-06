@@ -1,8 +1,5 @@
 package com.example.habitz.core.services.interfaces
 
-import com.example.habitz.core.database.entity.Habit
-import com.example.habitz.core.database.entity.HabitActivity
-import com.example.habitz.core.database.entity.Reward
 import com.example.habitz.core.uiEntities.ActivityData
 import kotlinx.coroutines.flow.Flow
 import java.time.YearMonth

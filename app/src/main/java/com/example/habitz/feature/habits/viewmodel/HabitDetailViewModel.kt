@@ -47,22 +47,21 @@ class HabitDetailViewModel @Inject constructor(
     }
 
     private fun loadHabitData() {
-        val habit = habitsService.getHabitById(habitId)
-        if (habit == null) {
-            _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
-            return
-        }
-
         combine(
+            habitsService.getHabitFlow(habitId),
             statsService.getHabitStats(habitId),
             activityService.getActivitiesForToday(listOf(habitId))
-        ) { stats, todayLogs ->
-            _uiState.value = _uiState.value.copy(
-                habit = habit,
-                stats = stats,
-                todayLogs = todayLogs,
-                isLoading = false
-            )
+        ) { habit, stats, todayLogs ->
+            if (habit == null) {
+                _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    habit = habit,
+                    stats = stats,
+                    todayLogs = todayLogs,
+                    isLoading = false
+                )
+            }
         }.launchIn(viewModelScope)
     }
 
@@ -95,9 +94,9 @@ class HabitDetailViewModel @Inject constructor(
 
     fun markCompleted() {
         val habit = _uiState.value.habit ?: return
-        if (habit.habitType == HabitType.YesNo) {
-            if (!habitsService.isHabitCompletedToday(habit.id, habit.completionTargetPerDay)) {
-                viewModelScope.launch {
+        viewModelScope.launch {
+            if (habit.habitType == HabitType.YesNo) {
+                if (!habitsService.isHabitCompletedToday(habit.id, habit.completionTargetPerDay)) {
                     activityService.logHabitActivity(habit.id, 1)
                 }
             }
@@ -108,7 +107,7 @@ class HabitDetailViewModel @Inject constructor(
             activityService.logHabitActivity(UUID.fromString(habitId), quantity)
         }
     }
-    fun getCompletedQuantity(): Int{
-        return habitsService.getTodaysCompletion(_uiState.value.habit?.id!!)
+    fun getCompletedQuantity(): Int {
+        return _uiState.value.todayLogs.sumOf { it.quantity }
     }
 }

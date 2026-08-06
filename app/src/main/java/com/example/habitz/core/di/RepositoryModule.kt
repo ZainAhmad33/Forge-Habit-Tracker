@@ -4,10 +4,10 @@ import com.example.habitz.core.database.interfaces.ICategoryRepository
 import com.example.habitz.core.database.interfaces.IHabitActivityRepository
 import com.example.habitz.core.database.interfaces.IHabitRepository
 import com.example.habitz.core.database.interfaces.IUserRepository
-import com.example.habitz.core.database.respositories.InMemoryCategoryRepository
-import com.example.habitz.core.database.respositories.InMemoryHabitActivityRepository
-import com.example.habitz.core.database.respositories.InMemoryIHabitRepository
-import com.example.habitz.core.database.respositories.InMemoryUserRepository
+import com.example.habitz.core.database.respositories.RoomCategoryRepository
+import com.example.habitz.core.database.respositories.RoomHabitActivityRepository
+import com.example.habitz.core.database.respositories.RoomHabitRepository
+import com.example.habitz.core.database.respositories.RoomUserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,24 +21,24 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindHabitRepository(
-        impl: InMemoryIHabitRepository
+        impl: RoomHabitRepository
     ): IHabitRepository
 
     @Binds
     @Singleton
     abstract fun bindHabitActivityRepository(
-        impl: InMemoryHabitActivityRepository
+        impl: RoomHabitActivityRepository
     ): IHabitActivityRepository
 
     @Binds
     @Singleton
     abstract fun bindCategoryRepository(
-        impl: InMemoryCategoryRepository
+        impl: RoomCategoryRepository
     ): ICategoryRepository
 
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        impl: InMemoryUserRepository
+        impl: RoomUserRepository
     ): IUserRepository
 }

@@ -11,5 +11,5 @@ interface IHabitActivityService {
     fun getActivitiesForToday(habitIds: List<UUID>): Flow<List<HabitActivity>>
     fun getActivitiesForHabit(habitId: UUID): Flow<List<HabitActivity>>
     fun getAllActivities(): Flow<List<HabitActivity>>
-    fun deleteHabitActivity(activityId: UUID)
+    suspend fun deleteHabitActivity(activityId: UUID)
 }

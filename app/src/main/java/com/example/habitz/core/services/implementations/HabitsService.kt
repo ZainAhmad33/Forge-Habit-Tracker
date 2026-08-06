@@ -11,6 +11,7 @@ import com.example.habitz.core.services.interfaces.IHabitsService
 import com.example.habitz.core.uiEntities.CategoryPill
 import com.example.habitz.core.uiEntities.ProgressShape
 import com.example.habitz.feature.upserthabit.state.UpsertHabitUiState
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
@@ -27,11 +28,15 @@ class HabitsService @Inject constructor(
             .map { CategoryPill(it, CategoryToImage[it] ?: "❓") }
     }
 
-    override fun getHabitById(habitId: UUID): Habit?{
+    override suspend fun getHabitById(habitId: UUID): Habit?{
         return habitRepository.getHabitById(habitId)
     }
 
-    override fun createHabit(habitForm: UpsertHabitUiState) {
+    override fun getHabitFlow(habitId: UUID): Flow<Habit?> {
+        return habitRepository.getHabitFlow(habitId)
+    }
+
+    override suspend fun createHabit(habitForm: UpsertHabitUiState) {
         val reminders = if (habitForm.remindersEnabled) habitForm.reminders else listOf()
         var numOfTrackedDays: Int
         if (habitForm.selectedFrequency == HabitFrequency.EveryDay)
@@ -77,13 +82,13 @@ class HabitsService @Inject constructor(
         habitRepository.createHabit(habit)
     }
 
-    fun isHabitCompletedToday(habitId: UUID, target: Int): Boolean{
+    suspend fun isHabitCompletedToday(habitId: UUID, target: Int): Boolean{
         val todayQuantity = getTodaysCompletion(habitId)
 
         return todayQuantity >= target
     }
 
-    fun getTodaysCompletion(habitId: UUID): Int{
+    suspend fun getTodaysCompletion(habitId: UUID): Int{
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now()
 

@@ -59,7 +59,7 @@ class HabitActivityService @Inject constructor(
         return activityRepository.getAllActivities()
     }
 
-    override fun deleteHabitActivity(activityId: UUID) {
+    override suspend fun deleteHabitActivity(activityId: UUID) {
         activityRepository.deleteActivity(activityId)
     }
 }
