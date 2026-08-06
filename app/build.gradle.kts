@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.habitz"
+    namespace = "com.example.forge"
     compileSdk = 36 // Cleaned up syntax for standard API levels
 
     defaultConfig {
-        applicationId = "com.example.habitz"
+        applicationId = "com.example.forge"
         minSdk = 31
         targetSdk = 36
         versionCode = 1

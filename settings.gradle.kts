@@ -17,5 +17,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Habitz"
+rootProject.name = "forge"
 include(":app")

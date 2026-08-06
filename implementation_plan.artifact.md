@@ -1,79 +1,60 @@
-# Room Database Integration Plan
+# App Rename Implementation Plan: Habitz to Forge
 
-Integrate Room as the primary database store for the Habitz project, replacing existing in-memory implementations.
+Rename the application from "Habitz" to "Forge" throughout the project, including display name, package name, class names, and themes.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> The migration will transition data storage from in-memory (volatile) to Room (persistent). Initial data currently in `dummyDatabase` will need to be seeded into Room if we want to preserve it for the first run.
+> [!WARNING]
+> This is a major refactor that changes the `applicationId`. If you have already deployed the "Habitz" app to a device or Play Store, the "Forge" app will be treated as a **different app**, and data from the old app will not be automatically accessible.
 
 ## Proposed Changes
 
-### Dependencies & Setup
+### 1. Visual Branding & Metadata
 
-#### [MODIFY] [libs.versions.toml](file:///C:/Users/zain4/GitProjects/Habitz/gradle/libs.versions.toml)
-- Add Room version and library definitions.
+#### [MODIFY] [strings.xml](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/res/values/strings.xml)
+- Change `app_name` from "Habitz" to "Forge".
 
 #### [MODIFY] [app/build.gradle.kts](file:///C:/Users/zain4/GitProjects/Habitz/app/build.gradle.kts)
-- Apply Room dependencies and KSP for annotation processing.
+- Change `namespace` to `com.example.forge`.
+- Change `applicationId` to `com.example.forge`.
+
+#### [MODIFY] [AndroidManifest.xml](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/AndroidManifest.xml)
+- Update `android:name` and theme references.
 
 ---
 
-### Core Database Layer
+### 2. Code Refactoring (Package & Classes)
 
-#### [NEW] [Converters.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/Converters.kt)
-- Type converters for `UUID`, `Date`, `LocalTime`, `List<LocalTime>`, `List<Int>`, and various Enums.
+#### [MODIFY] All Source Files
+- Update `package com.example.habitz...` to `package com.example.forge...`.
+- Update all imports referencing `com.example.habitz`.
 
-#### [NEW] [HabitzDatabase.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/HabitzDatabase.kt)
-- Define the Room database class with entities: `Habit`, `HabitActivity`, `User`, `Reward`.
+#### [RENAME] Classes
+- `HabitzApplication` -> `ForgeApplication`
+- `HabitzTheme` -> `ForgeTheme`
+- `HabitzDatabase` -> `ForgeDatabase`
+- `HabitzApp` -> `ForgeApp` (in MainActivity)
 
-#### [NEW] [DAOs](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/dao/)
-- `HabitDao`: CRUD for habits.
-- `HabitActivityDao`: CRUD for habit tracking logs.
-- `UserDao`: CRUD for user profile.
-- `RewardDao`: CRUD for rewards.
-
----
-
-### Entities Modification
-
-#### [MODIFY] [Habit.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/entity/Habit.kt)
-- Add `@Entity` and `@PrimaryKey` annotations.
-
-#### [MODIFY] [HabitActivity.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/entity/HabitActivity.kt)
-- Add `@Entity` and `@PrimaryKey` annotations.
-
-#### [MODIFY] [User.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/entity/User.kt)
-- Add `@Entity` and `@PrimaryKey` annotations. (Will need an ID if not present).
-
-#### [MODIFY] [Reward.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/entity/Reward.kt)
-- Add `@Entity` and `@PrimaryKey` annotations.
+#### [MOVE] Directory Structure
+- Move files from `app/src/main/java/com/example/habitz` to `app/src/main/java/com/example/forge`.
+- Move files from `app/src/androidTest/java/com/example/habitz` to `app/src/androidTest/java/com/example/forge`.
+- Move files from `app/src/test/java/com/example/habitz` to `app/src/test/java/com/example/forge`.
 
 ---
 
-### Repositories Implementation
+### 3. Database & Resources
 
-#### [NEW] [Room repositories](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/respositories/)
-- `RoomHabitRepository`: Implementation of `IHabitRepository` using `HabitDao`.
-- `RoomHabitActivityRepository`: Implementation of `IHabitActivityRepository` using `HabitActivityDao`.
-- `RoomUserRepository`: Implementation of `IUserRepository` using `UserDao`.
-
----
-
-### Dependency Injection
-
-#### [NEW] [DatabaseModule.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/di/DatabaseModule.kt)
-- Hilt module to provide `HabitzDatabase` and DAOs.
-
-#### [MODIFY] [RepositoryModule.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/di/RepositoryModule.kt)
-- Update `@Binds` to use Room-based repository implementations.
+#### [MODIFY] [HabitzDatabase.kt](file:///C:/Users/zain4/GitProjects/Habitz/app/src/main/java/com/example/habitz/core/database/HabitzDatabase.kt) (to be renamed)
+- Change `DATABASE_NAME` from "habitz_db" to "forge_db".
 
 ## Verification Plan
 
 ### Automated Tests
-- Create `HabitDaoTest` to verify Room operations.
-- Run `gradlew test` to ensure no regressions in existing logic.
+- Run `gradlew assembleDebug` to ensure the project compiles with the new package name.
+- Run existing unit tests to ensure no logic was broken.
 
 ### Manual Verification
-- Deploy the app and verify that habits are saved across app restarts.
-- Add a new habit and confirm it appears in the list after a restart.
+- Deploy to a device/emulator and verify:
+    - Launcher icon label is "Forge".
+    - App runs without crashing.
+    - Data persistence works with the new database name.

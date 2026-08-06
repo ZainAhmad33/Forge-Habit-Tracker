@@ -1,0 +1,111 @@
+package com.example.forge
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.forge.core.designsystem.theme.ForgeTheme
+import com.example.forge.feature.habits.screen.HabitDetailRoute
+import com.example.forge.feature.home.screen.HomeRoute
+import com.example.forge.feature.upserthabit.screen.NewHabitRoute
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            ForgeTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background // Ensure full screen dark surface
+                ) {
+                    ForgeApp()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ForgeApp() {
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable("home") {
+            HomeRoute(
+                onAddHabitClick = { navController.navigate("new_habit") },
+                onHabitDetailsClick = { habitId ->
+                    navController.navigate("habit_detail/$habitId")
+                }
+            )
+        }
+        composable(
+            route = "habit_detail/{habitId}",
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(400)
+                ) + fadeIn(animationSpec = tween(400))
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(400))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(400))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(400)
+                ) + fadeOut(animationSpec = tween(400))
+            }
+        ) {
+            HabitDetailRoute(
+                onBackClick = { navController.popBackStack() },
+                onEditClick = { habitId ->
+                    // Navigate to edit screen if available
+                    // navController.navigate("edit_habit/$habitId")
+                }
+            )
+        }
+        composable(
+                route = "new_habit",
+        // Slide up from bottom when navigating in
+        enterTransition = {
+            slideInVertically(
+                initialOffsetY = { fullHeight -> fullHeight },
+                animationSpec = tween(400)
+            )
+        },
+        // Slide down to bottom when pressing back or popping stack
+        popExitTransition = {
+            slideOutVertically(
+                targetOffsetY = { fullHeight -> fullHeight },
+                animationSpec = tween(400)
+            )
+        }) {
+            NewHabitRoute(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+    }
+}
