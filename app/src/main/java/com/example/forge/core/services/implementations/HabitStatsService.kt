@@ -108,6 +108,17 @@ class HabitStatsService @Inject constructor(
         var streak = 0
 
         var current = lastDate
+
+        if(isScheduledForDate(habit, current)){
+            if ((dailyTotals[current] ?: 0) >= target) {
+                streak++
+            }
+        }
+        else{
+            streak++
+        }
+        current = current.minusDays(1)
+
         while (!current.isBefore(firstDate)) {
             if(isScheduledForDate(habit, current)) {
                 if ((dailyTotals[current] ?: 0) >= target) {

@@ -97,7 +97,7 @@ fun HabitLogBottomSheet(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${"%.2f".format((quantityLoggedToday.toFloat()/target))}%",
+                        text = "${"%.2f".format((quantityLoggedToday.toFloat()/target) * 100f)}%",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
