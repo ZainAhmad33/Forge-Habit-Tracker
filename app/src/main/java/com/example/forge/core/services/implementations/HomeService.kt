@@ -8,6 +8,7 @@ import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.database.interfaces.IUserRepository
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHomeService
+import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.HomeHabit
@@ -28,26 +29,26 @@ class HomeService @Inject constructor(
     private val habitRepository: IHabitRepository,
     private val categoryRepository: ICategoryRepository,
     private val userRepository: IUserRepository,
-    private val activityService: IHabitActivityService
+    private val activityService: IHabitActivityService,
+    private val timeService: ITimeService
 ) : IHomeService {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getDashboardData(): Flow<HomeDashboardUIState> {
         return combine(
             habitRepository.getHabits(),
-            activityService.getAllActivities(),
+            activityService.getAllDailyQuantities(),
             userRepository.getUserDetails(),
-            categoryRepository.getCategories()
-        ) { habits, allActivities, user, categories ->
-            val todayDate = LocalDate.now()
+            categoryRepository.getCategories(),
+            timeService.getCurrentDateFlow()
+        ) { habits, dailyQuantities, user, categories, todayDate ->
             val zoneId = ZoneId.systemDefault()
 
-            // Pre-group activities by (HabitId -> (LocalDate -> Sum Quantity))
-            val activityMap: Map<UUID, Map<LocalDate, Int>> = allActivities
+            // Pre-group aggregated quantities by (HabitId -> (LocalDate -> Sum Quantity))
+            val activityMap: Map<UUID, Map<LocalDate, Int>> = dailyQuantities
                 .groupBy { it.habitId }
-                .mapValues { (_, activities) ->
-                    activities.groupBy { it.createdAt.toInstant().atZone(zoneId).toLocalDate() }
-                        .mapValues { (_, logs) -> logs.sumOf { it.quantity } }
+                .mapValues { (_, quantities) ->
+                    quantities.associate { it.day to it.totalQuantity }
                 }
 
             val homeHabits = habits.map { habit ->
@@ -120,7 +121,7 @@ class HomeService @Inject constructor(
         var date = today
 
         val limitDate = habits.minOfOrNull {
-            it.createdAt.toInstant().atZone(zoneId).toLocalDate()
+            timeService.toLocalDate(it.createdAt)
         } ?: today
 
         // Check today first
@@ -156,7 +157,7 @@ class HomeService @Inject constructor(
     }
 
     private fun isScheduledForDate(habit: Habit, date: LocalDate): Boolean {
-        val habitStartDate = habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        val habitStartDate = timeService.toLocalDate(habit.createdAt)
         if (date.isBefore(habitStartDate)) return false
 
         return when (habit.frequencyType) {
@@ -173,7 +174,7 @@ class HomeService @Inject constructor(
     ): Int {
         var streak = 0
         var date = today
-        val limitDate = habit.createdAt.toInstant().atZone(zoneId).toLocalDate()
+        val limitDate = timeService.toLocalDate(habit.createdAt)
 
         while (!date.isBefore(limitDate)) {
             val completed = (habitLogsMap[date] ?: 0) >= habit.completionTargetPerDay

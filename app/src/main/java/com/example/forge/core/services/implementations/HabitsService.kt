@@ -8,6 +8,7 @@ import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.database.interfaces.IHabitActivityRepository
 import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.interfaces.IHabitsService
+import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.feature.upserthabit.state.UpsertHabitUiState
@@ -20,7 +21,8 @@ import javax.inject.Inject
 
 class HabitsService @Inject constructor(
     private val habitRepository: IHabitRepository,
-    private val habitActivityRepository: IHabitActivityRepository
+    private val habitActivityRepository: IHabitActivityRepository,
+    private val timeService: ITimeService
 ) : IHabitsService {
     override fun getAllowedCategories(): List<CategoryPill> {
         return HabitCategory.entries
@@ -89,11 +91,10 @@ class HabitsService @Inject constructor(
     }
 
     suspend fun getTodaysCompletion(habitId: UUID): Int{
-        val zone = ZoneId.systemDefault()
-        val today = LocalDate.now()
+        val today = timeService.getCurrentDate()
 
-        val startOfDay = Date.from(today.atStartOfDay(zone).toInstant())
-        val endOfDay = Date.from(today.plusDays(1).atStartOfDay(zone).minusNanos(1).toInstant())
+        val startOfDay = timeService.toStartOfDayDate(today)
+        val endOfDay = timeService.toEndOfDayDate(today)
 
         val result = habitActivityRepository.getCompletedQuantityByRange(habitId, startOfDay, endOfDay)
 

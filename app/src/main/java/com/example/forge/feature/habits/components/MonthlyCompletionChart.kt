@@ -54,6 +54,7 @@ fun CurrentMonthCompletion(
     data: List<DailyCompletion>,
     target: Int,
     unit: String,
+    today: LocalDate,
     modifier: Modifier = Modifier
 ){
     Column(
@@ -65,7 +66,7 @@ fun CurrentMonthCompletion(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column{
-                val currentMonthFull = LocalDate.now()
+                val currentMonthFull = today
                     .month
                     .getDisplayName(TextStyle.FULL, Locale.getDefault())
                 Text(
@@ -75,7 +76,7 @@ fun CurrentMonthCompletion(
                     fontWeight = FontWeight(700)
                 )
                 Text(
-                    text = "Your daily completion vs ${target} ${unit} goal",
+                    text = "Your daily completion vs daily goal",
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -88,7 +89,7 @@ fun CurrentMonthCompletion(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
-        MonthlyCompletionChart(data, target)
+        MonthlyCompletionChart(data, target, today)
     }
 }
 
@@ -96,6 +97,7 @@ fun CurrentMonthCompletion(
 fun MonthlyCompletionChart(
     data: List<DailyCompletion>,
     target: Int,
+    today: LocalDate,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -181,18 +183,18 @@ fun MonthlyCompletionChart(
                 val cornerRadiusPx = 6.dp.toPx()
 
                 // 3. Draw Bars and X-Axis Labels
-                val lastDay: Int = YearMonth.now().lengthOfMonth()
+                val lastDay: Int = YearMonth.from(today).lengthOfMonth()
                 val markerDays = listOf(1, 5, 10, 15, 20, 25, lastDay).distinct()
 
-                val targetRatio = (target.toFloat() / yMax).coerceIn(0f, 1f)
-                val targetBarHeight = chartHeight * targetRatio
+                val targetBarRatio = (target.toFloat() / yMax).coerceIn(0f, 1f)
+                val targetBarHeight = chartHeight * targetBarRatio
                 val targetBarTop = chartHeight - targetBarHeight
 
-                val today = LocalDate.now().dayOfMonth
+                val todayDay = today.dayOfMonth
                 
                 data.forEachIndexed { index, item ->
                     val isBelowGoal = item.completedQuantity < target
-                    val isFutureItem = item.day > today
+                    val isFutureItem = item.day > todayDay
                     val barColor = when {
                         isFutureItem || item.isSkipDay -> skipColor
                         isBelowGoal -> errorColor
@@ -289,7 +291,8 @@ private fun LegendItem(color: Color, label: String) {
 @Composable
 fun CurrentMonthCompletionPreview() {
     ForgeTheme {
-        val lastDay: Int = YearMonth.now().lengthOfMonth()
+        val today = LocalDate.now()
+        val lastDay: Int = YearMonth.from(today).lengthOfMonth()
         val target = 2500
         val data = (1..lastDay).map { day ->
             DailyCompletion(
@@ -298,6 +301,6 @@ fun CurrentMonthCompletionPreview() {
                 isSkipDay = Random.nextInt(0, 20) > 15
             )
         }
-        CurrentMonthCompletion(data = data, target, "ML")
+        CurrentMonthCompletion(data = data, target, "ML", today)
     }
 }

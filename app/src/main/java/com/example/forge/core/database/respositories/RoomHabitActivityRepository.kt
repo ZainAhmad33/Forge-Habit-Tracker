@@ -3,9 +3,10 @@ package com.example.forge.core.database.respositories
 import com.example.forge.core.database.dao.HabitActivityDao
 import com.example.forge.core.database.entity.HabitActivity
 import com.example.forge.core.database.interfaces.IHabitActivityRepository
+import com.example.forge.core.database.pojo.DailyHabitQuantity
+import com.example.forge.core.services.interfaces.ITimeService
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
@@ -13,7 +14,8 @@ import javax.inject.Singleton
 
 @Singleton
 class RoomHabitActivityRepository @Inject constructor(
-    private val activityDao: HabitActivityDao
+    private val activityDao: HabitActivityDao,
+    private val timeService: ITimeService
 ) : IHabitActivityRepository {
 
     override suspend fun logActivity(activity: HabitActivity) {
@@ -32,16 +34,20 @@ class RoomHabitActivityRepository @Inject constructor(
         return activityDao.getAllActivities()
     }
 
+    override fun getAllDailyQuantities(): Flow<List<DailyHabitQuantity>> {
+        return activityDao.getAllDailyQuantities()
+    }
+
+    override fun getDailyQuantitiesForHabit(habitId: UUID): Flow<List<DailyHabitQuantity>> {
+        return activityDao.getDailyQuantitiesForHabit(habitId)
+    }
+
     override suspend fun deleteActivity(activityId: UUID) {
         activityDao.deleteActivityById(activityId)
     }
 
     override suspend fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int> {
-        val activities = activityDao.getActivitiesByRange(habitId, from, to)
-        return activities.groupBy { activity ->
-            activity.createdAt.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-        }.mapValues { entry -> entry.value.sumOf { it.quantity } }
+        return activityDao.getDailyQuantitiesByRange(habitId, from.time, to.time)
+            .associate { it.day to it.totalQuantity }
     }
 }

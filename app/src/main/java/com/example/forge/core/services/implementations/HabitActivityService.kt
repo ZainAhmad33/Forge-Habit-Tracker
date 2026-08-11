@@ -2,21 +2,20 @@ package com.example.forge.core.services.implementations
 
 import com.example.forge.core.database.entity.HabitActivity
 import com.example.forge.core.database.interfaces.IHabitActivityRepository
-import com.example.forge.core.database.interfaces.IHabitRepository
+import com.example.forge.core.database.pojo.DailyHabitQuantity
 import com.example.forge.core.services.interfaces.IHabitActivityService
+import com.example.forge.core.services.interfaces.ITimeService
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.forEach
-import kotlinx.coroutines.flow.toList
-import java.util.Calendar
+import kotlinx.coroutines.flow.flatMapLatest
+import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
 class HabitActivityService @Inject constructor(
-    private val activityRepository: IHabitActivityRepository
+    private val activityRepository: IHabitActivityRepository,
+    private val timeService: ITimeService
 ) : IHabitActivityService {
 
     override suspend fun logHabitActivity(habitId: UUID, quantity: Int) {
@@ -35,28 +34,26 @@ class HabitActivityService @Inject constructor(
         return activityRepository.getActivitiesForHabit(habitId)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getActivitiesForToday(habitIds: List<UUID>): Flow<List<HabitActivity>> {
-        val calendar = Calendar.getInstance()
-        
-        // Start of day
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val from = calendar.time
+        return timeService.getCurrentDateFlow().flatMapLatest { today ->
+            val from = timeService.toStartOfDayDate(today)
+            val to = timeService.toEndOfDayDate(today)
 
-        // End of day
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
-        val to = calendar.time
-
-        return activityRepository.getActivitiesForHabits(habitIds, from, to)
+            activityRepository.getActivitiesForHabits(habitIds, from, to)
+        }
     }
 
     override fun getAllActivities(): Flow<List<HabitActivity>> {
         return activityRepository.getAllActivities()
+    }
+
+    override fun getAllDailyQuantities(): Flow<List<DailyHabitQuantity>> {
+        return activityRepository.getAllDailyQuantities()
+    }
+
+    override fun getDailyQuantitiesForHabit(habitId: UUID): Flow<List<DailyHabitQuantity>> {
+        return activityRepository.getDailyQuantitiesForHabit(habitId)
     }
 
     override suspend fun deleteHabitActivity(activityId: UUID) {

@@ -4,10 +4,12 @@ import com.example.forge.core.services.implementations.HabitActivityService
 import com.example.forge.core.services.implementations.HabitsService
 import com.example.forge.core.services.implementations.HomeService
 import com.example.forge.core.services.implementations.HabitStatsService
+import com.example.forge.core.services.implementations.TimeService
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.IHomeService
+import com.example.forge.core.services.interfaces.ITimeService
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class ServiceModule {
     abstract fun bindHabitStatsService(
         impl: HabitStatsService
     ): IHabitStatsService
+
+    @Binds
+    @Singleton
+    abstract fun bindTimeService(
+        impl: TimeService
+    ): ITimeService
 }

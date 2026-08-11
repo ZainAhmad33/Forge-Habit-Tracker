@@ -4,6 +4,7 @@ import com.example.forge.core.database.entity.Habit
 import com.example.forge.core.database.entity.HabitActivity
 import com.example.forge.core.services.interfaces.HabitStats
 import com.example.forge.core.uiEntities.ActivityData
+import java.time.LocalDate
 import java.time.YearMonth
 
 data class HabitDetailUiState(
@@ -12,6 +13,8 @@ data class HabitDetailUiState(
     val todayLogs: List<HabitActivity> = emptyList(),
     val monthlyCalendarData: List<ActivityData> = emptyList(),
     val selectedCalendarMonth: YearMonth = YearMonth.now(),
+    val today: LocalDate = LocalDate.now(),
+    val startDate: LocalDate? = null,
     val isLoading: Boolean = true,
     val error: String? = null
 )

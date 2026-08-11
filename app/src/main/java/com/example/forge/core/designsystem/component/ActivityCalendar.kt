@@ -77,7 +77,8 @@ fun ActivityCalendar(
     val startDate = remember(yearMonths) {
         val firstMonth = yearMonths.firstOrNull() ?: YearMonth.now()
         val firstDay = firstMonth.atDay(1)
-        firstDay.minusDays(firstDay.dayOfWeek.value.toLong() % 7)
+        // Start on Monday of the first week
+        firstDay.minusDays((firstDay.dayOfWeek.value - 1).toLong())
     }
 
     val endDate = remember(yearMonths, maxDate) {
@@ -88,7 +89,8 @@ fun ActivityCalendar(
         } else {
             lastDayOfMonth
         }
-        end.plusDays(6 - (end.dayOfWeek.value.toLong() % 7))
+        // End on Sunday of the last week
+        end.plusDays((7 - end.dayOfWeek.value).toLong())
     }
 
     val totalWeeks = remember(startDate, endDate) {
@@ -128,10 +130,10 @@ fun ActivityCalendar(
             val monthLabelHeight = monthLabelHeightDp.toPx()
 
             if (showLabels) {
-                val daysOfWeek = listOf("Mon", "Wed", "Fri")
+                val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
                 daysOfWeek.forEachIndexed { index, day ->
                     val textLayoutResult = textMeasurer.measure(day, style = labelStyle)
-                    val yOffset = monthLabelHeight + (index * 2 + 1) * (squareSize + spacing) + (squareSize / 2) - (textLayoutResult.size.height / 2)
+                    val yOffset = monthLabelHeight + index * (squareSize + spacing) + (squareSize / 2) - (textLayoutResult.size.height / 2)
                     drawText(
                         textLayoutResult = textLayoutResult,
                         topLeft = Offset(0f, yOffset)
@@ -211,11 +213,11 @@ fun ActivityMonthlyPager(
     currentMonth: YearMonth,
     monthlyActivities: List<ActivityData>,
     onMonthChanged: (YearMonth) -> Unit,
+    today: LocalDate,
     modifier: Modifier = Modifier,
     monthsPerPage: Int = 3
 ) {
-    val today = remember { LocalDate.now() }
-    val todayMonth = remember { YearMonth.now() }
+    val todayMonth = YearMonth.from(today)
     
     val totalMonths = remember(startDate, todayMonth) {
         ChronoUnit.MONTHS.between(
@@ -276,7 +278,8 @@ fun ActivityMonthlyPager(
 @Composable
 fun ActivityMonthlyPagerPreview() {
     ForgeTheme {
-        val currentMonth = YearMonth.now()
+        val today = LocalDate.now()
+        val currentMonth = YearMonth.from(today)
         val monthsToGenerate = 3
         val dummyData = (0 until monthsToGenerate).flatMap { m ->
             val month = currentMonth.minusMonths(m.toLong())
@@ -292,6 +295,7 @@ fun ActivityMonthlyPagerPreview() {
             currentMonth = currentMonth,
             monthlyActivities = dummyData,
             onMonthChanged = {},
+            today = today,
             modifier = Modifier.padding(16.dp),
             monthsPerPage = monthsToGenerate
         )

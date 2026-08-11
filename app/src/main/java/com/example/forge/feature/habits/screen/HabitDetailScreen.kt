@@ -55,6 +55,7 @@ import com.example.forge.feature.habits.components.SkipDaysInfoSection
 import com.example.forge.feature.habits.state.HabitDetailUiState
 import com.example.forge.feature.habits.viewmodel.HabitDetailViewModel
 import com.example.forge.feature.home.components.HabitLogBottomSheet
+import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Date
 import java.util.UUID
@@ -171,7 +172,7 @@ fun HabitDetailScreen(
 
                 SkipDaysInfoSection(habit.skipDaysUnlocked, stats.currentStreak)
 
-                CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit)
+                CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit, uiState.today)
 
                 QuarterlyProgressCards(stats.quarterlyCompletionRates)
 
@@ -184,10 +185,11 @@ fun HabitDetailScreen(
                 )
 
                 HistoricalActivitiesSection(
-                    startDate = habit.createdAt.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate(),
+                    startDate = uiState.startDate ?: LocalDate.now(),
                     currentMonth = uiState.selectedCalendarMonth,
                     monthlyActivities = uiState.monthlyCalendarData,
-                    onMonthChanged = onMonthChanged
+                    onMonthChanged = onMonthChanged,
+                    today = uiState.today
                 )
 
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs

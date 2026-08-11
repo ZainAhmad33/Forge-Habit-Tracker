@@ -8,6 +8,7 @@ import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.implementations.HabitsService
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitStatsService
+import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.feature.habits.state.HabitDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +31,8 @@ class HabitDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val habitsService: HabitsService,
     private val statsService: IHabitStatsService,
-    private val activityService: IHabitActivityService
+    private val activityService: IHabitActivityService,
+    private val timeService: ITimeService
 ) : ViewModel() {
 
     private val habitIdString: String = checkNotNull(savedStateHandle["habitId"])
@@ -50,8 +52,9 @@ class HabitDetailViewModel @Inject constructor(
         combine(
             habitsService.getHabitFlow(habitId),
             statsService.getHabitStats(habitId),
-            activityService.getActivitiesForToday(listOf(habitId))
-        ) { habit, stats, todayLogs ->
+            activityService.getActivitiesForToday(listOf(habitId)),
+            timeService.getCurrentDateFlow()
+        ) { habit, stats, todayLogs, today ->
             if (habit == null) {
                 _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
             } else {
@@ -59,6 +62,8 @@ class HabitDetailViewModel @Inject constructor(
                     habit = habit,
                     stats = stats,
                     todayLogs = todayLogs,
+                    today = today,
+                    startDate = timeService.toLocalDate(habit.createdAt),
                     isLoading = false
                 )
             }

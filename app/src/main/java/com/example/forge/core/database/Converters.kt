@@ -5,6 +5,7 @@ import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.uiEntities.ProgressShape
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Date
 import java.util.UUID
@@ -21,6 +22,12 @@ class Converters {
 
     @TypeConverter
     fun toDate(millisSinceEpoch: Long?): Date? = millisSinceEpoch?.let { Date(it) }
+
+    @TypeConverter
+    fun fromLocalDate(date: LocalDate?): String? = date?.toString()
+
+    @TypeConverter
+    fun toLocalDate(dateStr: String?): LocalDate? = dateStr?.let { LocalDate.parse(it) }
 
     @TypeConverter
     fun fromLocalTime(time: LocalTime?): String? = time?.toString()
