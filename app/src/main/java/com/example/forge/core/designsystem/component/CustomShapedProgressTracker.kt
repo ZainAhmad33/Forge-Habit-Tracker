@@ -3,7 +3,9 @@ package com.example.forge.core.designsystem.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,12 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.materialIcon
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -48,7 +47,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -74,13 +76,20 @@ fun CustomShapeProgress(
     showCheckMark: Boolean = false,
     label: String = "${(progress * 100).toInt()}%"
 ) {
+    val isInspectionMode = LocalInspectionMode.current
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = if (isInspectionMode) 0 else 650, easing = FastOutSlowInEasing),
         label = "ProgressAnimation"
     )
 
-    val isCompleted = animatedProgress >= 0.999f
+    val isCompleted = (if (isInspectionMode) progress else animatedProgress) >= 0.999f
+
+    val checkmarkStrokeProgress by animateFloatAsState(
+        targetValue = if (isCompleted) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 200, easing = FastOutSlowInEasing),
+        label = "CheckmarkStrokeAnimation"
+    )
 
     val dynamicLabelColor by animateColorAsState(
         targetValue = if (isCompleted) progressColor else MaterialTheme.colorScheme.onSurface,
@@ -92,11 +101,23 @@ fun CustomShapeProgress(
     val layoutDirection = LocalLayoutDirection.current
     val checkColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
 
-    val fullPath = remember { Path() }
-    val segmentPath = remember { Path() }
-    val pathMeasure = remember { PathMeasure() }
+    var containerSize by remember { mutableStateOf(Size.Zero) }
 
-    var startPoint by remember { mutableStateOf(Offset.Zero) }
+    val startPoint = remember(containerSize, shape, startAngle, layoutDirection, density) {
+        if (containerSize == Size.Zero) return@remember Offset.Zero
+        val fullPath = Path()
+        val outline = shape.createOutline(containerSize, layoutDirection, density)
+        when (outline) {
+            is Outline.Generic -> fullPath.addPath(outline.path)
+            is Outline.Rectangle -> fullPath.addRect(outline.rect)
+            is Outline.Rounded -> fullPath.addRoundRect(outline.roundRect)
+        }
+        val measure = PathMeasure()
+        measure.setPath(fullPath, false)
+        if (measure.length > 0f) {
+            rotatePoint(measure.getPosition(0f), containerSize.center, startAngle)
+        } else Offset.Zero
+    }
 
     val badgeSize = if (trackerSize < 75.dp) 20.dp else 26.dp
     val badgeRadius = badgeSize / 2
@@ -105,7 +126,8 @@ fun CustomShapeProgress(
         modifier = modifier
             .padding(badgeRadius)
             .size(trackerSize)
-            .aspectRatio(1f),
+            .aspectRatio(1f)
+            .onSizeChanged { containerSize = it.toSize() },
         contentAlignment = Alignment.Center
     ) {
         // 1. Background Shape Track (Rotated to align with progress start)
@@ -124,8 +146,9 @@ fun CustomShapeProgress(
                 .fillMaxSize()
                 .padding(strokeWidth / 5)
         ) {
-            fullPath.reset()
-            segmentPath.reset()
+            val fullPath = Path()
+            val segmentPath = Path()
+            val pathMeasure = PathMeasure()
 
             val outline = shape.createOutline(size, layoutDirection, density)
             when (outline) {
@@ -138,20 +161,11 @@ fun CustomShapeProgress(
             val pathLength = pathMeasure.length
 
             if (pathLength > 0f) {
-                val rawStartPoint = pathMeasure.getPosition(0f)
-
-                // Calculate transformed badge start point
-                startPoint = rotatePoint(
-                    point = rawStartPoint,
-                    center = center,
-                    angleDegrees = startAngle
-                )
-
                 rotate(degrees = startAngle, pivot = center) {
                     // A. DRAW THE TRACK BAR (Full inactive outline)
                     drawPath(
                         path = fullPath,
-                        color = trackColor, // Use your track color (e.g. surfaceContainerHighest)
+                        color = trackColor,
                         style = Stroke(
                             width = strokeWidth.toPx(),
                             cap = StrokeCap.Round,
@@ -170,7 +184,7 @@ fun CustomShapeProgress(
 
                         drawPath(
                             path = segmentPath,
-                            color = progressColor, // Active color (e.g. primary)
+                            color = progressColor,
                             style = Stroke(
                                 width = strokeWidth.toPx(),
                                 cap = StrokeCap.Round,
@@ -194,7 +208,13 @@ fun CustomShapeProgress(
         if(showCheckMark){
             AnimatedVisibility(
                 visible = isCompleted && startPoint != Offset.Zero,
-                enter = fadeIn() + scaleIn(initialScale = 0.5f),
+                enter = fadeIn() + scaleIn(
+                    initialScale = 0.5f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ),
                 exit = fadeOut() + scaleOut(targetScale = 0.5f),
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -224,8 +244,13 @@ fun CustomShapeProgress(
                                 lineTo(size.width * 0.85f, size.height * 0.25f)
                             }
 
+                            val measure = PathMeasure()
+                            measure.setPath(path, false)
+                            val segmentPath = Path()
+                            measure.getSegment(0f, measure.length * checkmarkStrokeProgress, segmentPath, true)
+
                             drawPath(
-                                path = path,
+                                path = segmentPath,
                                 color = checkColor,
                                 style = Stroke(
                                     width = 3.dp.toPx(),
@@ -262,9 +287,10 @@ private fun rotatePoint(point: Offset, center: Offset, angleDegrees: Float): Off
 @Preview
 private fun PreviewCustomProgressTracker(){
     CustomShapeProgress(
-        progress = 0.8f,
+        progress = 1.0f,
         shape = MaterialShapes.Circle.toShape(), // Material Expressive shape
         trackerSize = 90.dp,
-        startAngle = 40f
+        startAngle = 40f,
+        showCheckMark = true
     )
 }
