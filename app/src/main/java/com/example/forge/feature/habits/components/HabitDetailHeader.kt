@@ -132,3 +132,40 @@ fun HabitDetailHeaderPreview() {
         HabitDetailHeader(habit = habit, stats = stats)
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun HabitDetailHeaderDaysPerWeekPreview() {
+    ForgeTheme {
+        val calendar = Calendar.getInstance()
+        // Set to Wednesday
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY)
+        val createdDate = calendar.time
+
+        val habit = Habit(
+            id = UUID.randomUUID(),
+            title = "Gym",
+            category = HabitCategory.Health,
+            emoji = "🏋️",
+            habitType = HabitType.YesNo,
+            reminders = emptyList(),
+            frequencyType = HabitFrequency.DaysPerWeek,
+            numberOfTrackedDays = 3,
+            completionTargetPerDay = 1,
+            targetUnit = "times per day",
+            progressShape = ProgressShape.Pill,
+            createdAt = createdDate,
+            updatedAt = createdDate
+        )
+        val stats = HabitStats(
+            currentStreak = 10,
+            bestStreak = 15,
+            overallCompletionRate = 0.9f,
+            monthlyCompletionData = emptyList(),
+            quarterlyCompletionRates = emptyList(),
+            currentStreakStartDate = LocalDate.now().minusDays(9),
+            trends = null
+        )
+        HabitDetailHeader(habit = habit, stats = stats)
+    }
+}

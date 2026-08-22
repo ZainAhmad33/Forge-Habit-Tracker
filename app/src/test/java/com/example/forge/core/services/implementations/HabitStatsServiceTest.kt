@@ -135,26 +135,32 @@ class HabitStatsServiceTest {
         val habit = createHabit(
             frequency = HabitFrequency.DaysPerWeek,
             numberOfTrackedDays = 3,
-            createdAt = today.minusWeeks(3)
+            createdAt = LocalDate.of(2026, 8, 6)
         )
         
         // This week (starts Aug 17): 3 completions (met)
         // Last week (starts Aug 10): 3 completions (met)
         // Week before (starts Aug 3): 2 completions (failed)
         val dailyTotals = mapOf(
-            LocalDate.of(2026, 8, 17) to 1,
-            LocalDate.of(2026, 8, 18) to 1,
-            LocalDate.of(2026, 8, 19) to 1, // Current week
+            LocalDate.of(2026, 8, 6) to 1,
+            LocalDate.of(2026, 8, 7) to 1,
+            LocalDate.of(2026, 8, 8) to 1, // Current week
+            LocalDate.of(2026, 8, 9) to 1,
             LocalDate.of(2026, 8, 10) to 1,
             LocalDate.of(2026, 8, 11) to 1,
             LocalDate.of(2026, 8, 12) to 1,
+            LocalDate.of(2026, 8, 14) to 1, // Current week
             LocalDate.of(2026, 8, 13) to 1,
-            LocalDate.of(2026, 8, 8) to 1,
-            LocalDate.of(2026, 8, 9) to 1
+            LocalDate.of(2026, 8, 16) to 1,
+            LocalDate.of(2026, 8, 17) to 1,
+            LocalDate.of(2026, 8, 18) to 1,
+            LocalDate.of(2026, 8, 19) to 1,
+            LocalDate.of(2026, 8, 20) to 1,
+            LocalDate.of(2026, 8, 22) to 1
         )
 
         val streak = service.calculateCurrentStreak(habit, dailyTotals, 1, today)
-        assertEquals(15, streak)
+        assertEquals(17, streak)
     }
 
     @Test

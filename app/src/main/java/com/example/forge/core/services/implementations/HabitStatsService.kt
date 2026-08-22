@@ -167,9 +167,8 @@ class HabitStatsService @Inject constructor(
                 if (d.isAfter(today)) continue
                 if ((dailyTotals[d] ?: 0) >= target) {
                     completionsInWeek++
-                    if (continueWeeksCompletion) {
+                    if (continueWeeksCompletion)
                         completionsBeforeFirstMiss += 1
-                    }
                 } else {
                     if (continueWeeksCompletion) {
                         firstMissInWeek = d
@@ -182,9 +181,18 @@ class HabitStatsService @Inject constructor(
 
             if (isCurrentWeek) {
                 if (goalMet) {
-                    val daysInStreak = ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
-                    streak += daysInStreak
-                    streakStartDate = weekStart
+                    if (weekStart.isBefore(habitStart)){
+                        streak += ChronoUnit.DAYS.between(habitStart, today).toInt() + 1
+                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
+                        // unless it's the first week of the habit
+                        streakStartDate = habitStart
+                    }
+                    else{
+                        streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
+                        // unless it's the first week of the habit
+                        streakStartDate = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                    }
                 } else {
                     // Check if still possible
                     val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
@@ -196,12 +204,24 @@ class HabitStatsService @Inject constructor(
                 isCurrentWeek = false
             } else {
                 if (goalMet) {
-                    streak += 7
-                    streakStartDate = weekStart
+                    if (weekStart.isBefore(habitStart)){
+                        streak += ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
+                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
+                        // unless it's the first week of the habit
+                        streakStartDate = habitStart
+                    }
+                    else{
+                        streak += 7
+                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
+                        // unless it's the first week of the habit
+                        streakStartDate = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                    }
+
                 } else {
                     streak += completionsBeforeFirstMiss
                     if (completionsBeforeFirstMiss > 0) {
-                        streakStartDate = firstMissInWeek?.plusDays(1) ?: weekStart
+                        val potentialStart = firstMissInWeek?.plusDays(1) ?: weekStart
+                        streakStartDate = if (potentialStart.isBefore(habitStart)) habitStart else potentialStart
                     }
                     break
                 }
@@ -229,6 +249,7 @@ class HabitStatsService @Inject constructor(
             var completionsInWeek = 0
             var continueWeeksCompletion = true
             var completionsBeforeFirstMiss = 0
+            val weekEnd = weekStart.plusDays(6)
 
             for (i in 0..6) {
                 val d = weekStart.plusDays(i.toLong())
@@ -250,8 +271,13 @@ class HabitStatsService @Inject constructor(
                     currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
                     maxStreak = maxOf(currentStreak, maxStreak)
                 }
+                else if (weekStart.isBefore(habitStart)){
+                    currentStreak += ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
+                    maxStreak = maxOf(currentStreak, maxStreak)
+                }
                 else{
                     currentStreak += 7
+                    maxStreak = maxOf(currentStreak, maxStreak)
                 }
             } else {
                 // streak broken
