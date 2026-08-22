@@ -3,12 +3,17 @@ package com.example.forge.core.services.implementations
 import com.example.forge.core.database.entity.Habit
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.interfaces.IHabitRepository
+import com.example.forge.core.services.interfaces.BestWeekData
 import com.example.forge.core.services.interfaces.DailyCompletion
+import com.example.forge.core.services.interfaces.GapData
 import com.example.forge.core.services.interfaces.HabitStats
+import com.example.forge.core.services.interfaces.StreakInfo
+import com.example.forge.core.services.interfaces.HabitTrends
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.services.interfaces.MonthlyRate
+import com.example.forge.core.services.interfaces.TrendData
 import com.example.forge.core.uiEntities.ActivityData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -41,19 +46,23 @@ class HabitStatsService @Inject constructor(
 
             val target = habit.completionTargetPerDay
 
-            val currentStreak = calculateCurrentStreak(habit, dailyQuantities, target, today)
+            val currentStreakInfo = calculateCurrentStreak(habit, dailyQuantities, target, today)
+            val currentStreak = currentStreakInfo.count
             val bestStreak = calculateBestStreak(habit, dailyQuantities, target, today)
             val overallRate = calculateOverallRate(habit, dailyQuantities, target, timeService.toLocalDate(habit.createdAt), today)
 
             val monthlyData = calculateMonthlyCompletion(dailyQuantities, habit, today)
             val quarterlyData = calculateQuarterlyRates(habit, dailyQuantities, today)
+            val trends = calculateTrends(habit, dailyQuantities, target, today)
 
             HabitStats(
                 currentStreak = currentStreak,
                 bestStreak = bestStreak,
                 overallCompletionRate = overallRate,
                 monthlyCompletionData = monthlyData,
-                quarterlyCompletionRates = quarterlyData
+                quarterlyCompletionRates = quarterlyData,
+                currentStreakStartDate = currentStreakInfo.startDate,
+                trends = trends
             )
         }.flowOn(Dispatchers.IO) // 👈 Critical: Shift calculations off the main thread
     }
@@ -91,22 +100,25 @@ class HabitStatsService @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
-    internal fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): Int {
+    internal fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): StreakInfo {
         if (habit.frequencyType == HabitFrequency.DaysPerWeek) {
             return calculateCurrentStreakForDaysPerWeek(habit, today, dailyTotals, target)
         }
 
-        val firstDate = dailyTotals.keys.minOrNull() ?: return 0
+        val firstDate = dailyTotals.keys.minOrNull() ?: return StreakInfo(0, null)
         val lastDate = today
         var streak = 0
         var current = lastDate
+        var streakStartDate: LocalDate? = null
 
         if (isScheduledForDate(habit, current)) {
             if ((dailyTotals[current] ?: 0) >= target) {
                 streak++
+                streakStartDate = current
             }
         } else {
             streak++
+            streakStartDate = current
         }
         current = current.minusDays(1)
 
@@ -114,15 +126,17 @@ class HabitStatsService @Inject constructor(
             if (isScheduledForDate(habit, current)) {
                 if ((dailyTotals[current] ?: 0) >= target) {
                     streak++
+                    streakStartDate = current
                 } else {
-                    return streak
+                    return StreakInfo(streak, streakStartDate)
                 }
             } else {
                 streak++
+                streakStartDate = current
             }
             current = current.minusDays(1)
         }
-        return streak
+        return StreakInfo(streak, streakStartDate)
     }
 
     private fun calculateCurrentStreakForDaysPerWeek(
@@ -130,8 +144,9 @@ class HabitStatsService @Inject constructor(
         today: LocalDate,
         dailyTotals: Map<LocalDate, Int>,
         target: Int
-    ): Int {
+    ): StreakInfo {
         var streak = 0
+        var streakStartDate: LocalDate? = null
         val habitStart = timeService.toLocalDate(habit.createdAt)
         val startOfFirstWeek = habitStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -144,6 +159,7 @@ class HabitStatsService @Inject constructor(
             var completionsInWeek = 0
             var continueWeeksCompletion = true
             var completionsBeforeFirstMiss = 0
+            var firstMissInWeek: LocalDate? = null
 
             for (i in 0..6) {
                 val d = weekEnd.minusDays(i.toLong())
@@ -151,9 +167,13 @@ class HabitStatsService @Inject constructor(
                 if (d.isAfter(today)) continue
                 if ((dailyTotals[d] ?: 0) >= target) {
                     completionsInWeek++
-                    if (continueWeeksCompletion)
+                    if (continueWeeksCompletion) {
                         completionsBeforeFirstMiss += 1
+                    }
                 } else {
+                    if (continueWeeksCompletion) {
+                        firstMissInWeek = d
+                    }
                     continueWeeksCompletion = false
                 }
             }
@@ -162,12 +182,14 @@ class HabitStatsService @Inject constructor(
 
             if (isCurrentWeek) {
                 if (goalMet) {
-                    streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1;
+                    val daysInStreak = ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                    streak += daysInStreak
+                    streakStartDate = weekStart
                 } else {
                     // Check if still possible
                     val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
                     if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
-                        return 0
+                        return StreakInfo(0, null)
                     }
                     // Still possible, continue checking previous weeks without incrementing streak
                 }
@@ -175,14 +197,18 @@ class HabitStatsService @Inject constructor(
             } else {
                 if (goalMet) {
                     streak += 7
+                    streakStartDate = weekStart
                 } else {
                     streak += completionsBeforeFirstMiss
+                    if (completionsBeforeFirstMiss > 0) {
+                        streakStartDate = firstMissInWeek?.plusDays(1) ?: weekStart
+                    }
                     break
                 }
             }
             weekStart = weekStart.minusWeeks(1)
         }
-        return streak
+        return StreakInfo(streak, streakStartDate)
     }
 
     private fun calculateBestStreakForDaysPerWeek(
@@ -200,7 +226,6 @@ class HabitStatsService @Inject constructor(
         var weekStart = startOfFirstWeek
 
         while (!weekStart.isAfter(currentWeekStart)) {
-            val weekEnd = weekStart.plusDays(6)
             var completionsInWeek = 0
             var continueWeeksCompletion = true
             var completionsBeforeFirstMiss = 0
@@ -286,17 +311,18 @@ class HabitStatsService @Inject constructor(
         if (habit.frequencyType == HabitFrequency.DaysPerWeek) {
             // For DaysPerWeek, we calculate it by looking at weeks
             val startOfFirstWeek = createdDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-            var currentWeekStart = startOfFirstWeek
+            var weekStart = startOfFirstWeek
+            val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
-            while (!currentWeekStart.isAfter(today)) {
-                val currentWeekEnd = currentWeekStart.plusDays(6)
+            while (!weekStart.isAfter(currentWeekStart)) {
+                val currentWeekEnd = weekStart.plusDays(6)
                 val targetForWeek = habit.numberOfTrackedDays
 
                 var completionsInWeek = 0
                 var daysPassedInWeek = 0
 
                 for (i in 0..6) {
-                    val d = currentWeekStart.plusDays(i.toLong())
+                    val d = weekStart.plusDays(i.toLong())
                     if (d.isBefore(createdDate)) continue
                     if (d.isAfter(today)) break
 
@@ -318,7 +344,7 @@ class HabitStatsService @Inject constructor(
                     successfulDays += minOf(completionsInWeek, targetForWeek)
                 }
 
-                currentWeekStart = currentWeekStart.plusWeeks(1)
+                weekStart = weekStart.plusWeeks(1)
             }
         } else {
             // EveryDay or SpecificDays
@@ -396,5 +422,153 @@ class HabitStatsService @Inject constructor(
         }
 
         return result.reversed()
+    }
+
+    internal fun calculateTrends(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): HabitTrends {
+        val habitStart = timeService.toLocalDate(habit.createdAt)
+        
+        val weeklyTrend = calculateTrend(habit, dailyTotals, target, 
+            currentStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
+            currentEnd = today,
+            previousStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1),
+            previousEnd = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusDays(1),
+            today = today
+        )
+
+        val monthlyTrend = calculateTrend(habit, dailyTotals, target,
+            currentStart = today.withDayOfMonth(1),
+            currentEnd = today,
+            previousStart = today.withDayOfMonth(1).minusMonths(1),
+            previousEnd = today.withDayOfMonth(1).minusDays(1),
+            today = today
+        )
+
+        val longestGap = calculateLongestGap(habit, dailyTotals, target, habitStart, today)
+        val allTimeAverage = calculateOverallRate(habit, dailyTotals, target, habitStart, today)
+        val bestWeek = calculateBestWeek(habit, dailyTotals, target, habitStart, today, today)
+
+        return HabitTrends(
+            weeklyTrend = weeklyTrend,
+            monthlyTrend = monthlyTrend,
+            longestGap = longestGap,
+            allTimeAverage = allTimeAverage,
+            bestWeek = bestWeek
+        )
+    }
+
+    private fun calculateTrend(
+        habit: Habit, 
+        dailyTotals: Map<LocalDate, Int>, 
+        target: Int, 
+        currentStart: LocalDate, 
+        currentEnd: LocalDate, 
+        previousStart: LocalDate, 
+        previousEnd: LocalDate,
+        today: LocalDate
+    ): TrendData {
+        val currentRate = calculateRangeRate(habit, dailyTotals, target, currentStart, currentEnd, today)
+        val previousRate = calculateRangeRate(habit, dailyTotals, target, previousStart, previousEnd, today)
+        
+        val change = if (previousRate > 0) {
+            ((currentRate - previousRate) / previousRate * 100).toInt()
+        } else if (currentRate > 0) {
+            100
+        } else {
+            0
+        }
+
+        return TrendData(currentRate, previousRate, change)
+    }
+
+    private fun calculateRangeRate(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, start: LocalDate, end: LocalDate, today: LocalDate): Float {
+        val habitStart = timeService.toLocalDate(habit.createdAt)
+        var date = if (start.isBefore(habitStart)) habitStart else start
+        var expected = 0
+        var completed = 0
+
+        if (habit.frequencyType == HabitFrequency.DaysPerWeek) {
+            var weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            while (!weekStart.isAfter(end)) {
+                var completionsInWeek = 0
+                var daysInTargetRange = 0
+                
+                for (i in 0..6) {
+                    val d = weekStart.plusDays(i.toLong())
+                    if (d.isBefore(habitStart) || d.isBefore(start)) continue
+                    if (d.isAfter(today) || d.isAfter(end)) break
+                    
+                    daysInTargetRange++
+                    if ((dailyTotals[d] ?: 0) >= target) {
+                        completionsInWeek++
+                    }
+                }
+                
+                val weekTarget = minOf(habit.numberOfTrackedDays, daysInTargetRange)
+                expected += weekTarget
+                completed += minOf(completionsInWeek, weekTarget)
+                
+                weekStart = weekStart.plusWeeks(1)
+            }
+        } else {
+            while (!date.isAfter(end) && !date.isAfter(today)) {
+                if (isScheduledForDate(habit, date)) {
+                    expected++
+                    if ((dailyTotals[date] ?: 0) >= target) {
+                        completed++
+                    }
+                }
+                date = date.plusDays(1)
+            }
+        }
+
+        return if (expected > 0) completed.toFloat() / expected else 0f
+    }
+
+    private fun calculateLongestGap(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, start: LocalDate, end: LocalDate): GapData {
+        var longestGap = 0
+        var currentGap = 0
+        var gapStart: LocalDate? = null
+        var gapEnd: LocalDate? = null
+        var currentGapStart: LocalDate? = null
+        
+        var date = start
+        while (!date.isAfter(end)) {
+            if (isScheduledForDate(habit, date)) {
+                if ((dailyTotals[date] ?: 0) < target) {
+                    if (currentGap == 0) currentGapStart = date
+                    currentGap++
+                    if (currentGap > longestGap) {
+                        longestGap = currentGap
+                        gapStart = currentGapStart
+                        gapEnd = date
+                    }
+                } else {
+                    currentGap = 0
+                }
+            }
+            date = date.plusDays(1)
+        }
+        
+        return GapData(longestGap, gapStart, gapEnd)
+    }
+
+    private fun calculateBestWeek(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, start: LocalDate, end: LocalDate, today: LocalDate): BestWeekData {
+        var bestRate = -1f
+        var bestStart = start
+        
+        // Use calendar weeks for "Best Week"
+        var weekStart = start.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        while (!weekStart.isAfter(end)) {
+            val weekEnd = weekStart.plusDays(6)
+            val rate = calculateRangeRate(habit, dailyTotals, target, weekStart, weekEnd, today)
+            
+            if (rate > bestRate) {
+                bestRate = rate
+                bestStart = weekStart
+            }
+            weekStart = weekStart.plusWeeks(1)
+        }
+        
+        return BestWeekData(max(0f, bestRate), bestStart, bestStart.plusDays(6))
     }
 }

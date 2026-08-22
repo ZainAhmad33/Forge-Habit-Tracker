@@ -2,6 +2,7 @@ package com.example.forge.core.services.interfaces
 
 import com.example.forge.core.uiEntities.ActivityData
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 
@@ -10,7 +11,40 @@ data class HabitStats(
     val bestStreak: Int,
     val overallCompletionRate: Float,
     val monthlyCompletionData: List<DailyCompletion>,
-    val quarterlyCompletionRates: List<MonthlyRate>
+    val quarterlyCompletionRates: List<MonthlyRate>,
+    val currentStreakStartDate: LocalDate? = null,
+    val trends: HabitTrends? = null
+)
+
+data class StreakInfo(
+    val count: Int,
+    val startDate: LocalDate?
+)
+
+data class HabitTrends(
+    val weeklyTrend: TrendData,
+    val monthlyTrend: TrendData,
+    val longestGap: GapData,
+    val allTimeAverage: Float,
+    val bestWeek: BestWeekData
+)
+
+data class TrendData(
+    val currentRate: Float,
+    val previousRate: Float,
+    val changePercentage: Int
+)
+
+data class GapData(
+    val days: Int,
+    val startDate: LocalDate?,
+    val endDate: LocalDate?
+)
+
+data class BestWeekData(
+    val rate: Float,
+    val startDate: LocalDate,
+    val endDate: LocalDate
 )
 
 data class DailyCompletion(

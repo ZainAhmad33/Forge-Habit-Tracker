@@ -9,6 +9,7 @@ import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.uiEntities.ProgressShape
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
@@ -263,5 +264,74 @@ class HabitStatsServiceTest {
         // Successful: 3 (Week 1) + 2 (Week 2) = 5
         // 5 / 6 = 0.833
         assertEquals(0.833f, rate, 0.01f)
+    }
+
+    @Test
+    fun `calculateTrends - weekly improvement`() {
+        val today = LocalDate.of(2026, 8, 22) // Saturday
+        val habit = createHabit(createdAt = today.minusDays(30))
+        
+        // This week (starts Aug 17): 4 days passed (Mon-Thu), say 4 completions = 100%
+        // Last week (Aug 10-16): 7 days, 3 completions = 3/7 = 42.8%
+        val dailyTotals = mutableMapOf<LocalDate, Int>()
+        // This week
+        dailyTotals[LocalDate.of(2026, 8, 17)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 18)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 19)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 20)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 21)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 22)] = 1
+        
+        // Last week
+        dailyTotals[LocalDate.of(2026, 8, 10)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 11)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 12)] = 1
+
+        val trends = service.calculateTrends(habit, dailyTotals, 1, today)
+        
+        assertEquals(1.0f, trends.weeklyTrend.currentRate, 0.01f)
+        assertTrue(trends.weeklyTrend.changePercentage > 0)
+    }
+
+    @Test
+    fun `calculateLongestGap - finds max consecutive scheduled missed days`() {
+        val today = LocalDate.of(2026, 8, 22)
+        val habit = createHabit(createdAt = today.minusDays(20))
+        
+        // Gap 1: 3 days (T-15, T-14, T-13)
+        // Gap 2: 5 days (T-8, T-7, T-6, T-5, T-4)
+        val dailyTotals = mutableMapOf<LocalDate, Int>()
+        // Completed days
+        dailyTotals[today.minusDays(20)] = 1
+        dailyTotals[today.minusDays(19)] = 1
+        dailyTotals[today.minusDays(12)] = 1
+        dailyTotals[today.minusDays(3)] = 1
+        dailyTotals[today.minusDays(2)] = 1
+        dailyTotals[today.minusDays(1)] = 1
+        dailyTotals[today] = 1
+
+        val trends = service.calculateTrends(habit, dailyTotals, 1, today)
+        
+        assertEquals(5, trends.longestGap.days)
+        assertEquals(today.minusDays(8), trends.longestGap.startDate)
+        assertEquals(today.minusDays(4), trends.longestGap.endDate)
+    }
+
+    @Test
+    fun `calculateBestWeek - identifies week with max completion`() {
+        val today = LocalDate.of(2026, 8, 22)
+        val habit = createHabit(createdAt = today.minusWeeks(4))
+        
+        // Week starting Aug 3: 100%
+        // Other weeks: 50%
+        val dailyTotals = mutableMapOf<LocalDate, Int>()
+        for (i in 0..6) {
+            dailyTotals[LocalDate.of(2026, 8, 3).plusDays(i.toLong())] = 1
+        }
+        
+        val trends = service.calculateTrends(habit, dailyTotals, 1, today)
+        
+        assertEquals(1.0f, trends.bestWeek.rate, 0.01f)
+        assertEquals(LocalDate.of(2026, 8, 3), trends.bestWeek.startDate)
     }
 }

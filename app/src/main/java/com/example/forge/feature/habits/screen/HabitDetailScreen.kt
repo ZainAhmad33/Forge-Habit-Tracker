@@ -41,9 +41,13 @@ import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.designsystem.theme.ForgeTheme
+import com.example.forge.core.services.interfaces.BestWeekData
 import com.example.forge.core.services.interfaces.DailyCompletion
+import com.example.forge.core.services.interfaces.GapData
 import com.example.forge.core.services.interfaces.HabitStats
+import com.example.forge.core.services.interfaces.HabitTrends
 import com.example.forge.core.services.interfaces.MonthlyRate
+import com.example.forge.core.services.interfaces.TrendData
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.feature.habits.components.AdditionalDetailsSection
 import com.example.forge.feature.habits.components.CurrentMonthCompletion
@@ -52,6 +56,7 @@ import com.example.forge.feature.habits.components.HistoricalActivitiesSection
 import com.example.forge.feature.habits.components.LogsSection
 import com.example.forge.feature.habits.components.QuarterlyProgressCards
 import com.example.forge.feature.habits.components.SkipDaysInfoSection
+import com.example.forge.feature.habits.components.TrendsAndConsistencySection
 import com.example.forge.feature.habits.state.HabitDetailUiState
 import com.example.forge.feature.habits.viewmodel.HabitDetailViewModel
 import com.example.forge.feature.home.components.HabitLogBottomSheet
@@ -170,6 +175,8 @@ fun HabitDetailScreen(
 
                 HabitDetailHeader(habit, stats)
 
+                TrendsAndConsistencySection(stats.trends)
+
                 SkipDaysInfoSection(habit.skipDaysUnlocked, stats.currentStreak)
 
                 CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit, uiState.today)
@@ -251,6 +258,13 @@ fun HabitDetailScreenPreview() {
                 MonthlyRate("May", 0.96f),
                 MonthlyRate("June", 0.90f),
                 MonthlyRate("July", 0.60f)
+            ),
+            trends = HabitTrends(
+                weeklyTrend = TrendData(0.91f, 0.81f, 12),
+                monthlyTrend = TrendData(0.85f, 0.79f, 7),
+                longestGap = GapData(4, LocalDate.of(2026, 4, 2), LocalDate.of(2026, 4, 5)),
+                allTimeAverage = 0.84f,
+                bestWeek = BestWeekData(1.0f, LocalDate.of(2026, 6, 8), LocalDate.of(2026, 6, 14))
             )
         )
         val uiState = HabitDetailUiState(

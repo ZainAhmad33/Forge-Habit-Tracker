@@ -20,6 +20,9 @@ import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.services.interfaces.HabitStats
 import com.example.forge.core.uiEntities.ProgressShape
 import java.util.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import androidx.compose.runtime.remember
 
 @Composable
 fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
@@ -68,11 +71,19 @@ fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
                 .fillMaxWidth()
                 .padding(8.dp)
                 .height(56.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
-                StatItem(label = "Current Streak", value = "🔥  ${stats.currentStreak}")
+                val streakLabel = remember(stats.currentStreak, stats.currentStreakStartDate) {
+                    if (stats.currentStreak > 0 && stats.currentStreakStartDate != null) {
+                        val formatter = DateTimeFormatter.ofPattern("MMM, d", Locale.getDefault())
+                        "Started ${stats.currentStreakStartDate.format(formatter)}"
+                    } else {
+                        "No active streak"
+                    }
+                }
+                StatItem(label = streakLabel, value = "🔥  ${stats.currentStreak}")
                 VerticalDivider()
-                StatItem(label = "Best Streak", value = "🏆  ${stats.bestStreak}")
+                StatItem(label = "Best streak", value = "🏆  ${stats.bestStreak}")
                 VerticalDivider()
-                StatItem(label = "Overall Completion", value = "${(stats.overallCompletionRate * 100).toInt()}%")
+                StatItem(label = "Avg. completion", value = "${(stats.overallCompletionRate * 100).toInt()}%")
             }
         }
 
@@ -114,7 +125,9 @@ fun HabitDetailHeaderPreview() {
             bestStreak = 12,
             overallCompletionRate = 0.85f,
             monthlyCompletionData = emptyList(),
-            quarterlyCompletionRates = emptyList()
+            quarterlyCompletionRates = emptyList(),
+            currentStreakStartDate = LocalDate.now().minusDays(4),
+            trends = null
         )
         HabitDetailHeader(habit = habit, stats = stats)
     }
