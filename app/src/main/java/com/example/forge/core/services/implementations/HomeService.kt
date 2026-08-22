@@ -68,7 +68,7 @@ class HomeService @Inject constructor(
                     progress = progress,
                     isCompletedToday = todayQuantity >= habit.completionTargetPerDay,
                     isScheduledForToday = isScheduledForToday,
-                    streak = streak,
+                    streak = streak.count,
                     todayQuantity
                 )
             }
