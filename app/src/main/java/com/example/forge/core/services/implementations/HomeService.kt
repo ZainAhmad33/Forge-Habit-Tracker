@@ -30,7 +30,8 @@ class HomeService @Inject constructor(
     private val categoryRepository: ICategoryRepository,
     private val userRepository: IUserRepository,
     private val activityService: IHabitActivityService,
-    private val timeService: ITimeService
+    private val timeService: ITimeService,
+    private val habitStatsService: HabitStatsService
 ) : IHomeService {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -60,7 +61,7 @@ class HomeService @Inject constructor(
                 } else 0
 
                 val isScheduledForToday = isScheduledForDate(habit, todayDate)
-                val streak = calculateHabitStreak(habit, habitLogsMap, todayDate, zoneId)
+                val streak = habitStatsService.calculateCurrentStreak(habit, habitLogsMap, habit.completionTargetPerDay, todayDate)
 
                 convertToHomeHabit(
                     habit = habit,

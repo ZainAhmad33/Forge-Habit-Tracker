@@ -68,9 +68,9 @@ fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
                 .fillMaxWidth()
                 .padding(8.dp)
                 .height(56.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
-                StatItem(label = "Current Streak", value = "${stats.currentStreak} 🔥")
+                StatItem(label = "Current Streak", value = "🔥  ${stats.currentStreak}")
                 VerticalDivider()
-                StatItem(label = "Best Streak", value = "${stats.bestStreak} ⭐")
+                StatItem(label = "Best Streak", value = "🏆  ${stats.bestStreak}")
                 VerticalDivider()
                 StatItem(label = "Overall Completion", value = "${(stats.overallCompletionRate * 100).toInt()}%")
             }
@@ -81,9 +81,12 @@ fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
 
 @Composable
 fun StatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
