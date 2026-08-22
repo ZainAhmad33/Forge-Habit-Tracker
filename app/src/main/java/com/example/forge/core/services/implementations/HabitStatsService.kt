@@ -200,6 +200,7 @@ class HabitStatsService @Inject constructor(
                         return StreakInfo(0, null)
                     }
                     // Still possible, continue checking previous weeks without incrementing streak
+                    streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
                 }
                 isCurrentWeek = false
             } else {
@@ -280,10 +281,32 @@ class HabitStatsService @Inject constructor(
                     maxStreak = maxOf(currentStreak, maxStreak)
                 }
             } else {
+                if (weekStart == currentWeekStart){
+                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                    if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
+                        currentStreak += completionsBeforeFirstMiss
+                        maxStreak = maxOf(currentStreak, maxStreak)
+                    }
+                    else{
+                        // Still possible, continue checking previous weeks without incrementing streak
+                        currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                        maxStreak = maxOf(currentStreak, maxStreak)
+                    }
+                }
+                else if (weekStart == startOfFirstWeek){
+                    val daysBeforeStart = ChronoUnit.DAYS.between(weekStart, habitStart).toInt()
+                    if (completionsBeforeFirstMiss + daysBeforeStart >= habit.numberOfTrackedDays){
+                        currentStreak += completionsBeforeFirstMiss
+                        maxStreak = maxOf(currentStreak, maxStreak)
+                    }
+                }
+                else{
+                    currentStreak += completionsBeforeFirstMiss
+                    maxStreak = maxOf(currentStreak, maxStreak)
+                    currentStreak = 0
+                }
                 // streak broken
-                currentStreak += completionsBeforeFirstMiss
-                maxStreak = maxOf(currentStreak, maxStreak)
-                currentStreak = 0
+
             }
             weekStart = weekStart.plusWeeks(1)
         }
