@@ -62,7 +62,7 @@ fun TrendsAndConsistencySection(trends: HabitTrends?) {
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         InsightCard(trends = trends)
     }
@@ -154,13 +154,14 @@ private fun InsightCard(trends: HabitTrends) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.Top
         ) {
             Icon(
                 imageVector = Icons.Outlined.Lightbulb,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.width(12.dp))
             
