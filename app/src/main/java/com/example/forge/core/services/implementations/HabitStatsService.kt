@@ -294,7 +294,13 @@ class HabitStatsService @Inject constructor(
                     }
                     else{
                         // Still possible, continue checking previous weeks without incrementing streak
-                        currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                        if (today == weekEnd){
+
+                            currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt()
+                        }
+                        else{
+                            currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                        }
                         maxStreak = maxOf(currentStreak, maxStreak)
                     }
                 }
