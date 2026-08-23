@@ -12,7 +12,7 @@ import com.example.forge.core.database.entity.User
 
 @Database(
     entities = [Habit::class, HabitActivity::class, User::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

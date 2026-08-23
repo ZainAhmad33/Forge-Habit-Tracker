@@ -12,7 +12,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,6 +73,7 @@ import kotlin.random.Random
 fun HabitDetailRoute(
     onBackClick: () -> Unit,
     onEditClick: (String) -> Unit,
+    onHabitDeleted: () -> Unit,
     viewModel: HabitDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -78,6 +82,10 @@ fun HabitDetailRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onEditClick = { uiState.habit?.id?.let { onEditClick(it.toString()) } },
+        onDeleteHabit = {
+            viewModel.deleteHabit()
+            onHabitDeleted()
+        },
         onMarkCompleted = { viewModel.markCompleted() },
         onDeleteLog = { viewModel.deleteLog(it) },
         onMonthChanged = { viewModel.onMonthChanged(it) },
@@ -92,6 +100,7 @@ fun HabitDetailScreen(
     uiState: HabitDetailUiState,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
+    onDeleteHabit: () -> Unit,
     onMarkCompleted: () -> Unit,
     onDeleteLog: (UUID) -> Unit,
     onMonthChanged: (YearMonth) -> Unit,
@@ -99,6 +108,7 @@ fun HabitDetailScreen(
     onLogProgress: (String, Int) -> Unit
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     Scaffold(
         topBar = {
@@ -111,6 +121,18 @@ fun HabitDetailScreen(
                         onBackClick()
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showDeleteConfirmation = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Habit",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             )
@@ -219,6 +241,29 @@ fun HabitDetailScreen(
             }
         )
     }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Habit") },
+            text = { Text("Are you sure you want to delete '${uiState.habit?.title}'? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteHabit()
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -276,6 +321,7 @@ fun HabitDetailScreenPreview() {
             uiState = uiState,
             onBackClick = {},
             onEditClick = {},
+            onDeleteHabit = {},
             onMarkCompleted = {},
             onDeleteLog = {},
             onMonthChanged = {},

@@ -19,6 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Save
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,10 +32,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,19 +67,29 @@ import com.example.forge.feature.upserthabit.components.GoalSelector
 import com.example.forge.feature.upserthabit.components.HabitTypeSelector
 import com.example.forge.feature.upserthabit.components.ReminderSelector
 import java.time.LocalTime
+import java.util.UUID
 
 @Composable
 fun NewHabitRoute(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    habitId: UUID? = null,
     viewModel: UpsertHabitViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(habitId) {
+        habitId?.let { viewModel.loadHabit(it) }
+    }
+
     NewHabitScreen(
         uiState = uiState,
-        pageTitle = "New Habit",
+        pageTitle = if (uiState.habitId != null) "Edit Habit" else "New Habit",
         onBackClick = onBackClick,
+        onDeleteClick = {
+            viewModel.deleteHabit()
+            onBackClick()
+        },
         onTitleChange = viewModel::onTitleChange,
         onEmojiSelected = viewModel::onEmojiChange,
         onCategorySelected = viewModel::onCategoryChange,
@@ -99,6 +118,7 @@ fun NewHabitScreen(
     uiState: UpsertHabitUiState,
     pageTitle: String,
     onBackClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onTitleChange: (String) -> Unit,
     onEmojiSelected: (String) -> Unit,
     onCategorySelected: (HabitCategory) -> Unit,
@@ -116,6 +136,7 @@ fun NewHabitScreen(
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier
@@ -139,6 +160,17 @@ fun NewHabitScreen(
                         Icon(imageVector = Icons.Rounded.Close, contentDescription = "Close")
                     }
                 },
+                actions = {
+                    if (uiState.habitId != null) {
+                        IconButton(onClick = { showDeleteConfirmation = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete Habit",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
                 )
@@ -150,7 +182,11 @@ fun NewHabitScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 32.dp)
             ) {
-                CreateHabitButton(onClick = onCreateHabitClick)
+                CreateHabitButton(
+                    text = if (uiState.habitId != null) "Save Changes" else "Create Habit",
+                    onClick = onCreateHabitClick,
+                    icon = if (uiState.habitId != null) Icons.Rounded.Save else Icons.Rounded.Add
+                )
             }
         }
     ) { innerPadding ->
@@ -275,6 +311,29 @@ fun NewHabitScreen(
             )
         }
     }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Habit") },
+            text = { Text("Are you sure you want to delete '${uiState.title}'? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteClick()
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -289,6 +348,7 @@ private fun NewHabitScreenPreview() {
                 )
             ),
             onBackClick = {},
+            onDeleteClick = {},
             onTitleChange = {},
             onEmojiSelected = {},
             onCategorySelected = {},

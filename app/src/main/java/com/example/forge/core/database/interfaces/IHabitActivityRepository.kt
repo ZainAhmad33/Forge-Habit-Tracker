@@ -15,5 +15,6 @@ interface IHabitActivityRepository {
     fun getAllDailyQuantities(): Flow<List<DailyHabitQuantity>>
     fun getDailyQuantitiesForHabit(habitId: UUID): Flow<List<DailyHabitQuantity>>
     suspend fun deleteActivity(activityId: UUID)
+    suspend fun deleteActivitiesForHabit(habitId: UUID)
     suspend fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int>
 }

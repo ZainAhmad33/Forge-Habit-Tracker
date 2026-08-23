@@ -46,6 +46,10 @@ class RoomHabitActivityRepository @Inject constructor(
         activityDao.deleteActivityById(activityId)
     }
 
+    override suspend fun deleteActivitiesForHabit(habitId: UUID) {
+        activityDao.deleteActivitiesForHabit(habitId)
+    }
+
     override suspend fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int> {
         return activityDao.getDailyQuantitiesByRange(habitId, from.time, to.time)
             .associate { it.day to it.totalQuantity }

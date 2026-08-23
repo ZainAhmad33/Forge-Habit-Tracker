@@ -5,8 +5,10 @@ import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.uiEntities.CategoryPill
 import java.time.LocalTime
+import java.util.UUID
 
 data class UpsertHabitUiState(
+    val habitId: UUID? = null,
     val title: String = "",
     val titleError: Boolean = false,
     val selectedEmoji: String = "💧",

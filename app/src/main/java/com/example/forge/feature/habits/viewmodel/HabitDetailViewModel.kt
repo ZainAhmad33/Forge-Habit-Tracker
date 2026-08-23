@@ -115,4 +115,10 @@ class HabitDetailViewModel @Inject constructor(
     fun getCompletedQuantity(): Int {
         return _uiState.value.todayLogs.sumOf { it.quantity }
     }
+
+    fun deleteHabit() {
+        viewModelScope.launch {
+            habitsService.deleteHabit(habitId)
+        }
+    }
 }

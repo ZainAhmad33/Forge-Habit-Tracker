@@ -8,7 +8,8 @@ import java.util.UUID
 
 interface IHabitsService {
     fun getAllowedCategories(): List<CategoryPill>
-    suspend fun createHabit(habitForm: UpsertHabitUiState)
+    suspend fun upsertHabit(habitForm: UpsertHabitUiState)
     suspend fun getHabitById(habitId: UUID): Habit?
+    suspend fun deleteHabit(habitId: UUID)
     fun getHabitFlow(habitId: UUID): Flow<Habit?>
 }

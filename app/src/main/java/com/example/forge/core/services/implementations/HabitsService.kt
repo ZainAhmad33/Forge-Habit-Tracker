@@ -34,11 +34,19 @@ class HabitsService @Inject constructor(
         return habitRepository.getHabitById(habitId)
     }
 
+    override suspend fun deleteHabit(habitId: UUID) {
+        val habit = habitRepository.getHabitById(habitId)
+        if (habit != null) {
+            habitActivityRepository.deleteActivitiesForHabit(habitId)
+            habitRepository.deleteHabit(habit)
+        }
+    }
+
     override fun getHabitFlow(habitId: UUID): Flow<Habit?> {
         return habitRepository.getHabitFlow(habitId)
     }
 
-    override suspend fun createHabit(habitForm: UpsertHabitUiState) {
+    override suspend fun upsertHabit(habitForm: UpsertHabitUiState) {
         val reminders = if (habitForm.remindersEnabled) habitForm.reminders else listOf()
         var numOfTrackedDays: Int
         if (habitForm.selectedFrequency == HabitFrequency.EveryDay)
@@ -62,23 +70,25 @@ class HabitsService @Inject constructor(
             unit = "times per day"
         }
 
+        val existingHabit = habitForm.habitId?.let { habitRepository.getHabitById(it) }
+
         val habit = Habit(
-            UUID.randomUUID(),
-            habitForm.title,
-            habitForm.selectedCategory,
-            habitForm.selectedEmoji,
-            habitForm.selectedType,
-            reminders,
-            habitForm.selectedFrequency,
-            habitForm.selectedFrequency == HabitFrequency.EveryDay,
-            specificDays,
-            numOfTrackedDays,
-            habitForm.dailyGoal,
-            unit,
-            ProgressShape.getRandom(),
-            0,
-            Date(),
-            Date(),
+            id = habitForm.habitId ?: UUID.randomUUID(),
+            title = habitForm.title,
+            category = habitForm.selectedCategory,
+            emoji = habitForm.selectedEmoji,
+            habitType = habitForm.selectedType,
+            reminders = reminders,
+            frequencyType = habitForm.selectedFrequency,
+            isTrackedEveryDay = habitForm.selectedFrequency == HabitFrequency.EveryDay,
+            trackedDays = specificDays,
+            numberOfTrackedDays = numOfTrackedDays,
+            completionTargetPerDay = habitForm.dailyGoal,
+            targetUnit = unit,
+            progressShape = existingHabit?.progressShape ?: ProgressShape.getRandom(),
+            skipDaysUnlocked = existingHabit?.skipDaysUnlocked ?: 0,
+            createdAt = existingHabit?.createdAt ?: Date(),
+            updatedAt = Date(),
         )
 
         habitRepository.createHabit(habit)

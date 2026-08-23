@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalTime
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -95,14 +96,47 @@ class UpsertHabitViewModel @Inject constructor(
         _uiState.update { it.copy(otherUnitInput = unitInput, otherUnitError = false) }
     }
 
+    fun loadHabit(habitId: UUID) {
+        viewModelScope.launch {
+            habitsService.getHabitById(habitId)?.let { habit ->
+                _uiState.update { state ->
+                    val isOtherUnit = !state.availableUnits.contains(habit.targetUnit) && habit.habitType == HabitType.Quantity
+                    state.copy(
+                        habitId = habit.id,
+                        title = habit.title,
+                        selectedEmoji = habit.emoji,
+                        selectedCategory = habit.category,
+                        selectedType = habit.habitType,
+                        dailyGoal = habit.completionTargetPerDay,
+                        selectedUnit = if (isOtherUnit) "Other" else habit.targetUnit,
+                        otherUnitInput = if (isOtherUnit) habit.targetUnit else "",
+                        selectedFrequency = habit.frequencyType,
+                        specificDays = habit.trackedDays,
+                        daysPerWeek = habit.numberOfTrackedDays,
+                        remindersEnabled = habit.reminders.isNotEmpty(),
+                        reminders = habit.reminders
+                    )
+                }
+            }
+        }
+    }
+
     fun onCreateHabitClick(): Boolean {
         if (validate()) {
             viewModelScope.launch {
-                habitsService.createHabit(_uiState.value)
+                habitsService.upsertHabit(_uiState.value)
             }
             return true
         }
         return false
+    }
+
+    fun deleteHabit() {
+        _uiState.value.habitId?.let { id ->
+            viewModelScope.launch {
+                habitsService.deleteHabit(id)
+            }
+        }
     }
 
     private fun validate(): Boolean {

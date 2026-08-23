@@ -16,4 +16,5 @@ interface IHabitRepository {
     fun getHabitFlow(habitId: UUID): Flow<Habit?>
     suspend fun getHabitById(habitId: UUID): Habit?
     suspend fun createHabit(habit: Habit)
+    suspend fun deleteHabit(habit: Habit)
 }

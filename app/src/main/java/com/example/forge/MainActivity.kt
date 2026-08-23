@@ -16,14 +16,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.feature.habits.screen.HabitDetailRoute
 import com.example.forge.feature.home.screen.HomeRoute
 import com.example.forge.feature.upserthabit.screen.NewHabitRoute
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.UUID
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -82,29 +85,43 @@ fun ForgeApp() {
             HabitDetailRoute(
                 onBackClick = { navController.popBackStack() },
                 onEditClick = { habitId ->
-                    // Navigate to edit screen if available
-                    // navController.navigate("edit_habit/$habitId")
+                    navController.navigate("new_habit?habitId=$habitId")
+                },
+                onHabitDeleted = {
+                    navController.popBackStack()
                 }
             )
         }
         composable(
-                route = "new_habit",
-        // Slide up from bottom when navigating in
-        enterTransition = {
-            slideInVertically(
-                initialOffsetY = { fullHeight -> fullHeight },
-                animationSpec = tween(400)
-            )
-        },
-        // Slide down to bottom when pressing back or popping stack
-        popExitTransition = {
-            slideOutVertically(
-                targetOffsetY = { fullHeight -> fullHeight },
-                animationSpec = tween(400)
-            )
-        }) {
+            route = "new_habit?habitId={habitId}",
+            arguments = listOf(
+                navArgument("habitId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
+            // Slide up from bottom when navigating in
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(400)
+                )
+            },
+            // Slide down to bottom when pressing back or popping stack
+            popExitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(400)
+                )
+            }
+        ) { backStackEntry ->
+            val habitIdString = backStackEntry.arguments?.getString("habitId")
+            val habitId = habitIdString?.let { UUID.fromString(it) }
+
             NewHabitRoute(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                habitId = habitId
             )
         }
     }

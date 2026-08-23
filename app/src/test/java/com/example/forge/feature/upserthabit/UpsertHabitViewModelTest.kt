@@ -15,10 +15,10 @@ class UpsertHabitViewModelTest {
 
     private lateinit var viewModel: UpsertHabitViewModel
     private val fakeHabitsService = object : IHabitsService {
-        var createHabitCalled = false
+        var upsertHabitCalled = false
         override fun getAllowedCategories(): List<CategoryPill> = emptyList()
-        override suspend fun createHabit(habitForm: UpsertHabitUiState) {
-            createHabitCalled = true
+        override suspend fun upsertHabit(habitForm: UpsertHabitUiState) {
+            upsertHabitCalled = true
         }
 
         override suspend fun getHabitById(habitId: java.util.UUID): com.example.forge.core.database.entity.Habit? = null
@@ -36,7 +36,7 @@ class UpsertHabitViewModelTest {
         val result = viewModel.onCreateHabitClick()
         assertFalse(result)
         assertTrue(viewModel.uiState.value.titleError)
-        assertFalse(fakeHabitsService.createHabitCalled)
+        assertFalse(fakeHabitsService.upsertHabitCalled)
     }
 
     @Test
@@ -47,7 +47,7 @@ class UpsertHabitViewModelTest {
         val result = viewModel.onCreateHabitClick()
         assertFalse(result)
         assertTrue(viewModel.uiState.value.specificDaysError)
-        assertFalse(fakeHabitsService.createHabitCalled)
+        assertFalse(fakeHabitsService.upsertHabitCalled)
     }
 
     @Test
@@ -59,7 +59,7 @@ class UpsertHabitViewModelTest {
         val result = viewModel.onCreateHabitClick()
         assertFalse(result)
         assertTrue(viewModel.uiState.value.otherUnitError)
-        assertFalse(fakeHabitsService.createHabitCalled)
+        assertFalse(fakeHabitsService.upsertHabitCalled)
     }
 
     @Test
@@ -70,7 +70,7 @@ class UpsertHabitViewModelTest {
         val result = viewModel.onCreateHabitClick()
         assertFalse(result)
         assertTrue(viewModel.uiState.value.remindersError)
-        assertFalse(fakeHabitsService.createHabitCalled)
+        assertFalse(fakeHabitsService.upsertHabitCalled)
     }
 
     @Test
@@ -79,6 +79,6 @@ class UpsertHabitViewModelTest {
         val result = viewModel.onCreateHabitClick()
         assertTrue(result)
         assertFalse(viewModel.uiState.value.titleError)
-        assertTrue(fakeHabitsService.createHabitCalled)
+        assertTrue(fakeHabitsService.upsertHabitCalled)
     }
 }
