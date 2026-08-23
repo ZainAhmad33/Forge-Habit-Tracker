@@ -131,10 +131,10 @@ class HabitStatsServiceTest {
 
     @Test
     fun `DaysPerWeek streak - counts full weeks met`() {
-        val today = LocalDate.of(2026, 8, 22) // Saturday
+        val today = LocalDate.of(2026, 8, 23) // Saturday
         val habit = createHabit(
             frequency = HabitFrequency.DaysPerWeek,
-            numberOfTrackedDays = 3,
+            numberOfTrackedDays = 6,
             createdAt = LocalDate.of(2026, 8, 6)
         )
         
@@ -160,7 +160,7 @@ class HabitStatsServiceTest {
         )
 
         val streak = service.calculateCurrentStreak(habit, dailyTotals, 1, today)
-        assertEquals(17, streak)
+        assertEquals(17, streak.count)
     }
 
     @Test

@@ -195,12 +195,17 @@ class HabitStatsService @Inject constructor(
                     }
                 } else {
                     // Check if still possible
-                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt() + 1
                     if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
                         return StreakInfo(0, null)
                     }
-                    // Still possible, continue checking previous weeks without incrementing streak
-                    streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                    if (today == weekEnd){
+                        streak += ChronoUnit.DAYS.between(weekStart, today).toInt()
+                    }
+                    else{
+                        // Still possible, continue checking previous weeks without incrementing streak
+                        streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                    }
                 }
                 isCurrentWeek = false
             } else {
@@ -282,7 +287,7 @@ class HabitStatsService @Inject constructor(
                 }
             } else {
                 if (weekStart == currentWeekStart){
-                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt() + 1
                     if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
                         currentStreak += completionsBeforeFirstMiss
                         maxStreak = maxOf(currentStreak, maxStreak)
