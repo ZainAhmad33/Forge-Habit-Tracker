@@ -13,9 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarExitDirection
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -143,115 +147,178 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.surface,
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(innerPadding)
-                    .padding(PaddingValues(horizontal = 20.dp, vertical = 18.dp)),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
-                HomeHeader(
-                    greetingMessage = uiState.greetingMessage,
-                    greetingName = uiState.greetingName,
-                    dateLabel = uiState.dateLabel,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (uiState.habits.size > 0){
-                    HomeSummaryCard(
-                        summary = uiState.summary,
+            if (uiState.isLoading) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Loading habits...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(innerPadding)
+                        .padding(PaddingValues(horizontal = 20.dp, vertical = 18.dp)),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                ) {
+                    HomeHeader(
+                        greetingMessage = uiState.greetingMessage,
+                        greetingName = uiState.greetingName,
+                        dateLabel = uiState.dateLabel,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    HabitCategoryChips(
-                        categories = uiState.categories,
-                        selectedCategory = uiState.selectedCategory,
-                        onCategorySelected = onCategorySelected,
-                        showAllCategoryChip = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    if (uiState.habits.isNotEmpty()) {
+                        HomeSummaryCard(
+                            summary = uiState.summary,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        HabitCategoryChips(
+                            categories = uiState.categories,
+                            selectedCategory = uiState.selectedCategory,
+                            onCategorySelected = onCategorySelected,
+                            showAllCategoryChip = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                    if (uiState.todaysHabits.isNotEmpty()) {
-                        SectionHeader(
-                            title = "Today's habits",
-                            trailingText = "${uiState.todaysHabits.size} shown",
-                        )
-                        HabitGrid(
-                            habits = uiState.todaysHabits,
-                            onHabitCardClick = onHabitCardClick,
-                            onHabitDetailsClick = onHabitDetailsClick
-                        )
+                        if (uiState.todaysHabits.isNotEmpty()) {
+                            SectionHeader(
+                                title = "Today's habits",
+                                trailingText = "${uiState.todaysHabits.size} shown",
+                            )
+                            HabitGrid(
+                                habits = uiState.todaysHabits,
+                                onHabitCardClick = onHabitCardClick,
+                                onHabitDetailsClick = onHabitDetailsClick
+                            )
+                        }
+
+                        if (uiState.otherHabits.isNotEmpty()) {
+                            SectionHeader(
+                                title = "Other habits",
+                                trailingText = "${uiState.otherHabits.size} shown",
+                            )
+                            HabitGrid(
+                                habits = uiState.otherHabits,
+                                onHabitCardClick = onHabitCardClick,
+                                onHabitDetailsClick = onHabitDetailsClick
+                            )
+                        }
+
+                        if (uiState.todaysHabits.isEmpty() && uiState.otherHabits.isEmpty()) {
+                            // Search results empty
+                            EmptySearchState(query = uiState.searchQuery)
+                        }
+                    } else {
+                        // no habits currently in DB
+                        EmptyHabitState()
                     }
 
-                    if (uiState.otherHabits.isNotEmpty()) {
-                        SectionHeader(
-                            title = "Other habits",
-                            trailingText = "${uiState.otherHabits.size} shown",
-                        )
-                        HabitGrid(
-                            habits = uiState.otherHabits,
-                            onHabitCardClick = onHabitCardClick,
-                            onHabitDetailsClick = onHabitDetailsClick
-                        )
-                    }
                 }
-                else{
-                    // no habits currently
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                            .weight(1f)
-                            .offset(0.dp, -80.dp),
-                        verticalArrangement = Arrangement.Center, // Centers everything vertically on screen
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_seedling),
-                            contentDescription = "Seedling icon",
-                            modifier = Modifier.size(200.dp) // ✅ Fixed: lowercase modifier replaced with Modifier
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Create habits",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.W600
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Create your first habit and start building a streak — even one small habit a day adds up.",
-                            style = MaterialTheme.typography.bodyMedium, // Better typography token for multi-line body text
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 32.dp) // Prevents text from hitting edge of screen
-                        )
-                    }
-                }
-
             }
             BottomNavBar(
                 scrollBehavior = scrollBehavior,
                 onAddHabitClick = onAddHabitClick
             )
         }
-    }
 
-    selectedHabitForLogging?.let { habit ->
-        val splitLabel = habit.targetLabel.split(" ")
-        HabitLogBottomSheet(
-            habit.image,
-            habit.title,
-            habit.category,
-            habit.quantityLoggedToday,
-            splitLabel.first().toInt(),
-            splitLabel.subList(1, splitLabel.size).joinToString(" "),
-            onDismiss = onDismissBottomSheet,
-            onLogProgress = { quantity ->
-                onLogProgress(habit.id, quantity)
-            }
+        selectedHabitForLogging?.let { habit ->
+            val splitLabel = habit.targetLabel.split(" ")
+            HabitLogBottomSheet(
+                habit.image,
+                habit.title,
+                habit.category,
+                habit.quantityLoggedToday,
+                splitLabel.first().toInt(),
+                splitLabel.subList(1, splitLabel.size).joinToString(" "),
+                onDismiss = onDismissBottomSheet,
+                onLogProgress = { quantity ->
+                    onLogProgress(habit.id, quantity)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyHabitState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 60.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_seedling),
+            contentDescription = "Seedling icon",
+            modifier = Modifier.size(200.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Create habits",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.W600
+            ),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Create your first habit and start building a streak — even one small habit a day adds up.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
+    }
+}
+
+@Composable
+private fun EmptySearchState(query: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 60.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "No results",
+            modifier = Modifier.size(120.dp),
+            tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "No results found",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.W600
+            ),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "We couldn't find any habits matching \"$query\". Try a different search term.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
 }

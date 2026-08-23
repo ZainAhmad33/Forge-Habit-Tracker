@@ -25,7 +25,17 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.remember
 
 @Composable
-fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
+fun HabitDetailHeader(
+    emoji: String,
+    title: String,
+    category: HabitCategory,
+    completionTargetPerDay: Int,
+    targetUnit: String,
+    currentStreak: Int,
+    bestStreak: Int,
+    overallCompletionRate: Float,
+    currentStreakStartDate: LocalDate?
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
@@ -38,23 +48,23 @@ fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(text = habit.emoji, fontSize = 48.sp)
+                    Text(text = emoji, fontSize = 48.sp)
                 }
             }
             Spacer(Modifier.size(24.dp))
-            Text(habit.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight(800))
+            Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight(800))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ){
-                val icon = CategoryToImage[habit.category] ?: ""
+                val icon = CategoryToImage[category] ?: ""
                 FilterChip(
-                    label = {Text(text = habit.category.label)},
+                    label = {Text(text = category.label)},
                     selected = true,
                     onClick = {},
                     leadingIcon = { Text(icon) }
                 )
                 FilterChip(
-                    label = {Text(text = habit.completionTargetPerDay.toString() + " " + habit.targetUnit)},
+                    label = {Text(text = "$completionTargetPerDay $targetUnit")},
                     selected = false,
                     onClick = {}
                 )
@@ -71,19 +81,19 @@ fun HabitDetailHeader(habit: Habit, stats: HabitStats) {
                 .fillMaxWidth()
                 .padding(8.dp)
                 .height(56.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
-                val streakLabel = remember(stats.currentStreak, stats.currentStreakStartDate) {
-                    if (stats.currentStreak > 0 && stats.currentStreakStartDate != null) {
+                val streakLabel = remember(currentStreak, currentStreakStartDate) {
+                    if (currentStreak > 0 && currentStreakStartDate != null) {
                         val formatter = DateTimeFormatter.ofPattern("MMM, d", Locale.getDefault())
-                        "Started ${stats.currentStreakStartDate.format(formatter)}"
+                        "Started ${currentStreakStartDate.format(formatter)}"
                     } else {
                         "No active streak"
                     }
                 }
-                StatItem(label = streakLabel, value = "🔥  ${stats.currentStreak}")
+                StatItem(label = streakLabel, value = "🔥  $currentStreak")
                 VerticalDivider()
-                StatItem(label = "Best streak", value = "🏆  ${stats.bestStreak}")
+                StatItem(label = "Best streak", value = "🏆  $bestStreak")
                 VerticalDivider()
-                StatItem(label = "Avg. completion", value = "${(stats.overallCompletionRate * 100).toInt()}%")
+                StatItem(label = "Avg. completion", value = "${(overallCompletionRate * 100).toInt()}%")
             }
         }
 
@@ -129,7 +139,17 @@ fun HabitDetailHeaderPreview() {
             currentStreakStartDate = LocalDate.now().minusDays(4),
             trends = null
         )
-        HabitDetailHeader(habit = habit, stats = stats)
+        HabitDetailHeader(
+            emoji = habit.emoji,
+            title = habit.title,
+            category = habit.category,
+            completionTargetPerDay = habit.completionTargetPerDay,
+            targetUnit = habit.targetUnit,
+            currentStreak = stats.currentStreak,
+            bestStreak = stats.bestStreak,
+            overallCompletionRate = stats.overallCompletionRate,
+            currentStreakStartDate = stats.currentStreakStartDate
+        )
     }
 }
 
@@ -166,6 +186,16 @@ fun HabitDetailHeaderDaysPerWeekPreview() {
             currentStreakStartDate = LocalDate.now().minusDays(9),
             trends = null
         )
-        HabitDetailHeader(habit = habit, stats = stats)
+        HabitDetailHeader(
+            emoji = habit.emoji,
+            title = habit.title,
+            category = habit.category,
+            completionTargetPerDay = habit.completionTargetPerDay,
+            targetUnit = habit.targetUnit,
+            currentStreak = stats.currentStreak,
+            bestStreak = stats.bestStreak,
+            overallCompletionRate = stats.overallCompletionRate,
+            currentStreakStartDate = stats.currentStreakStartDate
+        )
     }
 }

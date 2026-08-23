@@ -6,13 +6,21 @@ import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.feature.upserthabit.state.UpsertHabitUiState
 import com.example.forge.feature.upserthabit.viewmodel.UpsertHabitViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 
 class UpsertHabitViewModelTest {
 
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var viewModel: UpsertHabitViewModel
     private val fakeHabitsService = object : IHabitsService {
         var upsertHabitCalled = false
@@ -22,12 +30,19 @@ class UpsertHabitViewModelTest {
         }
 
         override suspend fun getHabitById(habitId: java.util.UUID): com.example.forge.core.database.entity.Habit? = null
+        override suspend fun deleteHabit(habitId: java.util.UUID) {}
         override fun getHabitFlow(habitId: java.util.UUID): kotlinx.coroutines.flow.Flow<com.example.forge.core.database.entity.Habit?> = kotlinx.coroutines.flow.emptyFlow()
     }
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         viewModel = UpsertHabitViewModel(fakeHabitsService)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -74,9 +89,10 @@ class UpsertHabitViewModelTest {
     }
 
     @Test
-    fun `onCreateHabitClick returns true when all fields are valid`() {
+    fun `onCreateHabitClick returns true when all fields are valid`() = runTest {
         viewModel.onTitleChange("Test Habit")
         val result = viewModel.onCreateHabitClick()
+        advanceUntilIdle()
         assertTrue(result)
         assertFalse(viewModel.uiState.value.titleError)
         assertTrue(fakeHabitsService.upsertHabitCalled)

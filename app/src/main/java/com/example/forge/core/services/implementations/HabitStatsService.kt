@@ -16,6 +16,8 @@ import com.example.forge.core.services.interfaces.MonthlyRate
 import com.example.forge.core.services.interfaces.TrendData
 import com.example.forge.core.uiEntities.ActivityData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
@@ -43,28 +45,30 @@ class HabitStatsService @Inject constructor(
             if (habit == null) return@combine HabitStats(0, 0, 0f, emptyList(), emptyList())
 
             val dailyQuantities = dailyQuantitiesList.associate { it.day to it.totalQuantity }
-
             val target = habit.completionTargetPerDay
+            val startDate = timeService.toLocalDate(habit.createdAt)
 
-            val currentStreakInfo = calculateCurrentStreak(habit, dailyQuantities, target, today)
-            val currentStreak = currentStreakInfo.count
-            val bestStreak = calculateBestStreak(habit, dailyQuantities, target, today)
-            val overallRate = calculateOverallRate(habit, dailyQuantities, target, timeService.toLocalDate(habit.createdAt), today)
+            coroutineScope {
+                val currentStreakInfoDeferred = async { calculateCurrentStreak(habit, dailyQuantities, target, today) }
+                val bestStreakDeferred = async { calculateBestStreak(habit, dailyQuantities, target, today) }
+                val overallRateDeferred = async { calculateOverallRate(habit, dailyQuantities, target, startDate, today) }
+                val monthlyDataDeferred = async { calculateMonthlyCompletion(dailyQuantities, habit, today) }
+                val quarterlyDataDeferred = async { calculateQuarterlyRates(habit, dailyQuantities, today) }
+                val trendsDeferred = async { calculateTrends(habit, dailyQuantities, target, today) }
 
-            val monthlyData = calculateMonthlyCompletion(dailyQuantities, habit, today)
-            val quarterlyData = calculateQuarterlyRates(habit, dailyQuantities, today)
-            val trends = calculateTrends(habit, dailyQuantities, target, today)
-
-            HabitStats(
-                currentStreak = currentStreak,
-                bestStreak = bestStreak,
-                overallCompletionRate = overallRate,
-                monthlyCompletionData = monthlyData,
-                quarterlyCompletionRates = quarterlyData,
-                currentStreakStartDate = currentStreakInfo.startDate,
-                trends = trends
-            )
-        }.flowOn(Dispatchers.IO) // 👈 Critical: Shift calculations off the main thread
+                val currentStreakInfo = currentStreakInfoDeferred.await()
+                
+                HabitStats(
+                    currentStreak = currentStreakInfo.count,
+                    bestStreak = bestStreakDeferred.await(),
+                    overallCompletionRate = overallRateDeferred.await(),
+                    monthlyCompletionData = monthlyDataDeferred.await(),
+                    quarterlyCompletionRates = quarterlyDataDeferred.await(),
+                    currentStreakStartDate = currentStreakInfo.startDate,
+                    trends = trendsDeferred.await()
+                )
+            }
+        }.flowOn(Dispatchers.Default)
     }
 
     override fun getMonthlyActivityData(habitId: UUID, yearMonth: YearMonth): Flow<List<ActivityData>> {
@@ -479,35 +483,39 @@ class HabitStatsService @Inject constructor(
         return result.reversed()
     }
 
-    internal fun calculateTrends(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): HabitTrends {
+    internal suspend fun calculateTrends(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): HabitTrends = coroutineScope {
         val habitStart = timeService.toLocalDate(habit.createdAt)
         
-        val weeklyTrend = calculateTrend(habit, dailyTotals, target, 
-            currentStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
-            currentEnd = today,
-            previousStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1),
-            previousEnd = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusDays(1),
-            today = today
-        )
+        val weeklyTrendDeferred = async {
+            calculateTrend(habit, dailyTotals, target,
+                currentStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
+                currentEnd = today,
+                previousStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1),
+                previousEnd = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusDays(1),
+                today = today
+            )
+        }
 
-        val monthlyTrend = calculateTrend(habit, dailyTotals, target,
-            currentStart = today.withDayOfMonth(1),
-            currentEnd = today,
-            previousStart = today.withDayOfMonth(1).minusMonths(1),
-            previousEnd = today.withDayOfMonth(1).minusDays(1),
-            today = today
-        )
+        val monthlyTrendDeferred = async {
+            calculateTrend(habit, dailyTotals, target,
+                currentStart = today.withDayOfMonth(1),
+                currentEnd = today,
+                previousStart = today.withDayOfMonth(1).minusMonths(1),
+                previousEnd = today.withDayOfMonth(1).minusDays(1),
+                today = today
+            )
+        }
 
-        val longestGap = calculateLongestGap(habit, dailyTotals, target, habitStart, today)
-        val allTimeAverage = calculateOverallRate(habit, dailyTotals, target, habitStart, today)
-        val bestWeek = calculateBestWeek(habit, dailyTotals, target, habitStart, today, today)
+        val longestGapDeferred = async { calculateLongestGap(habit, dailyTotals, target, habitStart, today) }
+        val allTimeAverageDeferred = async { calculateOverallRate(habit, dailyTotals, target, habitStart, today) }
+        val bestWeekDeferred = async { calculateBestWeek(habit, dailyTotals, target, habitStart, today, today) }
 
-        return HabitTrends(
-            weeklyTrend = weeklyTrend,
-            monthlyTrend = monthlyTrend,
-            longestGap = longestGap,
-            allTimeAverage = allTimeAverage,
-            bestWeek = bestWeek
+        HabitTrends(
+            weeklyTrend = weeklyTrendDeferred.await(),
+            monthlyTrend = monthlyTrendDeferred.await(),
+            longestGap = longestGapDeferred.await(),
+            allTimeAverage = allTimeAverageDeferred.await(),
+            bestWeek = bestWeekDeferred.await()
         )
     }
 

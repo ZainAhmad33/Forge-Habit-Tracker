@@ -12,10 +12,13 @@ import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.feature.habits.state.HabitDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -24,8 +27,9 @@ import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -50,10 +54,10 @@ class HabitDetailViewModel @Inject constructor(
 
     private fun loadHabitData() {
         combine(
-            habitsService.getHabitFlow(habitId),
-            statsService.getHabitStats(habitId),
-            activityService.getActivitiesForToday(listOf(habitId)),
-            timeService.getCurrentDateFlow()
+            habitsService.getHabitFlow(habitId).distinctUntilChanged(),
+            statsService.getHabitStats(habitId).distinctUntilChanged(),
+            activityService.getActivitiesForToday(listOf(habitId)).distinctUntilChanged(),
+            timeService.getCurrentDateFlow().distinctUntilChanged()
         ) { habit, stats, todayLogs, today ->
             if (habit == null) {
                 _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
@@ -67,7 +71,8 @@ class HabitDetailViewModel @Inject constructor(
                     isLoading = false
                 )
             }
-        }.launchIn(viewModelScope)
+        }.debounce(100.milliseconds) // Avoid rapid UI updates during batch operations
+         .launchIn(viewModelScope)
     }
 
     private fun observeMonthlyData() {
@@ -76,6 +81,7 @@ class HabitDetailViewModel @Inject constructor(
                 // Fetch 4 months ending at the selected month
                 val startMonth = month.minusMonths(3)
                 statsService.getRangeActivityData(habitId, startMonth, 4)
+                    .distinctUntilChanged()
                     .map { data -> month to data }
             }
             .onEach { (month, data) ->

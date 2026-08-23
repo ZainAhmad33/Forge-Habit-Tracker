@@ -195,9 +195,29 @@ fun HabitDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
-                HabitDetailHeader(habit, stats)
+                HabitDetailHeader(
+                    emoji = habit.emoji,
+                    title = habit.title,
+                    category = habit.category,
+                    completionTargetPerDay = habit.completionTargetPerDay,
+                    targetUnit = habit.targetUnit,
+                    currentStreak = stats.currentStreak,
+                    bestStreak = stats.bestStreak,
+                    overallCompletionRate = stats.overallCompletionRate,
+                    currentStreakStartDate = stats.currentStreakStartDate
+                )
 
-                TrendsAndConsistencySection(stats.trends)
+                TrendsAndConsistencySection(
+                    weeklyTrend = stats.trends?.weeklyTrend,
+                    monthlyTrend = stats.trends?.monthlyTrend,
+                    longestGapDays = stats.trends?.longestGap?.days ?: 0,
+                    longestGapStartDate = stats.trends?.longestGap?.startDate,
+                    longestGapEndDate = stats.trends?.longestGap?.endDate,
+                    allTimeAverage = stats.trends?.allTimeAverage ?: 0f,
+                    bestWeekRate = stats.trends?.bestWeek?.rate ?: 0f,
+                    bestWeekStartDate = stats.trends?.bestWeek?.startDate,
+                    bestWeekEndDate = stats.trends?.bestWeek?.endDate
+                )
 
                 SkipDaysInfoSection(habit.skipDaysUnlocked, stats.currentStreak)
 

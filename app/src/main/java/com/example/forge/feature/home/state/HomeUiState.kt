@@ -14,6 +14,8 @@ data class HomeUiState(
     val categories: List<CategoryPill>,
     val selectedCategory: HabitCategory,
     val habits: List<HomeHabit>,
+    val isLoading: Boolean = false,
+    val searchQuery: String = ""
 ) {
     val visibleHabits: List<HomeHabit>
         get() = if (selectedCategory == HabitCategory.All) {
@@ -32,6 +34,8 @@ data class HomeUiState(
         fun from(
             dashboard: HomeDashboardUIState,
             selectedCategory: HabitCategory = HabitCategory.All,
+            isLoading: Boolean = false,
+            searchQuery: String = ""
         ) = HomeUiState(
             greetingMessage = dashboard.greetingMessage,
             greetingName = dashboard.greetingName,
@@ -40,6 +44,8 @@ data class HomeUiState(
             categories = dashboard.categories,
             selectedCategory = selectedCategory,
             habits = dashboard.habits,
+            isLoading = isLoading,
+            searchQuery = searchQuery
         )
 
         fun empty() = HomeUiState(
@@ -49,7 +55,8 @@ data class HomeUiState(
             summary = HomeSummary(0, 0, 0, 0),
             categories = emptyList(),
             selectedCategory = HabitCategory.All,
-            habits = emptyList()
+            habits = emptyList(),
+            isLoading = true
         )
     }
 }

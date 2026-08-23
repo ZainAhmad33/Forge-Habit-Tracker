@@ -23,8 +23,18 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Composable
-fun TrendsAndConsistencySection(trends: HabitTrends?) {
-    if (trends == null) return
+fun TrendsAndConsistencySection(
+    weeklyTrend: TrendData?,
+    monthlyTrend: TrendData?,
+    longestGapDays: Int,
+    longestGapStartDate: LocalDate?,
+    longestGapEndDate: LocalDate?,
+    allTimeAverage: Float,
+    bestWeekRate: Float,
+    bestWeekStartDate: LocalDate?,
+    bestWeekEndDate: LocalDate?
+) {
+    if (weeklyTrend == null || monthlyTrend == null || bestWeekStartDate == null || bestWeekEndDate == null) return
 
     Column(
         modifier = Modifier
@@ -45,26 +55,32 @@ fun TrendsAndConsistencySection(trends: HabitTrends?) {
             TrendItem(
                 label = "This week",
                 subLabel = "vs. last",
-                value = "${(trends.weeklyTrend.currentRate * 100).toInt()}%",
-                change = trends.weeklyTrend.changePercentage
+                value = "${(weeklyTrend.currentRate * 100).toInt()}%",
+                change = weeklyTrend.changePercentage
             )
             TrendItem(
                 label = "This month",
                 subLabel = "vs. last",
-                value = "${(trends.monthlyTrend.currentRate * 100).toInt()}%",
-                change = trends.monthlyTrend.changePercentage
+                value = "${(monthlyTrend.currentRate * 100).toInt()}%",
+                change = monthlyTrend.changePercentage
             )
             GapItem(
                 label = "Longest gap",
-                days = trends.longestGap.days,
-                startDate = trends.longestGap.startDate?.format(DateTimeFormatter.ofPattern("MMM d")),
-                endDate = trends.longestGap.endDate?.format(DateTimeFormatter.ofPattern("d"))
+                days = longestGapDays,
+                startDate = longestGapStartDate?.format(DateTimeFormatter.ofPattern("MMM d")),
+                endDate = longestGapEndDate?.format(DateTimeFormatter.ofPattern("d"))
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        InsightCard(trends = trends)
+        InsightCard(
+            weeklyRate = (weeklyTrend.currentRate * 100).toInt(),
+            avgRate = (allTimeAverage * 100).toInt(),
+            bestRate = (bestWeekRate * 100).toInt(),
+            bestWeekStartDate = bestWeekStartDate,
+            bestWeekEndDate = bestWeekEndDate
+        )
     }
 }
 
@@ -147,7 +163,13 @@ private fun GapItem(
 }
 
 @Composable
-private fun InsightCard(trends: HabitTrends) {
+private fun InsightCard(
+    weeklyRate: Int,
+    avgRate: Int,
+    bestRate: Int,
+    bestWeekStartDate: LocalDate,
+    bestWeekEndDate: LocalDate
+) {
     Surface(
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
         shape = MaterialTheme.shapes.medium,
@@ -165,11 +187,7 @@ private fun InsightCard(trends: HabitTrends) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             
-            val bestWeekRange = "${trends.bestWeek.startDate.format(DateTimeFormatter.ofPattern("MMM d"))}–${trends.bestWeek.endDate.format(DateTimeFormatter.ofPattern("d"))}"
-            val weeklyRate = (trends.weeklyTrend.currentRate * 100).toInt()
-            val avgRate = (trends.allTimeAverage * 100).toInt()
-            val bestRate = (trends.bestWeek.rate * 100).toInt()
-            
+            val bestWeekRange = "${bestWeekStartDate.format(DateTimeFormatter.ofPattern("MMM d"))}–${bestWeekEndDate.format(DateTimeFormatter.ofPattern("d"))}"
             val comparison = if (weeklyRate >= avgRate) "above" else "below"
             
             Text(
@@ -186,14 +204,23 @@ private fun InsightCard(trends: HabitTrends) {
 fun TrendsAndConsistencyPreview() {
     ForgeTheme {
         Box(modifier = Modifier.padding(16.dp)) {
+            val trends = HabitTrends(
+                weeklyTrend = TrendData(0.91f, 0.81f, 12),
+                monthlyTrend = TrendData(0.85f, 0.79f, 7),
+                longestGap = GapData(4, LocalDate.of(2026, 4, 2), LocalDate.of(2026, 4, 5)),
+                allTimeAverage = 0.84f,
+                bestWeek = BestWeekData(1.0f, LocalDate.of(2026, 6, 8), LocalDate.of(2026, 6, 14))
+            )
             TrendsAndConsistencySection(
-                trends = HabitTrends(
-                    weeklyTrend = TrendData(0.91f, 0.81f, 12),
-                    monthlyTrend = TrendData(0.85f, 0.79f, 7),
-                    longestGap = GapData(4, LocalDate.of(2026, 4, 2), LocalDate.of(2026, 4, 5)),
-                    allTimeAverage = 0.84f,
-                    bestWeek = BestWeekData(1.0f, LocalDate.of(2026, 6, 8), LocalDate.of(2026, 6, 14))
-                )
+                weeklyTrend = trends.weeklyTrend,
+                monthlyTrend = trends.monthlyTrend,
+                longestGapDays = trends.longestGap.days,
+                longestGapStartDate = trends.longestGap.startDate,
+                longestGapEndDate = trends.longestGap.endDate,
+                allTimeAverage = trends.allTimeAverage,
+                bestWeekRate = trends.bestWeek.rate,
+                bestWeekStartDate = trends.bestWeek.startDate,
+                bestWeekEndDate = trends.bestWeek.endDate
             )
         }
     }

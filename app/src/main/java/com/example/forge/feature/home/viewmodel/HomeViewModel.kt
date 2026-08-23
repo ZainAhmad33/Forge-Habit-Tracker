@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -45,7 +46,9 @@ class HomeViewModel @Inject constructor(
 
         HomeUiState.from(
             dashboard.copy(habits = filteredHabits),
-            selectedCategory = category
+            selectedCategory = category,
+            isLoading = false,
+            searchQuery = query
         )
     }.stateIn(
         scope = viewModelScope,
