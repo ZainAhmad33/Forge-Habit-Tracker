@@ -392,17 +392,12 @@ class HabitStatsService @Inject constructor(
                     }
                 }
 
-                // A week is "full" if its end is not after today
-                val isFullWeek = !currentWeekEnd.isAfter(today)
-
-                if (isFullWeek) {
-                    expectedDays += targetForWeek
-                    successfulDays += minOf(completionsInWeek, targetForWeek)
-                } else {
-                    // Current partial week: expected is at most the weekly target
-                    expectedDays += minOf(daysPassedInWeek, targetForWeek)
-                    successfulDays += minOf(completionsInWeek, targetForWeek)
+                if (weekStart == currentWeekStart && today == currentWeekEnd){
+                    completionsInWeek++
                 }
+
+                expectedDays += minOf(daysPassedInWeek, targetForWeek)
+                successfulDays += minOf(completionsInWeek, targetForWeek)
 
                 weekStart = weekStart.plusWeeks(1)
             }
