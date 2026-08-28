@@ -22,7 +22,12 @@ import com.example.forge.core.uiEntities.ProgressShape
 import java.util.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun HabitDetailHeader(
@@ -89,11 +94,11 @@ fun HabitDetailHeader(
                         "No active streak"
                     }
                 }
-                StatItem(label = streakLabel, value = "🔥  $currentStreak")
+                StatItem(label = streakLabel, value = "$currentStreak", icon = Icons.Rounded.LocalFireDepartment)
                 VerticalDivider()
-                StatItem(label = "Best streak", value = "🏆  $bestStreak")
+                StatItem(label = "Best streak", value = "$bestStreak", icon = Icons.Rounded.EmojiEvents)
                 VerticalDivider()
-                StatItem(label = "Avg. completion", value = "${(overallCompletionRate * 100).toInt()}%")
+                StatItem(label = "Avg. completion", value = "${(overallCompletionRate * 100).toInt()}%", icon = Icons.Rounded.CheckCircle)
             }
         }
 
@@ -101,12 +106,25 @@ fun HabitDetailHeader(
 }
 
 @Composable
-fun StatItem(label: String, value: String) {
+fun StatItem(label: String, value: String, icon: ImageVector? = null) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        }
         Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
