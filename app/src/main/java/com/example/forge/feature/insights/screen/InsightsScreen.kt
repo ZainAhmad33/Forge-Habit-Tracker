@@ -170,7 +170,7 @@ fun InsightsScreenPreview() {
     val uiState = InsightsUiState(
         isLoading = false,
         globalStats = GlobalStats(
-            completionRate = 0.82f,
+            completionRate = 0.85f,
             currentGlobalStreak = 12,
             bestGlobalStreak = 24,
             perfectDaysCount = 45,

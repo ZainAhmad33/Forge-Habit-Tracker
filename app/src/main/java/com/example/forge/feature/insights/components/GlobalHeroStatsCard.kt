@@ -36,7 +36,7 @@ fun GlobalHeroStatsCard(
         ) {
             // First Row
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatItem(
@@ -47,8 +47,8 @@ fun GlobalHeroStatsCard(
                     modifier = Modifier.weight(1f)
                 )
                 StatItem(
-                    label = "Current Streak",
-                    value = "${stats.currentGlobalStreak}d",
+                    label = "Current streak",
+                    value = "${stats.currentGlobalStreak} days",
                     icon = Icons.Rounded.LocalFireDepartment,
                     modifier = Modifier.weight(1f)
                 )
@@ -56,18 +56,18 @@ fun GlobalHeroStatsCard(
 
             // Second Row
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatItem(
-                    label = "Perfect Days",
+                    label = "Perfect days",
                     value = stats.perfectDaysCount.toString(),
                     icon = Icons.Rounded.Star,
                     modifier = Modifier.weight(1f)
                 )
                 StatItem(
-                    label = "Best Streak",
-                    value = "${stats.bestGlobalStreak}d",
+                    label = "Best streak",
+                    value = "${stats.bestGlobalStreak} days",
                     icon = Icons.Rounded.EmojiEvents,
                     modifier = Modifier.weight(1f)
                 )
@@ -92,7 +92,7 @@ private fun StatItem(
         Surface(
             modifier = Modifier.size(36.dp),
             shape = MaterialTheme.shapes.small,
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(

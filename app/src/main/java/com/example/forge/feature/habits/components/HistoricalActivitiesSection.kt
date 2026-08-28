@@ -24,7 +24,7 @@ fun HistoricalActivitiesSection(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Historical Activity",
+            text = "Historical activity",
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight(700)

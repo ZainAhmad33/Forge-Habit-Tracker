@@ -3,6 +3,8 @@ package com.example.forge.feature.insights.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,7 +27,7 @@ fun WeeklyPerformanceChart(
     
     Column(modifier = modifier) {
         Text(
-            text = "Weekly Performance",
+            text = "Weekly performance",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -85,20 +87,26 @@ fun WeeklyPerformanceChart(
         val bestDayName = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[performance.bestDay]
         val worstDayName = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[performance.worstDay]
         
-        Card(
-            modifier = Modifier.padding(top = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+        Surface(
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.padding(top = 16.dp).fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier.padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(text = "💡", fontSize = 16.sp)
+                Icon(
+                    imageVector = Icons.Outlined.Lightbulb,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
                 Text(
                     text = "You're most consistent on $bestDayName and tend to skip $worstDayName.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = 20.sp
                 )
             }
         }

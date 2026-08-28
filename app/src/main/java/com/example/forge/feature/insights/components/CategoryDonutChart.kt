@@ -35,7 +35,7 @@ fun CategoryDonutChart(
     
     Column(modifier = modifier) {
         Text(
-            text = "Category Breakdown",
+            text = "Category breakdown",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )

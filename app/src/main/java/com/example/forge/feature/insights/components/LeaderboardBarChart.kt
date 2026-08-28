@@ -26,7 +26,7 @@ fun LeaderboardBarChart(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column {
             Text(
-                text = "Habit Leaderboard",
+                text = "Habit leaderboard",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )

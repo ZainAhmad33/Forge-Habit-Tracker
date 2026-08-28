@@ -23,7 +23,7 @@ fun StreakDistributionChart(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "Streak Distribution",
+            text = "Streak distribution",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
