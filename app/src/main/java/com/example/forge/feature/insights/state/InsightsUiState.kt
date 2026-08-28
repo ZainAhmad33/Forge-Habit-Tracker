@@ -4,7 +4,6 @@ import com.example.forge.core.services.interfaces.*
 
 data class InsightsUiState(
     val isLoading: Boolean = true,
-    val selectedPeriod: InsightPeriod = InsightPeriod.Week,
     val globalStats: GlobalStats? = null,
     val heatmap: List<HeatmapCell> = emptyList(),
     val momentumTrend: List<MomentumPoint> = emptyList(),

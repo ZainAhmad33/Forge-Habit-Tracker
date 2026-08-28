@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.forge.core.designsystem.theme.ForgeTheme
@@ -21,7 +22,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun MomentumLineChart(
     points: List<MomentumPoint>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     if (points.isEmpty()) return
     
@@ -31,8 +33,19 @@ fun MomentumLineChart(
         Text(
             text = "Momentum",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            fontWeight = FontWeight.Bold
         )
+
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         
         Canvas(
             modifier = Modifier
@@ -101,6 +114,10 @@ fun MomentumLineChartPreview() {
         MomentumPoint(LocalDate.now().minusDays(i.toLong()), (i % 10) / 10f, (i % 20) / 20f)
     }.reversed()
     ForgeTheme {
-        MomentumLineChart(points = samplePoints, modifier = Modifier.padding(16.dp))
+        MomentumLineChart(
+            points = samplePoints,
+            modifier = Modifier.padding(16.dp),
+            description = "7-day and 30-day rolling completion averages."
+        )
     }
 }

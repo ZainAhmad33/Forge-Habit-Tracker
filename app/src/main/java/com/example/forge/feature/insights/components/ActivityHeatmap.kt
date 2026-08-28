@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.forge.core.designsystem.theme.ForgeTheme
@@ -20,7 +21,8 @@ import java.time.LocalDate
 @Composable
 fun ActivityHeatmap(
     cells: List<HeatmapCell>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     val weeks = cells.chunked(7)
     
@@ -28,8 +30,19 @@ fun ActivityHeatmap(
         Text(
             text = "Activity",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
+            fontWeight = FontWeight.Bold
         )
+
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -94,6 +107,10 @@ fun ActivityHeatmapPreview() {
         HeatmapCell(LocalDate.now().minusDays(i.toLong()), (0..4).random(), emptyList())
     }
     ForgeTheme {
-        ActivityHeatmap(cells = sampleCells, modifier = Modifier.padding(16.dp))
+        ActivityHeatmap(
+            cells = sampleCells,
+            modifier = Modifier.padding(16.dp),
+            description = "Your habit completion density over the past year."
+        )
     }
 }

@@ -37,7 +37,6 @@ fun InsightsRoute(
 
     InsightsScreen(
         uiState = uiState,
-        onPeriodSelected = viewModel::onPeriodSelected,
         onNavigateToHome = onNavigateToHome,
         onAddHabitClick = onAddHabitClick,
         modifier = modifier
@@ -48,7 +47,6 @@ fun InsightsRoute(
 @Composable
 fun InsightsScreen(
     uiState: InsightsUiState,
-    onPeriodSelected: (InsightPeriod) -> Unit,
     onNavigateToHome: () -> Unit,
     onAddHabitClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -95,60 +93,58 @@ fun InsightsScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    // Period Selector
-                    PeriodSelector(
-                        selectedPeriod = uiState.selectedPeriod,
-                        onPeriodSelected = onPeriodSelected
-                    )
-
                     // Hero Stats
                     uiState.globalStats?.let { stats ->
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            StatCard(
-                                label = "Completion",
-                                value = "${(stats.completionRate * 100).toInt()}%",
-                                icon = Icons.Rounded.CheckCircle,
-                                delta = stats.rateChange,
-                                modifier = Modifier.weight(1f)
+                        Column {
+                            Text(
+                                text = "Overview",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
-                            StatCard(
-                                label = "Streak",
-                                value = "${stats.currentGlobalStreak}d",
-                                icon = Icons.Rounded.LocalFireDepartment,
-                                modifier = Modifier.weight(1f)
+                            Text(
+                                text = "Your overall performance since you started.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 12.dp)
                             )
-                        }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            StatCard(
-                                label = "Perfect Days",
-                                value = stats.perfectDaysCount.toString(),
-                                icon = Icons.Rounded.Star,
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatCard(
-                                label = "Best Global",
-                                value = "${stats.bestGlobalStreak}d",
-                                icon = Icons.Rounded.EmojiEvents,
-                                modifier = Modifier.weight(1f)
-                            )
+                            
+                            GlobalHeroStatsCard(stats = stats)
                         }
                     }
 
-                    ActivityHeatmap(cells = uiState.heatmap)
+                    ActivityHeatmap(
+                        cells = uiState.heatmap,
+                        description = "Your habit completion density over the past year."
+                    )
 
-                    MomentumLineChart(points = uiState.momentumTrend)
+                    MomentumLineChart(
+                        points = uiState.momentumTrend,
+                        description = "7-day and 30-day rolling completion averages."
+                    )
 
-                    LeaderboardBarChart(entries = uiState.leaderboard)
+                    LeaderboardBarChart(
+                        entries = uiState.leaderboard,
+                        description = "Top performing habits by completion rate."
+                    )
 
                     uiState.weeklyPerformance?.let {
-                        WeeklyPerformanceChart(performance = it)
+                        WeeklyPerformanceChart(
+                            performance = it,
+                            description = "Average completion rate by day of the week."
+                        )
                     }
 
-                    CategoryDonutChart(shares = uiState.categoryBreakdown)
+                    CategoryDonutChart(
+                        shares = uiState.categoryBreakdown,
+                        description = "Habit distribution across different life areas."
+                    )
 
-                    StreakDistributionChart(buckets = uiState.streakDistribution)
+                    StreakDistributionChart(
+                        buckets = uiState.streakDistribution,
+                        description = "Current streak length buckets for all active habits."
+                    )
                     
                     Spacer(modifier = Modifier.height(80.dp)) // Extra space for bottom nav
                 }
@@ -173,7 +169,6 @@ fun InsightsScreenPreview() {
     val today = LocalDate.now()
     val uiState = InsightsUiState(
         isLoading = false,
-        selectedPeriod = InsightPeriod.Week,
         globalStats = GlobalStats(
             completionRate = 0.82f,
             currentGlobalStreak = 12,
@@ -213,27 +208,8 @@ fun InsightsScreenPreview() {
     ForgeTheme {
         InsightsScreen(
             uiState = uiState,
-            onPeriodSelected = {},
             onNavigateToHome = {},
             onAddHabitClick = {}
         )
-    }
-}
-
-@Composable
-fun PeriodSelector(
-    selectedPeriod: InsightPeriod,
-    onPeriodSelected: (InsightPeriod) -> Unit
-) {
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        InsightPeriod.entries.forEachIndexed { index, period ->
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = InsightPeriod.entries.size),
-                onClick = { onPeriodSelected(period) },
-                selected = period == selectedPeriod
-            ) {
-                Text(period.name)
-            }
-        }
     }
 }

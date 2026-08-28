@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.forge.core.database.entity.HabitCategory
@@ -19,7 +20,8 @@ import com.example.forge.core.services.interfaces.CategoryShare
 @Composable
 fun CategoryDonutChart(
     shares: List<CategoryShare>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     if (shares.size < 2) return
     
@@ -35,8 +37,19 @@ fun CategoryDonutChart(
         Text(
             text = "Category Breakdown",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            fontWeight = FontWeight.Bold
         )
+
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -84,6 +97,10 @@ fun CategoryDonutChartPreview() {
         CategoryShare(HabitCategory.Home, 0.4f, 1)
     )
     ForgeTheme {
-        CategoryDonutChart(shares = sampleShares, modifier = Modifier.padding(16.dp))
+        CategoryDonutChart(
+            shares = sampleShares,
+            modifier = Modifier.padding(16.dp),
+            description = "Habit distribution across different life areas."
+        )
     }
 }

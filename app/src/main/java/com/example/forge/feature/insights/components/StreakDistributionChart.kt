@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -17,14 +18,26 @@ import com.example.forge.core.services.interfaces.StreakBucket
 @Composable
 fun StreakDistributionChart(
     buckets: List<StreakBucket>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     Column(modifier = modifier) {
         Text(
             text = "Streak Distribution",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            fontWeight = FontWeight.Bold
         )
+
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -65,6 +78,10 @@ fun StreakDistributionChartPreview() {
         StreakBucket("30+ days", 1)
     )
     ForgeTheme {
-        StreakDistributionChart(buckets = sampleBuckets, modifier = Modifier.padding(16.dp))
+        StreakDistributionChart(
+            buckets = sampleBuckets,
+            modifier = Modifier.padding(16.dp),
+            description = "Current streak length buckets for all active habits."
+        )
     }
 }

@@ -20,14 +20,26 @@ import java.util.UUID
 @Composable
 fun LeaderboardBarChart(
     entries: List<LeaderboardEntry>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = "Habit Leaderboard",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
+        Column {
+            Text(
+                text = "Habit Leaderboard",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+        }
         
         entries.take(5).forEach { entry ->
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -75,6 +87,10 @@ fun LeaderboardBarChartPreview() {
         LeaderboardEntry(UUID.randomUUID(), "Meditation", "🧘", 0.5f)
     )
     ForgeTheme {
-        LeaderboardBarChart(entries = sampleEntries, modifier = Modifier.padding(16.dp))
+        LeaderboardBarChart(
+            entries = sampleEntries,
+            modifier = Modifier.padding(16.dp),
+            description = "Top performing habits by completion rate."
+        )
     }
 }

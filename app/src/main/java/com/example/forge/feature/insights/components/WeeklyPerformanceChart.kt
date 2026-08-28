@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,7 +17,8 @@ import com.example.forge.core.services.interfaces.WeeklyPerformance
 @Composable
 fun WeeklyPerformanceChart(
     performance: WeeklyPerformance,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     val dayNames = listOf("M", "T", "W", "T", "F", "S", "S")
     val primary = MaterialTheme.colorScheme.primary
@@ -25,8 +27,19 @@ fun WeeklyPerformanceChart(
         Text(
             text = "Weekly Performance",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            fontWeight = FontWeight.Bold
         )
+
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         
         Row(
             modifier = Modifier
@@ -87,6 +100,10 @@ fun WeeklyPerformanceChartPreview() {
         worstDay = 6
     )
     ForgeTheme {
-        WeeklyPerformanceChart(performance = samplePerformance, modifier = Modifier.padding(16.dp))
+        WeeklyPerformanceChart(
+            performance = samplePerformance,
+            modifier = Modifier.padding(16.dp),
+            description = "Average completion rate by day of the week."
+        )
     }
 }
