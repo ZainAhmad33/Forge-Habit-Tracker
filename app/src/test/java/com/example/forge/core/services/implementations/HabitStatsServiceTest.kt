@@ -112,23 +112,26 @@ class HabitStatsServiceTest {
     @Test
     fun `SpecificDays streak - skips non-tracked days`() {
         // Monday(0) and Wednesday(2)
-        val today = LocalDate.of(2026, 8, 24) // Monday
+        val today = LocalDate.of(2026, 8, 28) // Friday
         val lastWednesday = today.minusDays(5) // Wednesday Aug 19
         
         val habit = createHabit(
             frequency = HabitFrequency.SpecificDays,
-            trackedDays = listOf(0, 2),
-            createdAt = today.minusDays(10)
+            trackedDays = listOf(0, 2), // Monday and Wednesday
+            createdAt = LocalDate.of(2026, 8, 13) // Thursday
         )
         val dailyTotals = mapOf(
-            today to 1,
-            lastWednesday to 1
+            LocalDate.of(2026, 8, 17) to 1,
+            LocalDate.of(2026, 8, 19) to 1,
+            LocalDate.of(2026, 8, 24) to 1,
+            LocalDate.of(2026, 8, 26) to 1,
+
         )
 
         // Streak should be 6 because it increments for non-scheduled days (Tue, Sun, Sat, Fri, Thu)
         // Aug 24 (Done), 23, 22, 21, 20, 19 (Done)
         val streak = service.calculateCurrentStreak(habit, dailyTotals, 1, today)
-        assertEquals(6, streak.count)
+        assertEquals(16, streak.count)
     }
 
     @Test

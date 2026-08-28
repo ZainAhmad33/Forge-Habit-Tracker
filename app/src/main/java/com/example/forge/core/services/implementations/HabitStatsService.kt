@@ -109,7 +109,7 @@ class HabitStatsService @Inject constructor(
             return calculateCurrentStreakForDaysPerWeek(habit, today, dailyTotals, target)
         }
 
-        val firstDate = dailyTotals.keys.minOrNull() ?: return StreakInfo(0, null)
+        val firstDate = timeService.toLocalDate(habit.createdAt)
         val lastDate = today
         var streak = 0
         var current = lastDate
@@ -334,7 +334,7 @@ class HabitStatsService @Inject constructor(
         }
 
         if (dailyTotals.isEmpty()) return 0
-        val firstDate = dailyTotals.keys.minOrNull() ?: return 0
+        val firstDate = timeService.toLocalDate(habit.createdAt)
         val lastDate = today
         var maxStreak = 0
         var currentStreak = 0
