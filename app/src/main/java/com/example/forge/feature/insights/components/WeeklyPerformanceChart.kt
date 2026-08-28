@@ -44,26 +44,40 @@ fun WeeklyPerformanceChart(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp),
+                .height(140.dp), // Total area for chart + labels
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
             dayNames.forEachIndexed { index, name ->
                 val rate = performance.dayRates[index] ?: 0f
                 Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.Bottom
                 ) {
+                    // Bar Area (Occupies remaining height above label)
                     Box(
-                        modifier = Modifier
-                            .width(24.dp)
-                            .fillMaxHeight(fraction = rate.coerceAtLeast(0.05f))
-                            .background(
-                                color = if (rate == (performance.dayRates[performance.bestDay] ?: -1f)) primary else primary.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                            )
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(24.dp)
+                                .fillMaxHeight(fraction = rate.coerceAtLeast(0.08f))
+                                .background(
+                                    color = if (rate == (performance.dayRates[performance.bestDay] ?: -1f)) primary else primary.copy(alpha = 0.4f),
+                                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                )
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = name, 
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(text = name, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
