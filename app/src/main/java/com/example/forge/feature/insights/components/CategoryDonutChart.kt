@@ -45,18 +45,18 @@ fun CategoryDonutChart(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
         } else {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
         
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
+            horizontalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Canvas(modifier = Modifier.size(140.dp)) {
+            Canvas(modifier = Modifier.size(100.dp)) {
                 var startAngle = -90f
                 val total = shares.sumOf { it.habitCount.toDouble() }.toFloat()
                 
@@ -67,7 +67,7 @@ fun CategoryDonutChart(
                         startAngle = startAngle,
                         sweepAngle = sweepAngle,
                         useCenter = false,
-                        style = Stroke(width = 30.dp.toPx())
+                        style = Stroke(width = 20.dp.toPx())
                     )
                     startAngle += sweepAngle
                 }
