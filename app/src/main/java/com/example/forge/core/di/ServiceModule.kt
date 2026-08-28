@@ -5,10 +5,12 @@ import com.example.forge.core.services.implementations.HabitsService
 import com.example.forge.core.services.implementations.HomeService
 import com.example.forge.core.services.implementations.HabitStatsService
 import com.example.forge.core.services.implementations.TimeService
+import com.example.forge.core.services.implementations.InsightsService
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.IHomeService
+import com.example.forge.core.services.interfaces.IInsightsService
 import com.example.forge.core.services.interfaces.ITimeService
 import dagger.Binds
 import dagger.Module
@@ -25,6 +27,12 @@ abstract class ServiceModule {
     abstract fun bindHomeService(
         impl: HomeService
     ): IHomeService
+
+    @Binds
+    @Singleton
+    abstract fun bindInsightsService(
+        impl: InsightsService
+    ): IInsightsService
 
     @Binds
     @Singleton

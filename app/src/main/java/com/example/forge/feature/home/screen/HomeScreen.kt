@@ -69,6 +69,7 @@ import java.util.Locale
 fun HomeRoute(
     onAddHabitClick: () -> Unit,
     onHabitDetailsClick: (String) -> Unit,
+    onNavigateToInsights: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -82,6 +83,7 @@ fun HomeRoute(
         onCategorySelected = viewModel::onCategorySelected,
         onAddHabitClick = onAddHabitClick,
         onHabitDetailsClick = onHabitDetailsClick,
+        onNavigateToInsights = onNavigateToInsights,
         modifier = modifier,
         searchHabits = viewModel::searchHabits,
         onHabitCardClick = viewModel::onHabitClick,
@@ -99,6 +101,7 @@ fun HomeScreen(
     searchHabits: (String) -> Unit,
     onAddHabitClick: () -> Unit,
     onHabitDetailsClick: (String) -> Unit,
+    onNavigateToInsights: () -> Unit,
     onHabitCardClick: (habit: HomeHabit) -> Unit,
     onLogProgress: (String, Int) -> Unit,
     onDismissBottomSheet: () -> Unit,
@@ -226,7 +229,10 @@ fun HomeScreen(
             }
             BottomNavBar(
                 scrollBehavior = scrollBehavior,
-                onAddHabitClick = onAddHabitClick
+                onAddHabitClick = onAddHabitClick,
+                initialSelected = "Home",
+                onNavigateToHome = {},
+                onNavigateToInsights = onNavigateToInsights
             )
         }
 
@@ -359,6 +365,7 @@ private fun HomeScreenPreview() {
             searchHabits = {},
             onAddHabitClick = {},
             onHabitDetailsClick = {},
+            onNavigateToInsights = {},
             onHabitCardClick = {},
             onLogProgress = { _, _ -> },
             onDismissBottomSheet = {}

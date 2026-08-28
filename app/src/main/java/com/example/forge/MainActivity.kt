@@ -24,6 +24,7 @@ import androidx.navigation.navArgument
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.feature.habits.screen.HabitDetailRoute
 import com.example.forge.feature.home.screen.HomeRoute
+import com.example.forge.feature.insights.screen.InsightsRoute
 import com.example.forge.feature.upserthabit.screen.NewHabitRoute
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
@@ -58,7 +59,26 @@ fun ForgeApp() {
                 onAddHabitClick = { navController.navigate("new_habit") },
                 onHabitDetailsClick = { habitId ->
                     navController.navigate("habit_detail/$habitId")
+                },
+                onNavigateToInsights = {
+                    navController.navigate("insights") {
+                        popUpTo("home") { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
+            )
+        }
+        composable("insights") {
+            InsightsRoute(
+                onNavigateToHome = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onAddHabitClick = { navController.navigate("new_habit") }
             )
         }
         composable(
