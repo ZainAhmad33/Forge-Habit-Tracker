@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -59,6 +60,24 @@ fun MomentumLineChart(
             fun getX(index: Int) = index * stepX
             fun getY(value: Float) = height - (value * height)
             
+            // 1. Draw 30-day rolling avg (Baseline)
+            val path30 = Path().apply {
+                moveTo(getX(0), getY(points[0].thirtyDayRollingAvg))
+                for (i in 1 until points.size) {
+                    lineTo(getX(i), getY(points[i].thirtyDayRollingAvg))
+                }
+            }
+            
+            drawPath(
+                path = path30,
+                color = primary.copy(alpha = 0.3f),
+                style = Stroke(
+                    width = 1.5.dp.toPx(),
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                )
+            )
+            
+            // 2. Draw 7-day rolling avg (Current Trend)
             val path7 = Path().apply {
                 moveTo(getX(0), getY(points[0].sevenDayRollingAvg))
                 for (i in 1 until points.size) {
@@ -69,9 +88,10 @@ fun MomentumLineChart(
             drawPath(
                 path = path7,
                 color = primary,
-                style = Stroke(width = 2.dp.toPx())
+                style = Stroke(width = 2.5.dp.toPx())
             )
             
+            // 3. Gradient fill for the 7-day trend
             val fillPath = Path().apply {
                 moveTo(getX(0), height)
                 lineTo(getX(0), getY(points[0].sevenDayRollingAvg))
@@ -85,25 +105,58 @@ fun MomentumLineChart(
             drawPath(
                 path = fillPath,
                 brush = Brush.verticalGradient(
-                    colors = listOf(primary.copy(alpha = 0.3f), Color.Transparent)
+                    colors = listOf(primary.copy(alpha = 0.2f), Color.Transparent)
                 )
             )
             
+            // 4. Highlight current point
             val lastPoint = points.last()
             drawCircle(
                 color = primary,
-                radius = 4.dp.toPx(),
+                radius = 5.dp.toPx(),
                 center = Offset(getX(points.size - 1), getY(lastPoint.sevenDayRollingAvg))
             )
         }
         
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = points.first().date.format(DateTimeFormatter.ofPattern("MMM d")), style = MaterialTheme.typography.labelSmall)
-            Text(text = points.last().date.format(DateTimeFormatter.ofPattern("MMM d")), style = MaterialTheme.typography.labelSmall)
+            Text(
+                text = points.first().date.format(DateTimeFormatter.ofPattern("MMM d")),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            // Legend
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                LegendItem(color = primary, label = "7-day (Trend)", isDashed = false)
+                LegendItem(color = primary.copy(alpha = 0.4f), label = "30-day (Baseline)", isDashed = true)
+            }
+
+            Text(
+                text = points.last().date.format(DateTimeFormatter.ofPattern("MMM d")),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, label: String, isDashed: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Canvas(modifier = Modifier.size(width = 16.dp, height = 2.dp)) {
+            drawLine(
+                color = color,
+                start = Offset.Zero,
+                end = Offset(size.width, 0f),
+                strokeWidth = size.height,
+                pathEffect = if (isDashed) androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f) else null
+            )
+        }
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

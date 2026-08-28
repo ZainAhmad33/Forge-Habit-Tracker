@@ -121,7 +121,7 @@ fun InsightsScreen(
 
                     MomentumLineChart(
                         points = uiState.momentumTrend,
-                        description = "7-day and 30-day rolling completion averages."
+                        description = "Direction of your consistency. A trend line above the 30-day baseline indicates you're improving."
                     )
 
                     LeaderboardBarChart(
