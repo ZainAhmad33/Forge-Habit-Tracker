@@ -21,6 +21,7 @@ import com.example.forge.core.designsystem.component.BottomNavBar
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.services.interfaces.*
 import com.example.forge.feature.insights.components.*
+import com.example.forge.feature.insights.components.InsightsScreenSkeleton
 import com.example.forge.feature.insights.state.InsightsUiState
 import com.example.forge.feature.insights.viewmodel.InsightsViewModel
 import java.time.LocalDate
@@ -59,7 +60,12 @@ fun InsightsScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Insights", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        text = "Insights", 
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    ) 
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -68,9 +74,7 @@ fun InsightsScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                InsightsScreenSkeleton()
             } else if (uiState.isEmpty) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(32.dp),

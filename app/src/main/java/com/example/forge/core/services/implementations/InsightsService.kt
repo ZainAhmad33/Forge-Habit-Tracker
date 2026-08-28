@@ -268,11 +268,12 @@ class InsightsService @Inject constructor(
     }
 
     private fun getPreviousPeriodRange(period: InsightPeriod, currentStart: LocalDate): Pair<LocalDate, LocalDate> {
+        if (currentStart == LocalDate.MIN) return LocalDate.MIN to LocalDate.MIN
         return when (period) {
             InsightPeriod.Today -> currentStart.minusDays(1) to currentStart.minusDays(1)
             InsightPeriod.Week -> currentStart.minusWeeks(1) to currentStart.minusDays(1)
             InsightPeriod.Month -> currentStart.minusMonths(1) to currentStart.minusDays(1)
-            InsightPeriod.AllTime -> LocalDate.MIN to currentStart.minusDays(1)
+            InsightPeriod.AllTime -> LocalDate.MIN to currentStart
         }
     }
 

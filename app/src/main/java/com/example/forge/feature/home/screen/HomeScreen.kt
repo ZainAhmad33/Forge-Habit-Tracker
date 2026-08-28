@@ -56,6 +56,7 @@ import com.example.forge.feature.home.components.HabitGrid
 import com.example.forge.feature.home.components.HabitLogBottomSheet
 import com.example.forge.feature.home.components.HomeAppBar
 import com.example.forge.feature.home.components.HomeHeader
+import com.example.forge.feature.home.components.HomeScreenSkeleton
 import com.example.forge.feature.home.components.HomeSummaryCard
 import com.example.forge.feature.home.components.SectionHeader
 import com.example.forge.feature.home.state.HomeUiState
@@ -151,19 +152,7 @@ fun HomeScreen(
             color = MaterialTheme.colorScheme.surface,
         ) {
             if (uiState.isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Loading habits...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                HomeScreenSkeleton()
             } else {
                 Column(
                     modifier = Modifier
