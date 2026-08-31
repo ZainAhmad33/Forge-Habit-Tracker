@@ -2,6 +2,7 @@ package com.example.forge.feature.home.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -150,10 +151,15 @@ fun HomeScreen(
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.surface,
-        ) {
+        )
+        {
             if (uiState.isLoading) {
-                HomeScreenSkeleton()
-            } else {
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    HomeScreenSkeleton()
+                }
+            } 
+            else 
+            {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

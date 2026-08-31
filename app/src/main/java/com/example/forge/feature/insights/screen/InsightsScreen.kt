@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,7 +58,9 @@ fun InsightsScreen(
     )
     
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
@@ -72,12 +75,20 @@ fun InsightsScreen(
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surface,
+        ) {
             if (uiState.isLoading) {
-                InsightsScreenSkeleton()
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    InsightsScreenSkeleton()
+                }
             } else if (uiState.isEmpty) {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(32.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(32.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -96,6 +107,7 @@ fun InsightsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
+                        .padding(innerPadding)
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
@@ -154,15 +166,13 @@ fun InsightsScreen(
                 }
             }
             
-            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                BottomNavBar(
-                    scrollBehavior = scrollBehavior,
-                    onAddHabitClick = onAddHabitClick,
-                    initialSelected = "Insights",
-                    onNavigateToHome = onNavigateToHome,
-                    onNavigateToInsights = {}
-                )
-            }
+            BottomNavBar(
+                scrollBehavior = scrollBehavior,
+                onAddHabitClick = onAddHabitClick,
+                initialSelected = "Insights",
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToInsights = {}
+            )
         }
     }
 }
