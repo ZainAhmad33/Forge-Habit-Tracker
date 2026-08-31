@@ -24,11 +24,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.designsystem.component.ActivityMonthlyPager
 import com.example.forge.core.designsystem.component.BottomNavBar
+import com.example.forge.core.designsystem.component.HeroStatCard
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.services.interfaces.*
 import com.example.forge.core.uiEntities.ActivityData
-import com.example.forge.feature.insights.components.*
+import com.example.forge.core.uiEntities.HeroStatItem
 import com.example.forge.feature.insights.components.InsightsScreenSkeleton
+import com.example.forge.feature.insights.components.LeaderboardBarChart
+import com.example.forge.feature.insights.components.MomentumLineChart
+import com.example.forge.feature.insights.components.StreakDistributionChart
+import com.example.forge.feature.insights.components.WeeklyPerformanceChart
+import com.example.forge.feature.insights.components.CategoryDonutChart
 import com.example.forge.feature.insights.state.InsightsUiState
 import com.example.forge.feature.insights.viewmodel.InsightsViewModel
 import java.time.YearMonth
@@ -137,8 +143,31 @@ fun InsightsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
+                            val statItems = listOf(
+                                HeroStatItem(
+                                    label = "Completion",
+                                    value = "${(stats.completionRate * 100).toInt()}%",
+                                    icon = Icons.Rounded.CheckCircle,
+                                    delta = stats.rateChange
+                                ),
+                                HeroStatItem(
+                                    label = "Current streak",
+                                    value = "${stats.currentGlobalStreak} days",
+                                    icon = Icons.Rounded.LocalFireDepartment
+                                ),
+                                HeroStatItem(
+                                    label = "Perfect days",
+                                    value = stats.perfectDaysCount.toString(),
+                                    icon = Icons.Rounded.Star
+                                ),
+                                HeroStatItem(
+                                    label = "Best streak",
+                                    value = "${stats.bestGlobalStreak} days",
+                                    icon = Icons.Rounded.EmojiEvents
+                                )
+                            )
                             
-                            GlobalHeroStatsCard(stats = stats)
+                            HeroStatCard(items = statItems)
                         }
                     }
 
