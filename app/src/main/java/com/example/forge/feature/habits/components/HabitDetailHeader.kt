@@ -23,11 +23,15 @@ import java.util.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.forge.core.designsystem.component.HeroStatCard
+import com.example.forge.core.uiEntities.HeroStatItem
 
 @Composable
 fun HabitDetailHeader(
@@ -77,31 +81,38 @@ fun HabitDetailHeader(
 
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-        ){
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .height(56.dp), horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
-                val streakLabel = remember(currentStreak, currentStreakStartDate) {
-                    if (currentStreak > 0 && currentStreakStartDate != null) {
-                        val formatter = DateTimeFormatter.ofPattern("MMM, d", Locale.getDefault())
-                        "Started ${currentStreakStartDate.format(formatter)}"
-                    } else {
-                        "No active streak"
-                    }
-                }
-                StatItem(label = streakLabel, value = "$currentStreak", icon = Icons.Rounded.LocalFireDepartment)
-                VerticalDivider()
-                StatItem(label = "Best streak", value = "$bestStreak", icon = Icons.Rounded.EmojiEvents)
-                VerticalDivider()
-                StatItem(label = "Avg. completion", value = "${(overallCompletionRate * 100).toInt()}%", icon = Icons.Rounded.CheckCircle)
+        val streakLabel = remember(currentStreak, currentStreakStartDate) {
+            if (currentStreak > 0 && currentStreakStartDate != null) {
+                val formatter = DateTimeFormatter.ofPattern("MMM, d", Locale.getDefault())
+                "${currentStreakStartDate.format(formatter)}"
+            } else {
+                "No active streak"
             }
         }
+        val statItems = listOf(
+            HeroStatItem(
+                label = "Current streak",
+                value = "$currentStreak days",
+                icon = Icons.Rounded.LocalFireDepartment
+            ),
+            HeroStatItem(
+                label = "Best streak",
+                value = "$bestStreak days",
+                icon = Icons.Rounded.EmojiEvents
+            ),
+            HeroStatItem(
+                label = if (streakLabel == "No active streak") "" else "Started on",
+                value = streakLabel,
+                icon = Icons.Rounded.CalendarMonth
+            ),
+            HeroStatItem(
+                label = "Overall completion",
+                value = "${(overallCompletionRate * 100).toInt()}%",
+                icon = Icons.Rounded.CheckCircle
+            )
+        )
 
+        HeroStatCard(items = statItems)
     }
 }
 
