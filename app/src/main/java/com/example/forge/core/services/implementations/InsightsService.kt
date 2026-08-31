@@ -4,6 +4,7 @@ import com.example.forge.core.database.entity.Habit
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.interfaces.*
+import com.example.forge.core.uiEntities.ActivityData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -58,29 +59,38 @@ class InsightsService @Inject constructor(
         }.flowOn(Dispatchers.Default)
     }
 
-    override fun getActivityHeatmap(): Flow<List<HeatmapCell>> {
+    override fun getActivityHeatmap(): Flow<List<ActivityData>> {
         return combine(
             habitRepository.getHabits(),
             activityService.getAllDailyQuantities(),
             timeService.getCurrentDateFlow()
         ) { habits, dailyQuantities, today ->
-            val habitMap = habits.associateBy { it.id }
-            val dailyActivity = dailyQuantities.associateBy { it.day }
+            val habitDailyTotals = dailyQuantities.groupBy { it.habitId }
+                .mapValues { (_, quantities) -> quantities.associate { it.day to it.totalQuantity } }
             
             val startDate = today.minusDays(364)
-            val cells = mutableListOf<HeatmapCell>()
+            val activities = mutableListOf<ActivityData>()
             
             for (i in 0..364) {
                 val date = startDate.plusDays(i.toLong())
-                val count = dailyQuantities.count { it.day == date && it.totalQuantity > 0 } // Basic implementation: any habit done
-                // Actually we should track which habits were done
-                // We don't have per-habit quantity in getAllDailyQuantities easily mapped back to habit titles here without more info
-                // But for now, intensity based on count of completed habits
                 
-                // We might need a better query to get (Date, List<HabitTitle>)
-                cells.add(HeatmapCell(date, calculateIntensity(count), emptyList()))
+                var totalExpected = 0
+                var totalCompleted = 0
+                
+                habits.forEach { habit ->
+                    if (isHabitScheduled(habit, date)) {
+                        totalExpected++
+                        val totals = habitDailyTotals[habit.id] ?: emptyMap()
+                        if ((totals[date] ?: 0) >= habit.completionTargetPerDay) {
+                            totalCompleted++
+                        }
+                    }
+                }
+                
+                val percentage = if (totalExpected > 0) (totalCompleted.toFloat() / totalExpected * 100).toInt() else 0
+                activities.add(ActivityData(date, percentage))
             }
-            cells
+            activities
         }.flowOn(Dispatchers.Default)
     }
 
@@ -350,16 +360,6 @@ class InsightsService @Inject constructor(
             date = date.plusDays(1)
         }
         return perfectDays
-    }
-
-    private fun calculateIntensity(count: Int): Int {
-        return when {
-            count == 0 -> 0
-            count == 1 -> 1
-            count in 2..3 -> 2
-            count in 4..5 -> 3
-            else -> 4
-        }
     }
 
     private fun calculateRollingAverage(habits: List<Habit>, habitDailyTotals: Map<UUID, Map<LocalDate, Int>>, endDate: LocalDate, days: Int): Float {

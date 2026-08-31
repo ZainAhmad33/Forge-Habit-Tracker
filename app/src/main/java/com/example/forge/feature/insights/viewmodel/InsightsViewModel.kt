@@ -3,10 +3,12 @@ package com.example.forge.feature.insights.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.forge.core.services.interfaces.*
+import com.example.forge.core.uiEntities.ActivityData
 import com.example.forge.feature.insights.state.InsightsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
@@ -17,6 +19,9 @@ class InsightsViewModel @Inject constructor(
 
     private val _selectedMomentumMonth = MutableStateFlow(YearMonth.now())
     val selectedMomentumMonth = _selectedMomentumMonth.asStateFlow()
+
+    private val _selectedHeatmapMonth = MutableStateFlow(YearMonth.now())
+    val selectedHeatmapMonth = _selectedHeatmapMonth.asStateFlow()
 
     private val momentumMonths = insightsService.getEarliestHabitDate().map { earliestDate ->
         val start = earliestDate?.let { YearMonth.from(it) } ?: YearMonth.now()
@@ -42,24 +47,30 @@ class InsightsViewModel @Inject constructor(
         insightsService.getCategoryBreakdown(),
         insightsService.getStreakDistribution(),
         momentumMonths,
-        _selectedMomentumMonth
+        _selectedMomentumMonth,
+        _selectedHeatmapMonth,
+        insightsService.getEarliestHabitDate()
     ) { flows ->
         val stats = flows[0] as GlobalStats
-        val heatmap = flows[1] as List<HeatmapCell>
+        val heatmap = flows[1] as List<ActivityData>
         val momentum = flows[2] as List<MomentumPoint>
         val leaderboard = flows[3] as List<LeaderboardEntry>
         val weekly = flows[4] as WeeklyPerformance
         val categories = flows[5] as List<CategoryShare>
         val streaks = flows[6] as List<StreakBucket>
         val months = flows[7] as List<YearMonth>
-        val currentMonth = flows[8] as YearMonth
+        val currentMomentumMonth = flows[8] as YearMonth
+        val currentHeatmapMonth = flows[9] as YearMonth
+        val earliestDate = flows[10] as LocalDate?
 
         InsightsUiState(
             isLoading = false,
             globalStats = stats,
             heatmap = heatmap,
+            earliestHabitDate = earliestDate,
+            selectedHeatmapMonth = currentHeatmapMonth,
             momentumTrend = momentum,
-            currentMomentumMonth = currentMonth,
+            currentMomentumMonth = currentMomentumMonth,
             momentumMonths = months,
             leaderboard = leaderboard,
             weeklyPerformance = weekly,
@@ -75,5 +86,9 @@ class InsightsViewModel @Inject constructor(
 
     fun onMomentumMonthSelected(month: YearMonth) {
         _selectedMomentumMonth.value = month
+    }
+
+    fun onHeatmapMonthSelected(month: YearMonth) {
+        _selectedHeatmapMonth.value = month
     }
 }

@@ -22,9 +22,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.core.database.entity.HabitCategory
+import com.example.forge.core.designsystem.component.ActivityMonthlyPager
 import com.example.forge.core.designsystem.component.BottomNavBar
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.services.interfaces.*
+import com.example.forge.core.uiEntities.ActivityData
 import com.example.forge.feature.insights.components.*
 import com.example.forge.feature.insights.components.InsightsScreenSkeleton
 import com.example.forge.feature.insights.state.InsightsUiState
@@ -48,6 +50,7 @@ fun InsightsRoute(
         onNavigateToHome = onNavigateToHome,
         onAddHabitClick = onAddHabitClick,
         onMomentumMonthSelected = viewModel::onMomentumMonthSelected,
+        onHeatmapMonthSelected = viewModel::onHeatmapMonthSelected,
         modifier = modifier
     )
 }
@@ -59,6 +62,7 @@ fun InsightsScreen(
     onNavigateToHome: () -> Unit,
     onAddHabitClick: () -> Unit,
     onMomentumMonthSelected: (YearMonth) -> Unit,
+    onHeatmapMonthSelected: (YearMonth) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
@@ -138,10 +142,29 @@ fun InsightsScreen(
                         }
                     }
 
-                    ActivityHeatmap(
-                        cells = uiState.heatmap,
-                        description = "Your habit completion density over the past year."
-                    )
+                    Column {
+                        Text(
+                            text = "Activity",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "Your habit completion density across all habits.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        ActivityMonthlyPager(
+                            startDate = uiState.earliestHabitDate ?: LocalDate.now(),
+                            currentMonth = uiState.selectedHeatmapMonth,
+                            monthlyActivities = uiState.heatmap,
+                            onMonthChanged = onHeatmapMonthSelected,
+                            today = LocalDate.now(),
+                            monthsPerPage = 3,
+                            showLegend = true
+                        )
+                    }
 
                     // Momentum Section
                     val pagerState = rememberPagerState(
@@ -217,8 +240,7 @@ fun InsightsScreen(
                         buckets = uiState.streakDistribution,
                         description = "Current streak length buckets for all active habits."
                     )
-                    
-                    Spacer(modifier = Modifier.height(80.dp)) // Extra space for bottom nav
+
                 }
             }
             
@@ -246,10 +268,10 @@ fun InsightsScreenPreview() {
             perfectDaysCount = 45,
             rateChange = 8
         ),
-        heatmap = (0..30).map { i ->
-            HeatmapCell(today.minusDays(i.toLong()), (0..4).random(), emptyList())
+        heatmap = (0..90).map { i ->
+            ActivityData(today.minusDays(i.toLong()), (0..100).random())
         },
-        momentumTrend = (0..20).map { i ->
+        momentumTrend = (0..30).map { i ->
             MomentumPoint(today.minusDays(i.toLong()), (i % 5) / 5f, (i % 10) / 10f)
         }.reversed(),
         leaderboard = listOf(
@@ -280,7 +302,8 @@ fun InsightsScreenPreview() {
             uiState = uiState,
             onNavigateToHome = {},
             onAddHabitClick = {},
-            onMomentumMonthSelected = {}
+            onMomentumMonthSelected = {},
+            onHeatmapMonthSelected = {}
         )
     }
 }

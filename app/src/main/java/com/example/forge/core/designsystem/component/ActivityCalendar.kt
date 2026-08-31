@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalConfiguration
@@ -65,8 +65,8 @@ fun ActivityCalendar(
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
-    val successColor = ForgeTheme.colors.success
-    val emptyColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+    val activeColor = MaterialTheme.colorScheme.primary
+    val emptyColor = MaterialTheme.colorScheme.surfaceVariant
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onPrimary = MaterialTheme.colorScheme.onPrimary
 
@@ -168,7 +168,7 @@ fun ActivityCalendar(
 
                     val activity = activityMap[date]
                     val color = if (activity != null && activity.percentage > 0) {
-                        successColor.copy(alpha = activity.intensity.coerceAtLeast(0.15f))
+                        activeColor.copy(alpha = activity.intensity.coerceAtLeast(0.15f))
                     } else {
                         emptyColor
                     }
@@ -215,7 +215,8 @@ fun ActivityMonthlyPager(
     onMonthChanged: (YearMonth) -> Unit,
     today: LocalDate,
     modifier: Modifier = Modifier,
-    monthsPerPage: Int = 3
+    monthsPerPage: Int = 3,
+    showLegend: Boolean = true
 ) {
     val todayMonth = YearMonth.from(today)
     
@@ -240,37 +241,96 @@ fun ActivityMonthlyPager(
         onMonthChanged(selectedMonth)
     }
     Card(
+        modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.Top,
-            pageSpacing = 0.dp, // No spacing for continuous look
-            pageSize = PageSize.Fill // Fill width, we'll pass multiple months to one ActivityCalendar
-        ) { page ->
-            val offsetFromEnd = (pageCount - 1) - page
-            val endMonth = todayMonth.minusMonths((offsetFromEnd * monthsPerPage).toLong())
-            val yearMonthsToShow = (0 until monthsPerPage).map {
-                endMonth.minusMonths((monthsPerPage - 1 - it).toLong())
-            }
-
-            // We highlight the 'currentMonth' in the grid.
-            // Ideally, we'd fetch data for all visible months.
-            // For now, we filter activities to match the requested range.
-            val displayActivities = monthlyActivities.filter { activity ->
-                yearMonthsToShow.any { YearMonth.from(activity.date) == it }
-            }
-
-            ActivityCalendar(
-                yearMonths = yearMonthsToShow,
-                activities = displayActivities,
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
-                showLabels = true,
-                minDate = startDate,
-                maxDate = today
-            )
+                verticalAlignment = Alignment.Top,
+                pageSpacing = 0.dp, // No spacing for continuous look
+                pageSize = PageSize.Fill // Fill width, we'll pass multiple months to one ActivityCalendar
+            ) { page ->
+                val offsetFromEnd = (pageCount - 1) - page
+                val endMonth = todayMonth.minusMonths((offsetFromEnd * monthsPerPage).toLong())
+                val yearMonthsToShow = (0 until monthsPerPage).map {
+                    endMonth.minusMonths((monthsPerPage - 1 - it).toLong())
+                }
+
+                // We highlight the 'currentMonth' in the grid.
+                // Ideally, we'd fetch data for all visible months.
+                // For now, we filter activities to match the requested range.
+                val displayActivities = monthlyActivities.filter { activity ->
+                    yearMonthsToShow.any { YearMonth.from(activity.date) == it }
+                }
+
+                ActivityCalendar(
+                    yearMonths = yearMonthsToShow,
+                    activities = displayActivities,
+                    modifier = Modifier.fillMaxWidth(),
+                    showLabels = true,
+                    minDate = startDate,
+                    maxDate = today
+                )
+            }
+
+            if (showLegend) {
+                ActivityHeatmapLegend(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 8.dp)
+                )
+            }
         }
+    }
+}
+
+/**
+ * A legend for the activity heatmap showing intensity levels.
+ */
+@Composable
+fun ActivityHeatmapLegend(
+    modifier: Modifier = Modifier,
+    activeColor: Color = MaterialTheme.colorScheme.primary,
+    emptyColor: Color = MaterialTheme.colorScheme.surfaceVariant
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Less",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(emptyColor, shape = RoundedCornerShape(2.dp))
+            )
+            repeat(4) { i ->
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(
+                            color = activeColor.copy(alpha = (i + 1) * 0.25f),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+            }
+        }
+        
+        Text(
+            text = "More",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

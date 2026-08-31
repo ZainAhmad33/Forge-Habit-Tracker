@@ -1,6 +1,7 @@
 package com.example.forge.core.services.interfaces
 
 import com.example.forge.core.database.entity.HabitCategory
+import com.example.forge.core.uiEntities.ActivityData
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.util.UUID
@@ -15,12 +16,6 @@ data class GlobalStats(
     val bestGlobalStreak: Int,
     val perfectDaysCount: Int,
     val rateChange: Int // Percentage change vs previous period
-)
-
-data class HeatmapCell(
-    val date: LocalDate,
-    val intensity: Int, // 0 to 4
-    val completedHabits: List<String>
 )
 
 data class MomentumPoint(
@@ -55,7 +50,7 @@ data class StreakBucket(
 
 interface IInsightsService {
     fun getGlobalStats(period: InsightPeriod): Flow<GlobalStats>
-    fun getActivityHeatmap(): Flow<List<HeatmapCell>>
+    fun getActivityHeatmap(): Flow<List<ActivityData>>
     fun getMomentumTrend(): Flow<List<MomentumPoint>>
     fun getMomentumTrend(startDate: LocalDate, endDate: LocalDate): Flow<List<MomentumPoint>>
     fun getEarliestHabitDate(): Flow<LocalDate?>

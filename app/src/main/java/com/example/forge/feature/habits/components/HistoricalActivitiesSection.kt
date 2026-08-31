@@ -18,7 +18,8 @@ fun HistoricalActivitiesSection(
     currentMonth: YearMonth,
     monthlyActivities: List<ActivityData>,
     today: LocalDate,
-    onMonthChanged: (YearMonth) -> Unit
+    onMonthChanged: (YearMonth) -> Unit,
+    showLegend: Boolean = true
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -35,7 +36,8 @@ fun HistoricalActivitiesSection(
             currentMonth = currentMonth,
             monthlyActivities = monthlyActivities,
             onMonthChanged = onMonthChanged,
-            today = today
+            today = today,
+            showLegend = showLegend
         )
     }
 }
