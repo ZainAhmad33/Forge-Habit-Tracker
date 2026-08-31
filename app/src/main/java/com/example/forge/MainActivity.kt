@@ -73,7 +73,9 @@ fun ForgeApp() {
             InsightsRoute(
                 onNavigateToHome = {
                     navController.navigate("home") {
-                        popUpTo("home") { inclusive = true }
+                        popUpTo("home") {
+                            saveState = true
+                        }
                         launchSingleTop = true
                         restoreState = true
                     }
