@@ -1,14 +1,18 @@
 package com.example.forge.feature.insights.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -25,6 +29,8 @@ import com.example.forge.feature.insights.components.*
 import com.example.forge.feature.insights.components.InsightsScreenSkeleton
 import com.example.forge.feature.insights.state.InsightsUiState
 import com.example.forge.feature.insights.viewmodel.InsightsViewModel
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.time.LocalDate
 import java.util.UUID
 
@@ -41,6 +47,7 @@ fun InsightsRoute(
         uiState = uiState,
         onNavigateToHome = onNavigateToHome,
         onAddHabitClick = onAddHabitClick,
+        onMomentumMonthSelected = viewModel::onMomentumMonthSelected,
         modifier = modifier
     )
 }
@@ -51,6 +58,7 @@ fun InsightsScreen(
     uiState: InsightsUiState,
     onNavigateToHome: () -> Unit,
     onAddHabitClick: () -> Unit,
+    onMomentumMonthSelected: (YearMonth) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
@@ -135,10 +143,58 @@ fun InsightsScreen(
                         description = "Your habit completion density over the past year."
                     )
 
-                    MomentumLineChart(
-                        points = uiState.momentumTrend,
-                        description = "Direction of your consistency. A trend line above the 30-day baseline indicates you're improving."
+                    // Momentum Section
+                    val pagerState = rememberPagerState(
+                        initialPage = uiState.momentumMonths.indexOf(uiState.currentMomentumMonth).coerceAtLeast(0),
+                        pageCount = { uiState.momentumMonths.size }
                     )
+
+                    LaunchedEffect(pagerState.currentPage) {
+                        if (uiState.momentumMonths.isNotEmpty()) {
+                            onMomentumMonthSelected(uiState.momentumMonths[pagerState.currentPage])
+                        }
+                    }
+
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Momentum",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            // Month Display (Swiping handles navigation)
+                            if (uiState.momentumMonths.size > 1) {
+                                Text(
+                                    text = uiState.currentMomentumMonth.format(DateTimeFormatter.ofPattern("MMM yyyy")),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Direction of your consistency. A trend line above the 30-day baseline indicates you're improving.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { _ ->
+                            MomentumLineChart(
+                                points = uiState.momentumTrend,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
 
                     LeaderboardBarChart(
                         entries = uiState.leaderboard,
@@ -223,7 +279,8 @@ fun InsightsScreenPreview() {
         InsightsScreen(
             uiState = uiState,
             onNavigateToHome = {},
-            onAddHabitClick = {}
+            onAddHabitClick = {},
+            onMomentumMonthSelected = {}
         )
     }
 }

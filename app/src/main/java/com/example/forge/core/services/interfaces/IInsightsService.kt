@@ -57,6 +57,8 @@ interface IInsightsService {
     fun getGlobalStats(period: InsightPeriod): Flow<GlobalStats>
     fun getActivityHeatmap(): Flow<List<HeatmapCell>>
     fun getMomentumTrend(): Flow<List<MomentumPoint>>
+    fun getMomentumTrend(startDate: LocalDate, endDate: LocalDate): Flow<List<MomentumPoint>>
+    fun getEarliestHabitDate(): Flow<LocalDate?>
     fun getHabitLeaderboard(period: InsightPeriod): Flow<List<LeaderboardEntry>>
     fun getWeeklyPerformance(): Flow<WeeklyPerformance>
     fun getCategoryBreakdown(): Flow<List<CategoryShare>>

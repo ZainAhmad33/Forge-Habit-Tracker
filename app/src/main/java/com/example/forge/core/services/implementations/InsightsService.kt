@@ -7,7 +7,9 @@ import com.example.forge.core.services.interfaces.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -83,6 +85,12 @@ class InsightsService @Inject constructor(
     }
 
     override fun getMomentumTrend(): Flow<List<MomentumPoint>> {
+        return timeService.getCurrentDateFlow().flatMapLatest { today ->
+            getMomentumTrend(today.minusDays(89), today)
+        }
+    }
+
+    override fun getMomentumTrend(startDate: LocalDate, endDate: LocalDate): Flow<List<MomentumPoint>> {
         return combine(
             habitRepository.getHabits(),
             activityService.getAllDailyQuantities(),
@@ -92,13 +100,20 @@ class InsightsService @Inject constructor(
                 .mapValues { (_, quantities) -> quantities.associate { it.day to it.totalQuantity } }
             val points = mutableListOf<MomentumPoint>()
             
-            for (i in 0..89) { // Last 90 days
-                val date = today.minusDays(i.toLong())
+            var date = startDate
+            while (!date.isAfter(endDate)) {
                 val sevenDayAvg = calculateRollingAverage(habits, habitDailyTotals, date, 7)
                 val thirtyDayAvg = calculateRollingAverage(habits, habitDailyTotals, date, 30)
                 points.add(MomentumPoint(date, sevenDayAvg, thirtyDayAvg))
+                date = date.plusDays(1)
             }
-            points.reversed()
+            points
+        }.flowOn(Dispatchers.Default)
+    }
+
+    override fun getEarliestHabitDate(): Flow<LocalDate?> {
+        return habitRepository.getHabits().map { habits ->
+            habits.minByOrNull { it.createdAt }?.let { timeService.toLocalDate(it.createdAt) }
         }.flowOn(Dispatchers.Default)
     }
 

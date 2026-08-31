@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.forge.core.designsystem.theme.ForgeTheme
@@ -23,31 +22,13 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun MomentumLineChart(
     points: List<MomentumPoint>,
-    modifier: Modifier = Modifier,
-    description: String? = null
+    modifier: Modifier = Modifier
 ) {
     if (points.isEmpty()) return
     
     val primary = MaterialTheme.colorScheme.primary
     
     Column(modifier = modifier) {
-        Text(
-            text = "Momentum",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        if (description != null) {
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-        } else {
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-        
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,10 +51,10 @@ fun MomentumLineChart(
             
             drawPath(
                 path = path30,
-                color = primary.copy(alpha = 0.3f),
+                color = primary.copy(alpha = 0.5f), // Increased alpha from 0.3
                 style = Stroke(
-                    width = 1.5.dp.toPx(),
-                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    width = 2.dp.toPx(), // Increased width from 1.5
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f)
                 )
             )
             
@@ -88,7 +69,7 @@ fun MomentumLineChart(
             drawPath(
                 path = path7,
                 color = primary,
-                style = Stroke(width = 2.5.dp.toPx())
+                style = Stroke(width = 3.dp.toPx()) // Increased width from 2.5
             )
             
             // 3. Gradient fill for the 7-day trend
@@ -109,7 +90,7 @@ fun MomentumLineChart(
                 )
             )
             
-            // 4. Highlight current point
+            // 4. Highlight current point if it's the current month (we'll just show it always on the last point of the set)
             val lastPoint = points.last()
             drawCircle(
                 color = primary,
@@ -128,11 +109,11 @@ fun MomentumLineChart(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             // Legend
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 LegendItem(color = primary, label = "7-day (Trend)", isDashed = false)
-                LegendItem(color = primary.copy(alpha = 0.4f), label = "30-day (Baseline)", isDashed = true)
+                LegendItem(color = primary.copy(alpha = 0.6f), label = "30-day (Baseline)", isDashed = true)
             }
 
             Text(
@@ -169,8 +150,7 @@ fun MomentumLineChartPreview() {
     ForgeTheme {
         MomentumLineChart(
             points = samplePoints,
-            modifier = Modifier.padding(16.dp),
-            description = "7-day and 30-day rolling completion averages."
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
