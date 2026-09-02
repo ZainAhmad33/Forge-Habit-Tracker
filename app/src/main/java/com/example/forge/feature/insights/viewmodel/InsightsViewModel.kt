@@ -35,10 +35,13 @@ class InsightsViewModel @Inject constructor(
         months // Chronological order: Earliest -> Latest
     }.stateIn(viewModelScope, SharingStarted.Eagerly, listOf(YearMonth.now()))
 
+    private val heatmapHistory = insightsService.getActivityHeatmap()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<InsightsUiState> = combine(
         insightsService.getGlobalStats(InsightPeriod.AllTime),
-        insightsService.getActivityHeatmap(),
+        heatmapHistory,
         momentumMonths.flatMapLatest { months ->
             insightsService.getAllMomentumTrends(months)
         },

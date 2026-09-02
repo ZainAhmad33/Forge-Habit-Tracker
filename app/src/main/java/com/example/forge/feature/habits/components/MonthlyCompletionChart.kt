@@ -250,19 +250,19 @@ fun MonthlyCompletionChart(
                     )
                 )
                 
-                // Goal Label
-                val goalText = "Goal: $target"
-                val goalLayoutResult = textMeasurer.measure(
-                    text = goalText,
-                    style = labelStyle.copy(fontWeight = FontWeight.Bold)
-                )
-                drawText(
-                    textLayoutResult = goalLayoutResult,
-                    topLeft = Offset(
-                        x = chartWidth - goalLayoutResult.size.width - 4.dp.toPx(),
-                        y = targetBarTop - goalLayoutResult.size.height - 6.dp.toPx()
-                    )
-                )
+//                // Goal Label
+//                val goalText = "Goal: $target"
+//                val goalLayoutResult = textMeasurer.measure(
+//                    text = goalText,
+//                    style = labelStyle.copy(fontWeight = FontWeight.Bold)
+//                )
+//                drawText(
+//                    textLayoutResult = goalLayoutResult,
+//                    topLeft = Offset(
+//                        x = chartWidth - goalLayoutResult.size.width - 4.dp.toPx(),
+//                        y = targetBarTop - goalLayoutResult.size.height - 6.dp.toPx()
+//                    )
+//                )
             }
         }
     }

@@ -461,25 +461,27 @@ class HabitStatsService @Inject constructor(
         }
     }
 
-    private fun calculateQuarterlyRates(habit: Habit, dailyTotals: Map<LocalDate, Int>, today: LocalDate): List<MonthlyRate> {
+    internal fun calculateQuarterlyRates(habit: Habit, dailyTotals: Map<LocalDate, Int>, today: LocalDate): List<MonthlyRate> {
         val result = mutableListOf<MonthlyRate>()
         val habitStart = timeService.toLocalDate(habit.createdAt)
         val target = habit.completionTargetPerDay
-        var lastMonthDate = today.withDayOfMonth(1).minusMonths(1)
+        
+        // Go back 3 months from today (excluding current month as it's shown in main chart)
+        var monthDate = today.withDayOfMonth(1).minusMonths(1)
 
         repeat(3) {
-            if (lastMonthDate.isAfter(habitStart.withDayOfMonth(1)) || lastMonthDate == habitStart.withDayOfMonth(1)) {
-                val daysInMonth = lastMonthDate.lengthOfMonth()
-                val monthName = lastMonthDate.month.name.take(3)
-
-                val successfulDays = (1..daysInMonth).count { day ->
-                    val date = lastMonthDate.withDayOfMonth(day)
-                    (dailyTotals[date] ?: 0) >= target
-                }
-
-                result.add(MonthlyRate(monthName, if (daysInMonth > 0) successfulDays.toFloat() / daysInMonth else 0f))
+            val monthStart = monthDate.withDayOfMonth(1)
+            val monthEnd = monthDate.with(TemporalAdjusters.lastDayOfMonth())
+            
+            // Only add the month if the habit existed during some part of it
+            if (!monthEnd.isBefore(habitStart)) {
+                val monthName = monthDate.month.name.take(3).lowercase()
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                
+                val rate = calculateRangeRate(habit, dailyTotals, target, monthStart, monthEnd, today)
+                result.add(MonthlyRate(monthName, rate))
             }
-            lastMonthDate = lastMonthDate.minusMonths(1)
+            monthDate = monthDate.minusMonths(1)
         }
 
         return result.reversed()

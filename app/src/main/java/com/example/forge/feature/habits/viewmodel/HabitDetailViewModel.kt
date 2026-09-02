@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -53,13 +55,28 @@ class HabitDetailViewModel @Inject constructor(
         observeMonthlyData()
     }
 
+    private val habitHistory = habitsService.getHabitFlow(habitId)
+        .distinctUntilChanged()
+        .flatMapLatest { habit ->
+            if (habit == null) return@flatMapLatest kotlinx.coroutines.flow.flowOf(emptyList())
+            val startDate = timeService.toLocalDate(habit.createdAt)
+            val today = timeService.getCurrentDate()
+            val habitStartMonth = YearMonth.from(startDate)
+            val todayMonth = YearMonth.from(today)
+            val monthCount = (ChronoUnit.MONTHS.between(habitStartMonth, todayMonth).toInt() + 1).coerceAtLeast(1)
+            
+            statsService.getRangeActivityData(habitId, habitStartMonth, monthCount)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private fun loadHabitData() {
         combine(
             habitsService.getHabitFlow(habitId).distinctUntilChanged(),
             statsService.getHabitStats(habitId).distinctUntilChanged(),
             activityService.getActivitiesForToday(listOf(habitId)).distinctUntilChanged(),
-            timeService.getCurrentDateFlow().distinctUntilChanged()
-        ) { habit, stats, todayLogs, today ->
+            timeService.getCurrentDateFlow().distinctUntilChanged(),
+            habitHistory
+        ) { habit, stats, todayLogs, today, history ->
             if (habit == null) {
                 _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
             } else {
@@ -69,6 +86,7 @@ class HabitDetailViewModel @Inject constructor(
                     todayLogs = todayLogs,
                     today = today,
                     startDate = timeService.toLocalDate(habit.createdAt),
+                    monthlyCalendarData = history,
                     isLoading = false
                 )
             }
@@ -77,25 +95,6 @@ class HabitDetailViewModel @Inject constructor(
     }
 
     private fun observeMonthlyData() {
-        habitsService.getHabitFlow(habitId)
-            .distinctUntilChanged()
-            .flatMapLatest { habit ->
-                if (habit == null) return@flatMapLatest kotlinx.coroutines.flow.flowOf(emptyList())
-                val startDate = timeService.toLocalDate(habit.createdAt)
-                val today = timeService.getCurrentDate()
-                val habitStartMonth = YearMonth.from(startDate)
-                val todayMonth = YearMonth.from(today)
-                val monthCount = (ChronoUnit.MONTHS.between(habitStartMonth, todayMonth).toInt() + 1).coerceAtLeast(1)
-                
-                statsService.getRangeActivityData(habitId, habitStartMonth, monthCount)
-            }
-            .onEach { data ->
-                _uiState.value = _uiState.value.copy(
-                    monthlyCalendarData = data
-                )
-            }
-            .launchIn(viewModelScope)
-
         _selectedMonth.onEach { month ->
             _uiState.value = _uiState.value.copy(selectedCalendarMonth = month)
         }.launchIn(viewModelScope)

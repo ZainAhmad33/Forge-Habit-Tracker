@@ -245,10 +245,15 @@ fun ActivityWeeklyPager(
                 val lastPageStart = thisMonday.minusWeeks((weeksPerPage - 1).toLong())
                 val pageStartMonday = lastPageStart.minusWeeks((offsetFromEnd * weeksPerPage).toLong())
 
+                val pageActivities = remember(monthlyActivities, pageStartMonday) {
+                    val pageEndSunday = pageStartMonday.plusWeeks(weeksPerPage.toLong()).minusDays(1)
+                    monthlyActivities.filter { !it.date.isBefore(pageStartMonday) && !it.date.isAfter(pageEndSunday) }
+                }
+
                 ActivityCalendar(
                     startDate = pageStartMonday,
                     weeksCount = weeksPerPage,
-                    activities = monthlyActivities,
+                    activities = pageActivities,
                     modifier = Modifier.fillMaxWidth(),
                     showLabels = true,
                     minDate = startDate,

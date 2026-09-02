@@ -345,4 +345,70 @@ class HabitStatsServiceTest {
         assertEquals(1.0f, trends.bestWeek.rate, 0.01f)
         assertEquals(LocalDate.of(2026, 8, 3), trends.bestWeek.startDate)
     }
+
+    @Test
+    fun `calculateQuarterlyRates - habit started mid-month`() {
+        // Today is Sept 2nd
+        val today = LocalDate.of(2026, 9, 2)
+        
+        // Habit created on Aug 21st (approx 11 days of existence in Aug)
+        val habit = createHabit(
+            createdAt = LocalDate.of(2026, 8, 21),
+            frequency = HabitFrequency.EveryDay
+        )
+
+        // Completions for ALL days habit existed in Aug (Aug 21 to Aug 31 = 11 days)
+        val dailyTotals = mutableMapOf<LocalDate, Int>()
+        for (i in 0 until 11) {
+            dailyTotals[LocalDate.of(2026, 8, 21).plusDays(i.toLong())] = 1
+        }
+
+        val rates = service.calculateQuarterlyRates(habit, dailyTotals, today)
+        
+        // Find August (Aug)
+        val augRate = rates.find { it.monthName == "Aug" }
+        
+        // Previously, this would be 11/31 = 35%
+        // Now it should be 11/11 = 100%
+        assertEquals(1.0f, augRate?.rate ?: 0f, 0.01f)
+    }
+
+    @Test
+    fun `calculateQuarterlyRates - respects days per week frequency`() {
+        val today = LocalDate.of(2026, 9, 2)
+        
+        // Habit created months ago
+        // Frequency: 2 days a week
+        val habit = createHabit(
+            createdAt = LocalDate.of(2026, 1, 1),
+            frequency = HabitFrequency.DaysPerWeek,
+            numberOfTrackedDays = 2
+        )
+
+        // Aug 2026 has approx 4.4 weeks
+        // If user completed exactly 2 days per week
+        val dailyTotals = mutableMapOf<LocalDate, Int>()
+        // Aug 3 (Mon), Aug 4 (Tue)
+        dailyTotals[LocalDate.of(2026, 8, 3)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 4)] = 1
+        // Aug 10, 11
+        dailyTotals[LocalDate.of(2026, 8, 10)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 11)] = 1
+        // Aug 17, 18
+        dailyTotals[LocalDate.of(2026, 8, 17)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 18)] = 1
+        // Aug 24, 25
+        dailyTotals[LocalDate.of(2026, 8, 24)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 25)] = 1
+        // Aug 31 (Mon) - 1st day of next week, but still in Aug. 
+        // Goal is 2 per week. 
+        dailyTotals[LocalDate.of(2026, 8, 31)] = 1
+
+        val rates = service.calculateQuarterlyRates(habit, dailyTotals, today)
+        val augRate = rates.find { it.monthName == "Aug" }
+        
+        // If logic is correct, completion should be 100% (met goals for all scheduled days in Aug)
+        // calculateRangeRate for Aug would calculate expected as min(target, daysPassed) for each week.
+        assertEquals(1.0f, augRate?.rate ?: 0f, 0.01f)
+    }
 }
