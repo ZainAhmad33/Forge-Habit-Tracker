@@ -96,7 +96,9 @@ class HabitStatsService @Inject constructor(
                 (1..currentMonth.lengthOfMonth()).forEach { day ->
                     val date = currentMonth.atDay(day)
                     val quantity = dailyQuantities[date] ?: 0
-                    val percentage = if (target > 0) (quantity * 100) / target else 0
+                    val percentage = if (target > 0) {
+                        (quantity.toFloat() / target * 100).toInt()
+                    } else 0
                     allData.add(ActivityData(date, percentage))
                 }
             }

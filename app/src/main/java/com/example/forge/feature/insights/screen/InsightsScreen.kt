@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.core.database.entity.HabitCategory
-import com.example.forge.core.designsystem.component.ActivityMonthlyPager
+import com.example.forge.core.designsystem.component.ActivityWeeklyPager
 import com.example.forge.core.designsystem.component.BottomNavBar
 import com.example.forge.core.designsystem.component.HeroStatCard
 import com.example.forge.core.designsystem.theme.ForgeTheme
@@ -184,13 +184,13 @@ fun InsightsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        ActivityMonthlyPager(
+                        ActivityWeeklyPager(
                             startDate = uiState.earliestHabitDate ?: LocalDate.now(),
                             currentMonth = uiState.selectedHeatmapMonth,
                             monthlyActivities = uiState.heatmap,
                             onMonthChanged = onHeatmapMonthSelected,
                             today = LocalDate.now(),
-                            monthsPerPage = 3,
+                            weeksPerPage = 14,
                             showLegend = true
                         )
                     }

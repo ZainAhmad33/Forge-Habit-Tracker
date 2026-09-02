@@ -101,7 +101,7 @@ fun HabitDetailHeader(
                 icon = Icons.Rounded.EmojiEvents
             ),
             HeroStatItem(
-                label = if (streakLabel == "No active streak") "" else "Started on",
+                label = if (streakLabel == "No active streak") "" else "Streak started",
                 value = streakLabel,
                 icon = Icons.Rounded.CalendarMonth
             ),

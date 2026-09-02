@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.forge.core.designsystem.component.ActivityMonthlyPager
+import com.example.forge.core.designsystem.component.ActivityWeeklyPager
 import com.example.forge.core.uiEntities.ActivityData
 import java.time.LocalDate
 import java.time.YearMonth
@@ -31,7 +31,7 @@ fun HistoricalActivitiesSection(
             fontWeight = FontWeight(700)
         )
 
-        ActivityMonthlyPager(
+        ActivityWeeklyPager(
             startDate = startDate,
             currentMonth = currentMonth,
             monthlyActivities = monthlyActivities,

@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -76,21 +77,28 @@ class HabitDetailViewModel @Inject constructor(
     }
 
     private fun observeMonthlyData() {
-        _selectedMonth
-            .flatMapLatest { month ->
-                // Fetch 4 months ending at the selected month
-                val startMonth = month.minusMonths(3)
-                statsService.getRangeActivityData(habitId, startMonth, 4)
-                    .distinctUntilChanged()
-                    .map { data -> month to data }
+        habitsService.getHabitFlow(habitId)
+            .distinctUntilChanged()
+            .flatMapLatest { habit ->
+                if (habit == null) return@flatMapLatest kotlinx.coroutines.flow.flowOf(emptyList())
+                val startDate = timeService.toLocalDate(habit.createdAt)
+                val today = timeService.getCurrentDate()
+                val habitStartMonth = YearMonth.from(startDate)
+                val todayMonth = YearMonth.from(today)
+                val monthCount = (ChronoUnit.MONTHS.between(habitStartMonth, todayMonth).toInt() + 1).coerceAtLeast(1)
+                
+                statsService.getRangeActivityData(habitId, habitStartMonth, monthCount)
             }
-            .onEach { (month, data) ->
+            .onEach { data ->
                 _uiState.value = _uiState.value.copy(
-                    selectedCalendarMonth = month,
                     monthlyCalendarData = data
                 )
             }
             .launchIn(viewModelScope)
+
+        _selectedMonth.onEach { month ->
+            _uiState.value = _uiState.value.copy(selectedCalendarMonth = month)
+        }.launchIn(viewModelScope)
     }
 
     fun onMonthChanged(month: YearMonth) {

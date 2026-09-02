@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -52,7 +51,8 @@ import java.util.Locale
  */
 @Composable
 fun ActivityCalendar(
-    yearMonths: List<YearMonth>,
+    startDate: LocalDate, // Should be a Monday for best alignment
+    weeksCount: Int,
     activities: List<ActivityData>,
     modifier: Modifier = Modifier,
     showLabels: Boolean = true,
@@ -74,29 +74,6 @@ fun ActivityCalendar(
         activities.associateBy { it.date }
     }
 
-    val startDate = remember(yearMonths) {
-        val firstMonth = yearMonths.firstOrNull() ?: YearMonth.now()
-        val firstDay = firstMonth.atDay(1)
-        // Start on Monday of the first week
-        firstDay.minusDays((firstDay.dayOfWeek.value - 1).toLong())
-    }
-
-    val endDate = remember(yearMonths, maxDate) {
-        val lastMonth = yearMonths.lastOrNull() ?: YearMonth.now()
-        val lastDayOfMonth = lastMonth.atEndOfMonth()
-        val end = if (maxDate != null && maxDate.isBefore(lastDayOfMonth)) {
-            maxDate
-        } else {
-            lastDayOfMonth
-        }
-        // End on Sunday of the last week
-        end.plusDays((7 - end.dayOfWeek.value).toLong())
-    }
-
-    val totalWeeks = remember(startDate, endDate) {
-        (ChronoUnit.DAYS.between(startDate, endDate) / 7).toInt() + 1
-    }
-
     val locale = LocalConfiguration.current.locales[0]
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -104,13 +81,10 @@ fun ActivityCalendar(
         val dayLabelWidthDp = if (showLabels) 30.dp else 0.dp
         val spacingDp = 2.dp
         
-        // Use a fixed number of weeks for size calculation to ensure consistent height across all pages.
-        // 4 months usually span 18-20 weeks depending on start/end days.
-        val referenceWeeks = 14
-        val squareSizeDp = (availableWidth - dayLabelWidthDp - (spacingDp * (referenceWeeks - 1))) / referenceWeeks
+        // Ensure squareSize is calculated to fit exactly weeksCount columns
+        val squareSizeDp = (availableWidth - dayLabelWidthDp - (spacingDp * (weeksCount - 1))) / weeksCount
         
         val monthLabelHeightDp = 20.dp
-        // Fixed height based on the constant squareSize
         val totalHeightDp = monthLabelHeightDp + (squareSizeDp * 7) + (spacingDp * 6) + 8.dp
 
         val dayNumberStyle = MaterialTheme.typography.labelSmall.copy(
@@ -143,12 +117,14 @@ fun ActivityCalendar(
 
             var currentX = dayLabelWidth
 
-            for (w in 0 until totalWeeks) {
+            for (w in 0 until weeksCount) {
                 val weekStartDate = startDate.plusWeeks(w.toLong())
 
+                // Draw Month Label
                 for (d in 0 until 7) {
                     val date = weekStartDate.plusDays(d.toLong())
-                    if (date.dayOfMonth == 1 && yearMonths.contains(YearMonth.from(date))) {
+                    // Draw month label if it's the 1st of the month, or if it's the very first column of the pager
+                    if (date.dayOfMonth == 1 || (w == 0 && d == 0)) {
                         val monthName = date.month.getDisplayName(TextStyle.SHORT, locale)
                         val monthTextLayoutResult = textMeasurer.measure(monthName, style = labelStyle)
                         drawText(
@@ -159,10 +135,10 @@ fun ActivityCalendar(
                     }
                 }
 
+                // Draw Day Squares
                 for (d in 0 until 7) {
                     val date = weekStartDate.plusDays(d.toLong())
 
-                    if (yearMonths.none { YearMonth.from(date) == it }) continue
                     if (maxDate != null && date.isAfter(maxDate)) continue
                     if (minDate != null && date.isBefore(minDate)) continue
 
@@ -205,41 +181,52 @@ fun ActivityCalendar(
 }
 
 /**
- * A paginated monthly activity calendar component.
+ * A paginated weekly activity calendar component.
  */
 @Composable
-fun ActivityMonthlyPager(
+fun ActivityWeeklyPager(
     startDate: LocalDate,
     currentMonth: YearMonth,
     monthlyActivities: List<ActivityData>,
     onMonthChanged: (YearMonth) -> Unit,
     today: LocalDate,
     modifier: Modifier = Modifier,
-    monthsPerPage: Int = 3,
+    weeksPerPage: Int = 14,
     showLegend: Boolean = true
 ) {
-    val todayMonth = YearMonth.from(today)
-    
-    val totalMonths = remember(startDate, todayMonth) {
-        ChronoUnit.MONTHS.between(
-            startDate.withDayOfMonth(1),
-            todayMonth.atDay(1)
-        ).toInt() + 1
+    // Start of the very first week (Monday)
+    val firstMonday = remember(startDate) {
+        startDate.minusDays((startDate.dayOfWeek.value - 1).toLong())
     }
     
-    val pageCount = remember(totalMonths, monthsPerPage) {
-        (totalMonths + monthsPerPage - 1) / monthsPerPage
+    // Start of the current week (Monday)
+    val thisMonday = remember(today) {
+        today.minusDays((today.dayOfWeek.value - 1).toLong())
+    }
+
+    val totalWeeks = remember(firstMonday, thisMonday) {
+        ChronoUnit.WEEKS.between(firstMonday, thisMonday).toInt() + 1
+    }
+    
+    val pageCount = remember(totalWeeks, weeksPerPage) {
+        (totalWeeks + weeksPerPage - 1) / weeksPerPage
     }
     
     val initialPage = remember(pageCount) { (pageCount - 1).coerceAtLeast(0) }
     val pagerState = rememberPagerState(initialPage = initialPage) { pageCount }
 
     LaunchedEffect(pagerState.currentPage) {
-        // We want the last page to end at todayMonth
+        // The start of the current page's window
         val offsetFromEnd = (pageCount - 1) - pagerState.currentPage
-        val selectedMonth = todayMonth.minusMonths((offsetFromEnd * monthsPerPage).toLong())
-        onMonthChanged(selectedMonth)
+        // Last page should end at 'thisMonday', so it starts at 'thisMonday - (weeksPerPage - 1)'
+        val lastPageStart = thisMonday.minusWeeks((weeksPerPage - 1).toLong())
+        val pageStartMonday = lastPageStart.minusWeeks((offsetFromEnd * weeksPerPage).toLong())
+        
+        // Find the month centered in this 14-week window
+        val middleDate = pageStartMonday.plusWeeks((weeksPerPage / 2).toLong())
+        onMonthChanged(YearMonth.from(middleDate))
     }
+
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
@@ -251,25 +238,17 @@ fun ActivityMonthlyPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
-                pageSpacing = 0.dp, // No spacing for continuous look
-                pageSize = PageSize.Fill // Fill width, we'll pass multiple months to one ActivityCalendar
+                pageSpacing = 0.dp,
+                pageSize = PageSize.Fill
             ) { page ->
                 val offsetFromEnd = (pageCount - 1) - page
-                val endMonth = todayMonth.minusMonths((offsetFromEnd * monthsPerPage).toLong())
-                val yearMonthsToShow = (0 until monthsPerPage).map {
-                    endMonth.minusMonths((monthsPerPage - 1 - it).toLong())
-                }
-
-                // We highlight the 'currentMonth' in the grid.
-                // Ideally, we'd fetch data for all visible months.
-                // For now, we filter activities to match the requested range.
-                val displayActivities = monthlyActivities.filter { activity ->
-                    yearMonthsToShow.any { YearMonth.from(activity.date) == it }
-                }
+                val lastPageStart = thisMonday.minusWeeks((weeksPerPage - 1).toLong())
+                val pageStartMonday = lastPageStart.minusWeeks((offsetFromEnd * weeksPerPage).toLong())
 
                 ActivityCalendar(
-                    yearMonths = yearMonthsToShow,
-                    activities = displayActivities,
+                    startDate = pageStartMonday,
+                    weeksCount = weeksPerPage,
+                    activities = monthlyActivities,
                     modifier = Modifier.fillMaxWidth(),
                     showLabels = true,
                     minDate = startDate,
@@ -336,28 +315,28 @@ fun ActivityHeatmapLegend(
 
 @Preview(showBackground = true)
 @Composable
-fun ActivityMonthlyPagerPreview() {
+fun ActivityWeeklyPagerPreview() {
     ForgeTheme {
         val today = LocalDate.now()
         val currentMonth = YearMonth.from(today)
-        val monthsToGenerate = 3
-        val dummyData = (0 until monthsToGenerate).flatMap { m ->
-            val month = currentMonth.minusMonths(m.toLong())
-            (1..month.lengthOfMonth()).map { day ->
+        val weeksToGenerate = 14
+        val dummyData = (0 until weeksToGenerate).flatMap { w ->
+            val weekDate = today.minusWeeks(w.toLong())
+            (0..6).map { day ->
                 ActivityData(
-                    date = month.atDay(day),
+                    date = weekDate.minusDays(day.toLong()),
                     percentage = (0..100).random()
                 )
             }
         }
-        ActivityMonthlyPager(
-            startDate = currentMonth.minusMonths(6).atDay(1),
+        ActivityWeeklyPager(
+            startDate = today.minusMonths(6),
             currentMonth = currentMonth,
             monthlyActivities = dummyData,
             onMonthChanged = {},
             today = today,
             modifier = Modifier.padding(16.dp),
-            monthsPerPage = monthsToGenerate
+            weeksPerPage = weeksToGenerate
         )
     }
 }
