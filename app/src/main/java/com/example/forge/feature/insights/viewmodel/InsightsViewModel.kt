@@ -39,8 +39,8 @@ class InsightsViewModel @Inject constructor(
     val uiState: StateFlow<InsightsUiState> = combine(
         insightsService.getGlobalStats(InsightPeriod.AllTime),
         insightsService.getActivityHeatmap(),
-        _selectedMomentumMonth.flatMapLatest { ym ->
-            insightsService.getMomentumTrend(ym.atDay(1), ym.atEndOfMonth())
+        momentumMonths.flatMapLatest { months ->
+            insightsService.getAllMomentumTrends(months)
         },
         insightsService.getHabitLeaderboard(InsightPeriod.AllTime),
         insightsService.getWeeklyPerformance(),
@@ -53,7 +53,7 @@ class InsightsViewModel @Inject constructor(
     ) { flows ->
         val stats = flows[0] as GlobalStats
         val heatmap = flows[1] as List<ActivityData>
-        val momentum = flows[2] as List<MomentumPoint>
+        val momentumData = flows[2] as Map<YearMonth, List<MomentumPoint>>
         val leaderboard = flows[3] as List<LeaderboardEntry>
         val weekly = flows[4] as WeeklyPerformance
         val categories = flows[5] as List<CategoryShare>
@@ -69,7 +69,7 @@ class InsightsViewModel @Inject constructor(
             heatmap = heatmap,
             earliestHabitDate = earliestDate,
             selectedHeatmapMonth = currentHeatmapMonth,
-            momentumTrend = momentum,
+            momentumData = momentumData,
             currentMomentumMonth = currentMomentumMonth,
             momentumMonths = months,
             leaderboard = leaderboard,

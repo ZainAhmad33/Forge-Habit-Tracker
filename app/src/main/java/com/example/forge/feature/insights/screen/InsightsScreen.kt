@@ -12,6 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -240,9 +243,13 @@ fun InsightsScreen(
                         HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.fillMaxWidth()
-                        ) { _ ->
+                        ) { page ->
+                            val month = uiState.momentumMonths.getOrNull(page)
+                            val monthlyPoints = uiState.momentumData[month] ?: emptyList()
+                            
                             MomentumLineChart(
-                                points = uiState.momentumTrend,
+                                points = monthlyPoints,
+                                totalDaysInMonth = month?.lengthOfMonth() ?: 30,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -288,6 +295,23 @@ fun InsightsScreen(
 @Composable
 fun InsightsScreenPreview() {
     val today = LocalDate.now()
+    val aug2026 = YearMonth.of(2026, 8)
+    val sept2026 = YearMonth.of(2026, 9)
+    
+    val momentumMonths = listOf(aug2026, sept2026)
+    
+    var currentMonth by remember { mutableStateOf(sept2026) }
+    
+    val momentumData = remember {
+        val augPoints = (1..aug2026.lengthOfMonth()).map { day ->
+            MomentumPoint(aug2026.atDay(day), 0.8f, 0.75f)
+        }
+        val septPoints = (1..7).map { day ->
+            MomentumPoint(sept2026.atDay(day), 0.7f, 0.6f)
+        }
+        mapOf(aug2026 to augPoints, sept2026 to septPoints)
+    }
+
     val uiState = InsightsUiState(
         isLoading = false,
         globalStats = GlobalStats(
@@ -300,9 +324,9 @@ fun InsightsScreenPreview() {
         heatmap = (0..90).map { i ->
             ActivityData(today.minusDays(i.toLong()), (0..100).random())
         },
-        momentumTrend = (0..30).map { i ->
-            MomentumPoint(today.minusDays(i.toLong()), (i % 5) / 5f, (i % 10) / 10f)
-        }.reversed(),
+        momentumData = momentumData,
+        currentMomentumMonth = currentMonth,
+        momentumMonths = momentumMonths,
         leaderboard = listOf(
             LeaderboardEntry(UUID.randomUUID(), "Water", "💧", 0.95f),
             LeaderboardEntry(UUID.randomUUID(), "Reading", "📚", 0.85f),
@@ -331,7 +355,7 @@ fun InsightsScreenPreview() {
             uiState = uiState,
             onNavigateToHome = {},
             onAddHabitClick = {},
-            onMomentumMonthSelected = {},
+            onMomentumMonthSelected = { currentMonth = it },
             onHeatmapMonthSelected = {}
         )
     }

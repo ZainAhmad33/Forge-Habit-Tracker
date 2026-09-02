@@ -53,6 +53,7 @@ interface IInsightsService {
     fun getActivityHeatmap(): Flow<List<ActivityData>>
     fun getMomentumTrend(): Flow<List<MomentumPoint>>
     fun getMomentumTrend(startDate: LocalDate, endDate: LocalDate): Flow<List<MomentumPoint>>
+    fun getAllMomentumTrends(months: List<java.time.YearMonth>): Flow<Map<java.time.YearMonth, List<MomentumPoint>>>
     fun getEarliestHabitDate(): Flow<LocalDate?>
     fun getHabitLeaderboard(period: InsightPeriod): Flow<List<LeaderboardEntry>>
     fun getWeeklyPerformance(): Flow<WeeklyPerformance>

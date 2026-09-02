@@ -6,6 +6,7 @@ import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.interfaces.*
 import com.example.forge.core.uiEntities.ActivityData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.util.UUID
@@ -110,14 +112,44 @@ class InsightsService @Inject constructor(
                 .mapValues { (_, quantities) -> quantities.associate { it.day to it.totalQuantity } }
             val points = mutableListOf<MomentumPoint>()
             
+            val actualEnd = if (endDate.isAfter(today)) today else endDate
+            
             var date = startDate
-            while (!date.isAfter(endDate)) {
+            while (!date.isAfter(actualEnd)) {
                 val sevenDayAvg = calculateRollingAverage(habits, habitDailyTotals, date, 7)
                 val thirtyDayAvg = calculateRollingAverage(habits, habitDailyTotals, date, 30)
                 points.add(MomentumPoint(date, sevenDayAvg, thirtyDayAvg))
                 date = date.plusDays(1)
             }
             points
+        }.flowOn(Dispatchers.Default)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getAllMomentumTrends(months: List<YearMonth>): Flow<Map<YearMonth, List<MomentumPoint>>> {
+        return combine(
+            habitRepository.getHabits(),
+            activityService.getAllDailyQuantities(),
+            timeService.getCurrentDateFlow()
+        ) { habits, dailyQuantities, today ->
+            val habitDailyTotals = dailyQuantities.groupBy { it.habitId }
+                .mapValues { (_, quantities) -> quantities.associate { it.day to it.totalQuantity } }
+            
+            months.associateWith { ym ->
+                val startDate = ym.atDay(1)
+                val endDate = ym.atEndOfMonth()
+                val actualEnd = if (endDate.isAfter(today)) today else endDate
+                
+                val points = mutableListOf<MomentumPoint>()
+                var date = startDate
+                while (!date.isAfter(actualEnd)) {
+                    val sevenDayAvg = calculateRollingAverage(habits, habitDailyTotals, date, 7)
+                    val thirtyDayAvg = calculateRollingAverage(habits, habitDailyTotals, date, 30)
+                    points.add(MomentumPoint(date, sevenDayAvg, thirtyDayAvg))
+                    date = date.plusDays(1)
+                }
+                points
+            }
         }.flowOn(Dispatchers.Default)
     }
 

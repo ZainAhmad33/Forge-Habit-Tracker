@@ -22,6 +22,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun MomentumLineChart(
     points: List<MomentumPoint>,
+    totalDaysInMonth: Int,
     modifier: Modifier = Modifier
 ) {
     if (points.isEmpty()) return
@@ -36,9 +37,15 @@ fun MomentumLineChart(
         ) {
             val width = size.width
             val height = size.height
-            val stepX = width / (points.size - 1)
             
-            fun getX(index: Int) = index * stepX
+            // Horizontal padding to prevent circle clipping at edges
+            val horizontalPadding = 6.dp.toPx()
+            val availableWidth = width - (horizontalPadding * 2)
+            
+            // Use totalDaysInMonth to ensure the x-axis scale is consistent for the whole month
+            val stepX = availableWidth / (totalDaysInMonth - 1)
+            
+            fun getX(index: Int) = horizontalPadding + (index * stepX)
             fun getY(value: Float) = height - (value * height)
             
             // 1. Draw 30-day rolling avg (Baseline)
@@ -150,6 +157,7 @@ fun MomentumLineChartPreview() {
     ForgeTheme {
         MomentumLineChart(
             points = samplePoints,
+            totalDaysInMonth = 30,
             modifier = Modifier.padding(16.dp)
         )
     }

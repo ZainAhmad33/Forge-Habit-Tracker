@@ -11,7 +11,7 @@ data class InsightsUiState(
     val heatmap: List<ActivityData> = emptyList(),
     val earliestHabitDate: LocalDate? = null,
     val selectedHeatmapMonth: YearMonth = YearMonth.now(),
-    val momentumTrend: List<MomentumPoint> = emptyList(),
+    val momentumData: Map<YearMonth, List<MomentumPoint>> = emptyMap(),
     val currentMomentumMonth: YearMonth = YearMonth.now(),
     val momentumMonths: List<YearMonth> = emptyList(),
     val leaderboard: List<LeaderboardEntry> = emptyList(),
