@@ -1,28 +1,14 @@
 package com.example.forge.feature.habits.components
 
-// Foundation & Layout
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-// Material 3 Components & Theme
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-
-// Compose Geometry & Graphics (For Canvas drawing)
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -30,14 +16,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
-
-// Compose Core & Accessibility
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,20 +28,34 @@ import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.services.interfaces.DailyCompletion
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.TextStyle
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.random.Random
 
 @Composable
-fun CurrentMonthCompletion(
-    data: List<DailyCompletion>,
+fun MonthlyCompletionPager(
+    allData: Map<YearMonth, List<DailyCompletion>>,
+    months: List<YearMonth>,
+    selectedMonth: YearMonth,
+    onMonthChanged: (YearMonth) -> Unit,
     target: Int,
-    unit: String,
     today: LocalDate,
     modifier: Modifier = Modifier
 ){
+    val pagerState = rememberPagerState(
+        initialPage = months.indexOf(selectedMonth).coerceAtLeast(0),
+        pageCount = { months.size }
+    )
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (months.isNotEmpty()) {
+            onMonthChanged(months[pagerState.currentPage])
+        }
+    }
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -66,11 +63,8 @@ fun CurrentMonthCompletion(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column{
-                val currentMonthFull = today
-                    .month
-                    .getDisplayName(TextStyle.FULL, Locale.getDefault())
                 Text(
-                    text = "${currentMonthFull}'s completion",
+                    text = "Completion history",
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight(700)
@@ -81,15 +75,46 @@ fun CurrentMonthCompletion(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            val totalCompletion = data.filter { it.completedQuantity >= target }.size
-            val effectiveDays = data.count { !it.isSkipDay }
-            Text(
-                text = "$totalCompletion/$effectiveDays days on goal",
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                style = MaterialTheme.typography.bodySmall,
-            )
+
+            // Month Display
+            if (months.size > 1) {
+                Text(
+                    text = selectedMonth.format(DateTimeFormatter.ofPattern("MMM yyyy")),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
-        MonthlyCompletionChart(data, target, today)
+        
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            pageSpacing = 16.dp
+        ) { page ->
+            val month = months.getOrNull(page)
+            val monthData = allData[month] ?: emptyList()
+            
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                val totalCompletion = monthData.filter { it.completedQuantity >= target }.size
+                val effectiveDays = monthData.count { !it.isSkipDay }
+                
+                Text(
+                    text = "$totalCompletion/$effectiveDays days on goal",
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.End)
+                )
+
+                MonthlyCompletionChart(
+                    data = monthData,
+                    target = target,
+                    yearMonth = month ?: YearMonth.from(today),
+                    today = today
+                )
+            }
+        }
     }
 }
 
@@ -97,13 +122,14 @@ fun CurrentMonthCompletion(
 fun MonthlyCompletionChart(
     data: List<DailyCompletion>,
     target: Int,
+    yearMonth: YearMonth,
     today: LocalDate,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
-            .height(280.dp), // Increased height for legends and axis
+            .height(260.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
@@ -116,11 +142,9 @@ fun MonthlyCompletionChart(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                
                 // Legends
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -134,7 +158,6 @@ fun MonthlyCompletionChart(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Pre-calculate scale metrics
             val maxQuantity = data.maxOfOrNull { it.completedQuantity } ?: 0
             val yMax = maxOf(maxQuantity, target, 1)
 
@@ -143,25 +166,24 @@ fun MonthlyCompletionChart(
             val skipColor = MaterialTheme.colorScheme.outlineVariant
             val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
             val targetLineColor = MaterialTheme.colorScheme.outline
-            val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
             
             val textMeasurer = rememberTextMeasurer()
             val labelStyle = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 10.sp,
-                color = onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Canvas(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .semantics { contentDescription = "Monthly completion bar chart with target line and date labels" }
+                    .semantics { contentDescription = "Monthly completion bar chart" }
             ) {
                 val chartWidth = size.width
                 val xAxisHeight = 24.dp.toPx()
                 val chartHeight = size.height - xAxisHeight
 
-                // 1. Draw Background Grid
+                // Background Grid
                 val segmentHeight = chartHeight / 10f
                 for (i in 0..10) {
                     val y = chartHeight - (i * segmentHeight)
@@ -173,7 +195,6 @@ fun MonthlyCompletionChart(
                     )
                 }
 
-                // 2. Bar Dimensions
                 val totalBars = data.size
                 if (totalBars == 0) return@Canvas
 
@@ -182,52 +203,37 @@ fun MonthlyCompletionChart(
                 val barWidth = ((chartWidth - totalSpacingPx) / totalBars).coerceAtLeast(1f)
                 val cornerRadiusPx = 6.dp.toPx()
 
-                // 3. Draw Bars and X-Axis Labels
-                val lastDay: Int = YearMonth.from(today).lengthOfMonth()
-                val markerDays = listOf(1, 5, 10, 15, 20, 25, lastDay).distinct()
+                val markerDays = listOf(1, 5, 10, 15, 20, 25, yearMonth.lengthOfMonth()).distinct()
+                val targetBarTop = chartHeight - (chartHeight * (target.toFloat() / yMax).coerceIn(0f, 1f))
 
-                val targetBarRatio = (target.toFloat() / yMax).coerceIn(0f, 1f)
-                val targetBarHeight = chartHeight * targetBarRatio
-                val targetBarTop = chartHeight - targetBarHeight
-
-                val todayDay = today.dayOfMonth
-                
                 data.forEachIndexed { index, item ->
-                    val isBelowGoal = item.completedQuantity < target
-                    val isFutureItem = item.day > todayDay
+                    val isFutureItem = yearMonth == YearMonth.from(today) && item.day > today.dayOfMonth
                     val barColor = when {
                         isFutureItem || item.isSkipDay -> skipColor
-                        isBelowGoal -> errorColor
+                        item.completedQuantity < target -> errorColor
                         else -> successColor
                     }
                     val xOffset = index * (barWidth + spacingPx)
+                    val barHeight = (chartHeight * (item.completedQuantity.toFloat() / yMax).coerceIn(0f, 1f)).coerceAtLeast(4.dp.toPx())
 
-                    val ratio = (item.completedQuantity.toFloat() / yMax).coerceIn(0f, 1f)
-                    val barHeight = (chartHeight * ratio).coerceAtLeast(4.dp.toPx())
-                    val barTop = chartHeight - barHeight
-
-                    // Track (Capped at Goal height)
+                    // Track
                     drawRoundRect(
                         color = trackColor,
-                        topLeft = Offset(xOffset, targetBarTop),
-                        size = Size(barWidth, targetBarHeight),
+                        topLeft = Offset(xOffset, 0f),
+                        size = Size(barWidth, chartHeight),
                         cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
                     )
 
                     // Active Bar
                     drawRoundRect(
                         color = barColor,
-                        topLeft = Offset(xOffset, barTop),
+                        topLeft = Offset(xOffset, chartHeight - barHeight),
                         size = Size(barWidth, barHeight),
                         cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
                     )
                     
-                    // X-Axis Marker
                     if (item.day in markerDays) {
-                        val textLayoutResult = textMeasurer.measure(
-                            text = item.day.toString(),
-                            style = labelStyle
-                        )
+                        val textLayoutResult = textMeasurer.measure(item.day.toString(), style = labelStyle)
                         drawText(
                             textLayoutResult = textLayoutResult,
                             topLeft = Offset(
@@ -238,31 +244,14 @@ fun MonthlyCompletionChart(
                     }
                 }
 
-                // 4. Target Line and Goal Marker
+                // Target Line
                 drawLine(
                     color = targetLineColor,
                     start = Offset(0f, targetBarTop),
                     end = Offset(chartWidth, targetBarTop),
                     strokeWidth = 2.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(
-                        intervals = floatArrayOf(6.dp.toPx(), 4.dp.toPx()),
-                        phase = 0f
-                    )
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()), 0f)
                 )
-                
-//                // Goal Label
-//                val goalText = "Goal: $target"
-//                val goalLayoutResult = textMeasurer.measure(
-//                    text = goalText,
-//                    style = labelStyle.copy(fontWeight = FontWeight.Bold)
-//                )
-//                drawText(
-//                    textLayoutResult = goalLayoutResult,
-//                    topLeft = Offset(
-//                        x = chartWidth - goalLayoutResult.size.width - 4.dp.toPx(),
-//                        y = targetBarTop - goalLayoutResult.size.height - 6.dp.toPx()
-//                    )
-//                )
             }
         }
     }
@@ -289,18 +278,21 @@ private fun LegendItem(color: Color, label: String) {
 
 @Preview(showBackground = true)
 @Composable
-fun CurrentMonthCompletionPreview() {
+fun MonthlyCompletionPagerPreview() {
     ForgeTheme {
         val today = LocalDate.now()
-        val lastDay: Int = YearMonth.from(today).lengthOfMonth()
-        val target = 2500
-        val data = (1..lastDay).map { day ->
-            DailyCompletion(
-                day = day,
-                completedQuantity = Random.nextInt(from = 2000, until = 2501),
-                isSkipDay = Random.nextInt(0, 20) > 15
-            )
+        val currentMonth = YearMonth.from(today)
+        val data = (1..currentMonth.lengthOfMonth()).map { day ->
+            DailyCompletion(day, Random.nextInt(1500, 3000), Random.nextInt(0, 10) > 8)
         }
-        CurrentMonthCompletion(data = data, target, "ML", today)
+        MonthlyCompletionPager(
+            allData = mapOf(currentMonth to data),
+            months = listOf(currentMonth),
+            selectedMonth = currentMonth,
+            onMonthChanged = {},
+            target = 2500,
+            today = today,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

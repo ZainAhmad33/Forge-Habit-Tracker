@@ -53,7 +53,7 @@ import com.example.forge.core.services.interfaces.MonthlyRate
 import com.example.forge.core.services.interfaces.TrendData
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.feature.habits.components.AdditionalDetailsSection
-import com.example.forge.feature.habits.components.CurrentMonthCompletion
+import com.example.forge.feature.habits.components.MonthlyCompletionPager
 import com.example.forge.feature.habits.components.HabitDetailHeader
 import com.example.forge.feature.habits.components.HistoricalActivitiesSection
 import com.example.forge.feature.habits.components.LogsSection
@@ -88,7 +88,8 @@ fun HabitDetailRoute(
         },
         onMarkCompleted = { viewModel.markCompleted() },
         onDeleteLog = { viewModel.deleteLog(it) },
-        onMonthChanged = { viewModel.onMonthChanged(it) },
+        onCalendarMonthChanged = { viewModel.onCalendarMonthChanged(it) },
+        onCompletionMonthChanged = { viewModel.onCompletionMonthChanged(it) },
         getCompletionQuantity = viewModel::getCompletedQuantity,
         onLogProgress = viewModel::onLogProgress
     )
@@ -103,7 +104,8 @@ fun HabitDetailScreen(
     onDeleteHabit: () -> Unit,
     onMarkCompleted: () -> Unit,
     onDeleteLog: (UUID) -> Unit,
-    onMonthChanged: (YearMonth) -> Unit,
+    onCalendarMonthChanged: (YearMonth) -> Unit,
+    onCompletionMonthChanged: (YearMonth) -> Unit,
     getCompletionQuantity: () -> Int,
     onLogProgress: (String, Int) -> Unit
 ) {
@@ -221,7 +223,14 @@ fun HabitDetailScreen(
 
                 SkipDaysInfoSection(habit.skipDaysUnlocked, stats.currentStreak)
 
-                CurrentMonthCompletion(stats.monthlyCompletionData, habit.completionTargetPerDay, habit.targetUnit, uiState.today)
+                MonthlyCompletionPager(
+                    allData = uiState.allMonthlyCompletion,
+                    months = uiState.completionMonths,
+                    selectedMonth = uiState.selectedCompletionMonth,
+                    onMonthChanged = onCompletionMonthChanged,
+                    target = habit.completionTargetPerDay,
+                    today = uiState.today
+                )
 
                 QuarterlyProgressCards(stats.quarterlyCompletionRates)
 
@@ -237,7 +246,7 @@ fun HabitDetailScreen(
                     startDate = uiState.startDate ?: LocalDate.now(),
                     currentMonth = uiState.selectedCalendarMonth,
                     monthlyActivities = uiState.monthlyCalendarData,
-                    onMonthChanged = onMonthChanged,
+                    onMonthChanged = onCalendarMonthChanged,
                     today = uiState.today
                 )
 
@@ -344,9 +353,10 @@ fun HabitDetailScreenPreview() {
             onDeleteHabit = {},
             onMarkCompleted = {},
             onDeleteLog = {},
-            onMonthChanged = {},
+            onCalendarMonthChanged = {},
+            onCompletionMonthChanged = {},
             getCompletionQuantity = {100},
-            onLogProgress = {} as (String, Int) -> Unit
+            onLogProgress = { _, _ -> }
         )
     }
 }

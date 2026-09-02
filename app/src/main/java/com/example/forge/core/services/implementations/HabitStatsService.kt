@@ -52,7 +52,7 @@ class HabitStatsService @Inject constructor(
                 val currentStreakInfoDeferred = async { calculateCurrentStreak(habit, dailyQuantities, target, today) }
                 val bestStreakDeferred = async { calculateBestStreak(habit, dailyQuantities, target, today) }
                 val overallRateDeferred = async { calculateOverallRate(habit, dailyQuantities, target, startDate, today) }
-                val monthlyDataDeferred = async { calculateMonthlyCompletion(dailyQuantities, habit, today) }
+                val monthlyDataDeferred = async { calculateMonthlyCompletion(dailyQuantities, habit, YearMonth.from(today)) }
                 val quarterlyDataDeferred = async { calculateQuarterlyRates(habit, dailyQuantities, today) }
                 val trendsDeferred = async { calculateTrends(habit, dailyQuantities, target, today) }
 
@@ -104,6 +104,28 @@ class HabitStatsService @Inject constructor(
             }
             allData
         }.flowOn(Dispatchers.IO)
+    }
+
+    override fun getAllMonthlyCompletion(habitId: UUID): Flow<Map<YearMonth, List<DailyCompletion>>> {
+        return combine(
+            activityService.getDailyQuantitiesForHabit(habitId),
+            habitRepository.getHabitFlow(habitId),
+            timeService.getCurrentDateFlow()
+        ) { dailyQuantitiesList, habit, today ->
+            if (habit == null) return@combine emptyMap()
+            
+            val dailyTotals = dailyQuantitiesList.associate { it.day to it.totalQuantity }
+            val habitStartMonth = YearMonth.from(timeService.toLocalDate(habit.createdAt))
+            val todayMonth = YearMonth.from(today)
+            
+            val result = mutableMapOf<YearMonth, List<DailyCompletion>>()
+            var current = habitStartMonth
+            while (!current.isAfter(todayMonth)) {
+                result[current] = calculateMonthlyCompletion(dailyTotals, habit, current)
+                current = current.plusMonths(1)
+            }
+            result
+        }.flowOn(Dispatchers.Default)
     }
 
     internal fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): StreakInfo {
@@ -424,14 +446,14 @@ class HabitStatsService @Inject constructor(
         return successfulDays.toFloat() / expectedDays
     }
 
-    private fun calculateMonthlyCompletion(dailyTotals: Map<LocalDate, Int>, habit: Habit, today: LocalDate): List<DailyCompletion> {
-        val daysInMonth = today.lengthOfMonth()
+    private fun calculateMonthlyCompletion(dailyTotals: Map<LocalDate, Int>, habit: Habit, yearMonth: YearMonth): List<DailyCompletion> {
+        val daysInMonth = yearMonth.lengthOfMonth()
         val target = habit.completionTargetPerDay
 
         val successfulDates = dailyTotals.filter { it.value >= target }.keys
 
         return (1..daysInMonth).map { day ->
-            val date = LocalDate.of(today.year, today.month, day)
+            val date = LocalDate.of(yearMonth.year, yearMonth.month, day)
             val sum = dailyTotals[date] ?: 0
             val isCompleted = sum >= target
 

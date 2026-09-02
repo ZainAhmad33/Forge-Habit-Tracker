@@ -62,4 +62,5 @@ interface IHabitStatsService {
     fun getHabitStats(habitId: UUID): Flow<HabitStats>
     fun getMonthlyActivityData(habitId: UUID, yearMonth: YearMonth): Flow<List<ActivityData>>
     fun getRangeActivityData(habitId: UUID, startMonth: YearMonth, monthCount: Int): Flow<List<ActivityData>>
+    fun getAllMonthlyCompletion(habitId: UUID): Flow<Map<YearMonth, List<DailyCompletion>>>
 }
