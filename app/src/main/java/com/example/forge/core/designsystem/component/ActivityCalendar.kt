@@ -212,6 +212,8 @@ fun ActivityWeeklyPager(
         (totalWeeks + weeksPerPage - 1) / weeksPerPage
     }
     
+    if (pageCount <= 0) return
+    
     val initialPage = remember(pageCount) { (pageCount - 1).coerceAtLeast(0) }
     val pagerState = rememberPagerState(initialPage = initialPage) { pageCount }
 

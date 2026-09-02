@@ -199,59 +199,61 @@ fun InsightsScreen(
                     }
 
                     // Momentum Section
-                    val pagerState = rememberPagerState(
-                        initialPage = uiState.momentumMonths.indexOf(uiState.currentMomentumMonth).coerceAtLeast(0),
-                        pageCount = { uiState.momentumMonths.size }
-                    )
-
-                    LaunchedEffect(pagerState.currentPage) {
-                        if (uiState.momentumMonths.isNotEmpty()) {
-                            onMomentumMonthSelected(uiState.momentumMonths[pagerState.currentPage])
-                        }
-                    }
-
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Momentum",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            // Month Display (Swiping handles navigation)
-                            if (uiState.momentumMonths.size > 1) {
-                                Text(
-                                    text = uiState.currentMomentumMonth.format(DateTimeFormatter.ofPattern("MMM yyyy")),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
-                        Text(
-                            text = "Direction of your consistency. A trend line above the 30-day baseline indicates you're improving.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 12.dp)
+                    if (uiState.momentumMonths.isNotEmpty()) {
+                        val pagerState = rememberPagerState(
+                            initialPage = uiState.momentumMonths.indexOf(uiState.currentMomentumMonth).coerceAtLeast(0),
+                            pageCount = { uiState.momentumMonths.size }
                         )
 
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { page ->
-                            val month = uiState.momentumMonths.getOrNull(page)
-                            val monthlyPoints = uiState.momentumData[month] ?: emptyList()
-                            
-                            MomentumLineChart(
-                                points = monthlyPoints,
-                                totalDaysInMonth = month?.lengthOfMonth() ?: 30,
-                                modifier = Modifier.fillMaxWidth()
+                        LaunchedEffect(pagerState.currentPage) {
+                            onMomentumMonthSelected(uiState.momentumMonths[pagerState.currentPage])
+                        }
+
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Momentum",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                // Month Display (Swiping handles navigation)
+                                if (uiState.momentumMonths.size > 1) {
+                                    Text(
+                                        text = uiState.currentMomentumMonth.format(DateTimeFormatter.ofPattern("MMM yyyy")),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "Direction of your consistency. A trend line above the 30-day baseline indicates you're improving.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 12.dp)
                             )
+
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top,
+                                pageSpacing = 16.dp
+                            ) { page ->
+                                val month = uiState.momentumMonths.getOrNull(page)
+                                val monthlyPoints = uiState.momentumData[month] ?: emptyList()
+
+                                MomentumLineChart(
+                                    points = monthlyPoints,
+                                    totalDaysInMonth = month?.lengthOfMonth() ?: 30,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
 

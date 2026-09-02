@@ -49,6 +49,8 @@ fun MonthlyCompletionPager(
     today: LocalDate,
     modifier: Modifier = Modifier
 ){
+    if (months.isEmpty()) return
+
     val pagerState = rememberPagerState(
         initialPage = months.indexOf(selectedMonth).coerceAtLeast(0),
         pageCount = { months.size }

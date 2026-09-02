@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.forge.core.database.entity.HabitType
-import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.implementations.HabitsService
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitStatsService
@@ -13,18 +12,7 @@ import com.example.forge.feature.habits.state.HabitDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -51,15 +39,10 @@ class HabitDetailViewModel @Inject constructor(
     private val _selectedCalendarMonth = MutableStateFlow(YearMonth.now())
     private val _selectedCompletionMonth = MutableStateFlow(YearMonth.now())
 
-    init {
-        loadHabitData()
-        observeMonthlyData()
-    }
-
     private val habitHistory = habitsService.getHabitFlow(habitId)
         .distinctUntilChanged()
         .flatMapLatest { habit ->
-            if (habit == null) return@flatMapLatest kotlinx.coroutines.flow.flowOf(emptyList())
+            if (habit == null) return@flatMapLatest flowOf(emptyList())
             val startDate = timeService.toLocalDate(habit.createdAt)
             val today = timeService.getCurrentDate()
             val habitStartMonth = YearMonth.from(startDate)
@@ -73,24 +56,33 @@ class HabitDetailViewModel @Inject constructor(
     private val monthlyCompletion = statsService.getAllMonthlyCompletion(habitId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    init {
+        loadHabitData()
+        observeMonthSelections()
+    }
+
     private fun loadHabitData() {
-        combine(
+        val coreDataFlow = combine(
             habitsService.getHabitFlow(habitId).distinctUntilChanged(),
             statsService.getHabitStats(habitId).distinctUntilChanged(),
             activityService.getActivitiesForToday(listOf(habitId)).distinctUntilChanged(),
-            timeService.getCurrentDateFlow().distinctUntilChanged(),
+            timeService.getCurrentDateFlow().distinctUntilChanged()
+        ) { habit, stats, todayLogs, today ->
+            Quad(habit, stats, todayLogs, today)
+        }
+
+        combine(
+            coreDataFlow,
             habitHistory,
             monthlyCompletion
-        ) { flows ->
-            val habit = flows[0] as com.example.forge.core.database.entity.Habit?
-            val stats = flows[1] as com.example.forge.core.services.interfaces.HabitStats
-            val todayLogs = flows[2] as List<com.example.forge.core.database.entity.HabitActivity>
-            val today = flows[3] as java.time.LocalDate
-            val history = flows[4] as List<com.example.forge.core.uiEntities.ActivityData>
-            val completions = flows[5] as Map<YearMonth, List<com.example.forge.core.services.interfaces.DailyCompletion>>
+        ) { core, history, completions ->
+            val habit = core.first
+            val stats = core.second
+            val todayLogs = core.third
+            val today = core.fourth
 
             if (habit == null) {
-                _uiState.value = _uiState.value.copy(error = "Habit not found", isLoading = false)
+                _uiState.update { it.copy(error = "Habit not found", isLoading = false) }
             } else {
                 val habitStartMonth = YearMonth.from(timeService.toLocalDate(habit.createdAt))
                 val todayMonth = YearMonth.from(today)
@@ -101,31 +93,35 @@ class HabitDetailViewModel @Inject constructor(
                     curr = curr.plusMonths(1)
                 }
 
-                _uiState.value = _uiState.value.copy(
-                    habit = habit,
-                    stats = stats,
-                    todayLogs = todayLogs,
-                    today = today,
-                    startDate = timeService.toLocalDate(habit.createdAt),
-                    monthlyCalendarData = history,
-                    allMonthlyCompletion = completions,
-                    completionMonths = months,
-                    isLoading = false
-                )
+                _uiState.update { 
+                    it.copy(
+                        habit = habit,
+                        stats = stats,
+                        todayLogs = todayLogs,
+                        today = today,
+                        startDate = timeService.toLocalDate(habit.createdAt),
+                        monthlyCalendarData = history,
+                        allMonthlyCompletion = completions,
+                        completionMonths = months,
+                        isLoading = false
+                    )
+                }
             }
-        }.debounce(100.milliseconds) // Avoid rapid UI updates during batch operations
+        }.debounce(100.milliseconds)
          .launchIn(viewModelScope)
     }
 
-    private fun observeMonthlyData() {
+    private fun observeMonthSelections() {
         _selectedCalendarMonth.onEach { month ->
-            _uiState.value = _uiState.value.copy(selectedCalendarMonth = month)
+            _uiState.update { it.copy(selectedCalendarMonth = month) }
         }.launchIn(viewModelScope)
 
         _selectedCompletionMonth.onEach { month ->
-            _uiState.value = _uiState.value.copy(selectedCompletionMonth = month)
+            _uiState.update { it.copy(selectedCompletionMonth = month) }
         }.launchIn(viewModelScope)
     }
+
+    private data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
     fun onCalendarMonthChanged(month: YearMonth) {
         _selectedCalendarMonth.value = month
@@ -151,11 +147,13 @@ class HabitDetailViewModel @Inject constructor(
             }
         }
     }
+
     fun onLogProgress(habitId: String, quantity: Int) {
         viewModelScope.launch {
             activityService.logHabitActivity(UUID.fromString(habitId), quantity)
         }
     }
+
     fun getCompletedQuantity(): Int {
         return _uiState.value.todayLogs.sumOf { it.quantity }
     }
