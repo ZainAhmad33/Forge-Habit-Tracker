@@ -14,9 +14,11 @@ import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.HomeHabit
 import com.example.forge.core.uiEntities.HomeSummary
 import com.example.forge.feature.home.viewmodel.HomeDashboardUIState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -89,7 +91,7 @@ class HomeService @Inject constructor(
                 categoryPills,
                 homeHabits
             )
-        }
+        }.flowOn(Dispatchers.Default)
     }
 
     override fun searchHabits(query: String): List<HomeHabit> = emptyList()

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -62,7 +63,7 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
 
     val horizontalEnter = slideInHorizontally(
         initialOffsetX = { fullWidth -> fullWidth },
-        animationSpec = tween(400)
+        animationSpec = tween(400, easing = FastOutSlowInEasing)
     ) + fadeIn(animationSpec = tween(400))
 
     val horizontalExit = fadeOut(animationSpec = tween(400))
@@ -71,7 +72,7 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
 
     val horizontalPopExit = slideOutHorizontally(
         targetOffsetX = { fullWidth -> fullWidth },
-        animationSpec = tween(400)
+        animationSpec = tween(400, easing = FastOutSlowInEasing)
     ) + fadeOut(animationSpec = tween(400))
 
     NavHost(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,8 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,6 +55,7 @@ import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.HomeHabit
 import com.example.forge.core.uiEntities.HomeSummary
 import com.example.forge.core.uiEntities.ProgressShape
+import com.example.forge.feature.home.components.HabitCard
 import com.example.forge.feature.home.components.HabitCategoryChips
 import com.example.forge.feature.home.components.HabitGrid
 import com.example.forge.feature.home.components.HabitLogBottomSheet
@@ -116,16 +118,6 @@ fun HomeScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     var query by remember { mutableStateOf("") }
-    var isToolbarVisible by remember { mutableStateOf(true) }
-    val scrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -10f) isToolbarVisible = false
-                if (available.y > 10f) isToolbarVisible = true
-                return Offset.Zero
-            }
-        }
-    }
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
         exitDirection = FloatingToolbarExitDirection.Bottom
     )
@@ -163,69 +155,87 @@ fun HomeScreen(
             } 
             else 
             {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(innerPadding)
-                        .padding(PaddingValues(horizontal = 20.dp, vertical = 24.dp)),
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    HomeHeader(
-                        greetingMessage = uiState.greetingMessage,
-                        greetingName = uiState.greetingName,
-                        dateLabel = uiState.dateLabel,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    item {
+                        HomeHeader(
+                            greetingMessage = uiState.greetingMessage,
+                            greetingName = uiState.greetingName,
+                            dateLabel = uiState.dateLabel,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+
                     if (uiState.totalHabitsCount > 0) {
-                        HomeSummaryCard(
-                            summary = uiState.summary,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        HabitCategoryChips(
-                            categories = uiState.categories,
-                            selectedCategory = uiState.selectedCategory,
-                            onCategorySelected = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onCategorySelected(it)
-                            },
-                            showAllCategoryChip = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        item {
+                            HomeSummaryCard(
+                                summary = uiState.summary,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+
+                        item {
+                            HabitCategoryChips(
+                                categories = uiState.categories,
+                                selectedCategory = uiState.selectedCategory,
+                                onCategorySelected = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onCategorySelected(it)
+                                },
+                                showAllCategoryChip = true,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
 
                         if (uiState.todaysHabits.isNotEmpty()) {
-                            SectionHeader(
-                                title = "Today's habits",
-                                trailingText = "${uiState.todaysHabits.size} shown",
-                            )
-                            HabitGrid(
-                                habits = uiState.todaysHabits,
-                                onHabitCardClick = onHabitCardClick,
-                                onHabitDetailsClick = onHabitDetailsClick
-                            )
+                            item {
+                                SectionHeader(
+                                    title = "Today's habits",
+                                    trailingText = "${uiState.todaysHabits.size} shown",
+                                )
+                            }
+                            items(uiState.todaysHabits.chunked(2)) { rowHabits ->
+                                HabitRow(
+                                    habits = rowHabits,
+                                    onHabitCardClick = onHabitCardClick,
+                                    onHabitDetailsClick = onHabitDetailsClick
+                                )
+                            }
                         }
 
                         if (uiState.otherHabits.isNotEmpty()) {
-                            SectionHeader(
-                                title = "Other habits",
-                                trailingText = "${uiState.otherHabits.size} shown",
-                            )
-                            HabitGrid(
-                                habits = uiState.otherHabits,
-                                onHabitCardClick = onHabitCardClick,
-                                onHabitDetailsClick = onHabitDetailsClick
-                            )
+                            item {
+                                SectionHeader(
+                                    title = "Other habits",
+                                    trailingText = "${uiState.otherHabits.size} shown",
+                                )
+                            }
+                            items(uiState.otherHabits.chunked(2)) { rowHabits ->
+                                HabitRow(
+                                    habits = rowHabits,
+                                    onHabitCardClick = onHabitCardClick,
+                                    onHabitDetailsClick = onHabitDetailsClick
+                                )
+                            }
                         }
 
                         if (uiState.todaysHabits.isEmpty() && uiState.otherHabits.isEmpty()) {
-                            // No results for current search or category filter
-                            EmptySearchState(query = uiState.searchQuery)
+                            item {
+                                // No results for current search or category filter
+                                EmptySearchState(query = uiState.searchQuery)
+                            }
                         }
                     } else {
-                        // no habits currently in DB
-                        EmptyHabitState()
+                        item {
+                            // no habits currently in DB
+                            EmptyHabitState()
+                        }
                     }
-
                 }
             }
             BottomNavBar(
@@ -257,6 +267,30 @@ fun HomeScreen(
                     onLogProgress(habit.id, quantity)
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun HabitRow(
+    habits: List<HomeHabit>,
+    onHabitCardClick: (HomeHabit) -> Unit,
+    onHabitDetailsClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        habits.forEach { habit ->
+            HabitCard(
+                habit = habit,
+                modifier = Modifier.weight(1f),
+                onHabitCardClick = onHabitCardClick,
+                onDetailsClick = { onHabitDetailsClick(habit.id) }
+            )
+        }
+        if (habits.size == 1) {
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

@@ -6,6 +6,7 @@ import com.example.forge.core.services.interfaces.*
 import com.example.forge.core.uiEntities.ActivityData
 import com.example.forge.feature.insights.state.InsightsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
@@ -81,7 +82,8 @@ class InsightsViewModel @Inject constructor(
             streakDistribution = streaks,
             isEmpty = leaderboard.isEmpty() && (stats.completionRate == 0f)
         )
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+    .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = InsightsUiState()

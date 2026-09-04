@@ -88,6 +88,7 @@ fun ProfileDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()) }
+    val monthYearFormatter = remember { SimpleDateFormat("MMM yyyy", Locale.getDefault()) }
     val haptic = LocalHapticFeedback.current
 
     Box(
@@ -218,7 +219,7 @@ fun ProfileDetailsScreen(
                             ),
                             HeroStatItem(
                                 label = "Joining Date",
-                                value = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(uiState.stats.joinedDate),
+                                value = monthYearFormatter.format(uiState.stats.joinedDate),
                                 icon = Icons.Rounded.History
                             ),
                             HeroStatItem(
