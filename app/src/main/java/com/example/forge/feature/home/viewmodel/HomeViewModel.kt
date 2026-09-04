@@ -48,7 +48,8 @@ class HomeViewModel @Inject constructor(
             dashboard.copy(habits = filteredHabits),
             selectedCategory = category,
             isLoading = false,
-            searchQuery = query
+            searchQuery = query,
+            totalHabitsCount = dashboard.habits.size
         )
     }.stateIn(
         scope = viewModelScope,

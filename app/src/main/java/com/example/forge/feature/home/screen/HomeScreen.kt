@@ -175,7 +175,7 @@ fun HomeScreen(
                         dateLabel = uiState.dateLabel,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    if (uiState.habits.isNotEmpty()) {
+                    if (uiState.totalHabitsCount > 0) {
                         HomeSummaryCard(
                             summary = uiState.summary,
                             modifier = Modifier.fillMaxWidth(),
@@ -213,7 +213,7 @@ fun HomeScreen(
                         }
 
                         if (uiState.todaysHabits.isEmpty() && uiState.otherHabits.isEmpty()) {
-                            // Search results empty
+                            // No results for current search or category filter
                             EmptySearchState(query = uiState.searchQuery)
                         }
                     } else {
@@ -315,8 +315,14 @@ private fun EmptySearchState(query: String) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        val message = if (query.isNotEmpty()) {
+            "We couldn't find any habits matching \"$query\". Try a different search term."
+        } else {
+            "No habits found in this category. Try selecting a different category or create a new habit."
+        }
+
         Text(
-            text = "We couldn't find any habits matching \"$query\". Try a different search term.",
+            text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -352,6 +358,7 @@ private fun HomeScreenPreview() {
             )
         ),
         selectedCategory = selectedCategory,
+        totalHabitsCount = 2
     )
     ForgeTheme {
         HomeScreen(
