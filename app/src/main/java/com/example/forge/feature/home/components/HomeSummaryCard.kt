@@ -69,7 +69,7 @@ fun HomeSummaryCard(
             Column (verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "${summary.completedCount} of ${summary.totalCount} habits completed",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Surface(
