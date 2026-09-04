@@ -14,7 +14,7 @@ import com.example.forge.core.database.entity.User
 
 @Database(
     entities = [Habit::class, HabitActivity::class, User::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,6 +39,13 @@ abstract class ForgeDatabase : RoomDatabase() {
                 database.execSQL("INSERT INTO `users_new` (`id`, `firstName`, `lastName`, `dob`) SELECT `id`, `firstName`, `lastName`, `dob` FROM `users`")
                 database.execSQL("DROP TABLE `users`")
                 database.execSQL("ALTER TABLE `users_new` RENAME TO `users`")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                val currentTime = System.currentTimeMillis()
+                database.execSQL("ALTER TABLE users ADD COLUMN joinedDate INTEGER NOT NULL DEFAULT $currentTime")
             }
         }
     }

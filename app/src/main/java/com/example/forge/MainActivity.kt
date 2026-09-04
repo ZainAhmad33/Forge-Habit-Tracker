@@ -29,6 +29,7 @@ import com.example.forge.feature.habits.screen.HabitDetailRoute
 import com.example.forge.feature.home.screen.HomeRoute
 import com.example.forge.feature.insights.screen.InsightsRoute
 import com.example.forge.feature.onboarding.WelcomeRoute
+import com.example.forge.feature.profile.screen.ProfileDetailsRoute
 import com.example.forge.feature.profile.screen.ProfileRoute
 import com.example.forge.feature.upserthabit.screen.NewHabitRoute
 import dagger.hilt.android.AndroidEntryPoint
@@ -65,20 +66,27 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
     ) {
         composable("welcome") {
             WelcomeRoute(
-                onGetStartedClick = { navController.navigate("profile") }
+                onGetStartedClick = { navController.navigate("profile_setup") }
             )
         }
-        composable("profile") {
+        composable("profile_setup") {
             ProfileRoute(
                 onSaveSuccess = {
                     // If we came from onboarding, navigate to home and clear stack
-                    // If we came from home (edit mode), just pop back
+                    // If we came from details (edit mode), just pop back
                     if (!navController.popBackStack()) {
                         navController.navigate("home") {
                             popUpTo("welcome") { inclusive = true }
                         }
                     }
-                }
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable("profile_details") {
+            ProfileDetailsRoute(
+                onBackClick = { navController.popBackStack() },
+                onEditClick = { navController.navigate("profile_setup") }
             )
         }
         composable("home") {
@@ -95,7 +103,7 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
                     }
                 },
                 onProfileClick = {
-                    navController.navigate("profile")
+                    navController.navigate("profile_details")
                 }
             )
         }

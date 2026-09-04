@@ -26,7 +26,8 @@ object DatabaseModule {
             ForgeDatabase.DATABASE_NAME
         ).addMigrations(
             ForgeDatabase.MIGRATION_2_3,
-            ForgeDatabase.MIGRATION_3_4
+            ForgeDatabase.MIGRATION_3_4,
+            ForgeDatabase.MIGRATION_4_5
         ).build()
     }
 

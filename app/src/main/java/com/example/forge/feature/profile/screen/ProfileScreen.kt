@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
@@ -70,6 +71,7 @@ import java.util.Locale
 @Composable
 fun ProfileRoute(
     onSaveSuccess: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -83,6 +85,7 @@ fun ProfileRoute(
         onSaveClick = {
             viewModel.onSaveClick(onSaveSuccess)
         },
+        onBackClick = onBackClick,
         modifier = modifier
     )
 }
@@ -95,6 +98,7 @@ fun ProfileScreen(
     onLastNameChange: (String) -> Unit,
     onDobChange: (Date?) -> Unit,
     onSaveClick: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
@@ -134,6 +138,15 @@ fun ProfileScreen(
                     })
                 },
             containerColor = Color.Transparent,
+            topBar = {
+                if (uiState.isUserExisting) {
+                    Box(modifier = Modifier.padding(8.dp)) {
+                        IconButton(onClick = onBackClick) {
+                            Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                }
+            },
             bottomBar = {
                 Box(
                     modifier = Modifier
@@ -337,7 +350,8 @@ fun ProfileScreenPreview() {
             onFirstNameChange = {},
             onLastNameChange = {},
             onDobChange = {},
-            onSaveClick = {}
+            onSaveClick = {},
+            onBackClick = {}
         )
     }
 }
