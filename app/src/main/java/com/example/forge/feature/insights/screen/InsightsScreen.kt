@@ -18,7 +18,9 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,6 +76,7 @@ fun InsightsScreen(
     onHeatmapMonthSelected: (YearMonth) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
         exitDirection = FloatingToolbarExitDirection.Bottom
     )
@@ -284,9 +287,15 @@ fun InsightsScreen(
             
             BottomNavBar(
                 scrollBehavior = scrollBehavior,
-                onAddHabitClick = onAddHabitClick,
+                onAddHabitClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onAddHabitClick()
+                },
                 initialSelected = "Insights",
-                onNavigateToHome = onNavigateToHome,
+                onNavigateToHome = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigateToHome()
+                },
                 onNavigateToInsights = {}
             )
         }

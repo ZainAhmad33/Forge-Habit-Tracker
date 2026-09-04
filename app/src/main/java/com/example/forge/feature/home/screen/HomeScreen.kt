@@ -34,9 +34,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -112,7 +114,7 @@ fun HomeScreen(
     onDismissBottomSheet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
+    val haptic = LocalHapticFeedback.current
     var query by remember { mutableStateOf("") }
     var isToolbarVisible by remember { mutableStateOf(true) }
     val scrollConnection = remember {
@@ -183,7 +185,10 @@ fun HomeScreen(
                         HabitCategoryChips(
                             categories = uiState.categories,
                             selectedCategory = uiState.selectedCategory,
-                            onCategorySelected = onCategorySelected,
+                            onCategorySelected = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onCategorySelected(it)
+                            },
                             showAllCategoryChip = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -225,10 +230,16 @@ fun HomeScreen(
             }
             BottomNavBar(
                 scrollBehavior = scrollBehavior,
-                onAddHabitClick = onAddHabitClick,
+                onAddHabitClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onAddHabitClick()
+                },
                 initialSelected = "Home",
                 onNavigateToHome = {},
-                onNavigateToInsights = onNavigateToInsights
+                onNavigateToInsights = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigateToInsights()
+                }
             )
         }
 

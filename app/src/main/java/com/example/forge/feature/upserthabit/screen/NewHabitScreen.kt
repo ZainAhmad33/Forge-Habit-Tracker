@@ -44,7 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -136,6 +138,7 @@ fun NewHabitScreen(
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+    val haptic = LocalHapticFeedback.current
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -156,13 +159,19 @@ fun NewHabitScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onBackClick()
+                    }) {
                         Icon(imageVector = Icons.Rounded.Close, contentDescription = "Close")
                     }
                 },
                 actions = {
                     if (uiState.habitId != null) {
-                        IconButton(onClick = { showDeleteConfirmation = true }) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showDeleteConfirmation = true
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Delete Habit",
@@ -184,7 +193,10 @@ fun NewHabitScreen(
             ) {
                 CreateHabitButton(
                     text = if (uiState.habitId != null) "Save Changes" else "Create Habit",
-                    onClick = onCreateHabitClick,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onCreateHabitClick()
+                    },
                     icon = if (uiState.habitId != null) Icons.Rounded.Save else Icons.Rounded.Add
                 )
             }
@@ -210,8 +222,14 @@ fun NewHabitScreen(
             EmojiSelectorBar(
                 selectedEmoji = uiState.selectedEmoji,
                 popularEmojis = uiState.popularEmojis,
-                onEmojiSelected = onEmojiSelected,
-                onMoreClick = { /* Open emoji picker */ }
+                onEmojiSelected = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onEmojiSelected(it)
+                },
+                onMoreClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    /* Open emoji picker */
+                }
             )
 
             // 3. Habit Title
@@ -254,7 +272,10 @@ fun NewHabitScreen(
                 HabitCategoryChips(
                     categories = uiState.categories,
                     selectedCategory = uiState.selectedCategory,
-                    onCategorySelected = onCategorySelected
+                    onCategorySelected = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onCategorySelected(it)
+                    }
                 )
             }
 
@@ -270,20 +291,29 @@ fun NewHabitScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 HabitTypeSelector(
                     selectedType = uiState.selectedType,
-                    onTypeSelected = onTypeSelected
+                    onTypeSelected = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onTypeSelected(it)
+                    }
                 )
             }
 
             // 6. Goal Selector
             GoalSelector(
                 goal = uiState.dailyGoal,
-                onGoalChange = onGoalChange,
+                onGoalChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onGoalChange(it)
+                },
                 showUnit = uiState.selectedType == HabitType.Quantity,
                 unit = uiState.selectedUnit,
                 availableUnits = uiState.availableUnits,
                 otherUnitInput = uiState.otherUnitInput,
                 onOtherUnitInputChange = onOtherUnitInputChange,
-                onUnitSelected = onUnitSelected,
+                onUnitSelected = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onUnitSelected(it)
+                },
                 showCounter = uiState.selectedType != HabitType.YesNo,
                 isOtherUnitError = uiState.otherUnitError,
                 habitTypeSelected = uiState.selectedType
@@ -292,21 +322,39 @@ fun NewHabitScreen(
             // 7 & 8. Frequency Selector
             FrequencySelector(
                 selectedFrequency = uiState.selectedFrequency,
-                onFrequencySelected = onFrequencySelected,
+                onFrequencySelected = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFrequencySelected(it)
+                },
                 specificDays = uiState.specificDays,
-                onDayToggle = onDayToggle,
+                onDayToggle = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDayToggle(it)
+                },
                 daysPerWeek = uiState.daysPerWeek,
-                onDaysPerWeekChange = onDaysPerWeekChange,
+                onDaysPerWeekChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDaysPerWeekChange(it)
+                },
                 isError = uiState.specificDaysError
             )
 
             // 9. Reminders
             ReminderSelector(
                 remindersEnabled = uiState.remindersEnabled,
-                onRemindersEnabledChange = onRemindersEnabledChange,
+                onRemindersEnabledChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onRemindersEnabledChange(it)
+                },
                 reminders = uiState.reminders,
-                onRemoveReminder = onRemoveReminder,
-                onAddReminderClick = onAddReminderClick,
+                onRemoveReminder = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onRemoveReminder(it)
+                },
+                onAddReminderClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onAddReminderClick(it)
+                },
                 isError = uiState.remindersError
             )
         }

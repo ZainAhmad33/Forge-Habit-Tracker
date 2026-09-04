@@ -60,9 +60,27 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
 
     if (startDestination == null) return
 
+    val horizontalEnter = slideInHorizontally(
+        initialOffsetX = { fullWidth -> fullWidth },
+        animationSpec = tween(400)
+    ) + fadeIn(animationSpec = tween(400))
+
+    val horizontalExit = fadeOut(animationSpec = tween(400))
+
+    val horizontalPopEnter = fadeIn(animationSpec = tween(400))
+
+    val horizontalPopExit = slideOutHorizontally(
+        targetOffsetX = { fullWidth -> fullWidth },
+        animationSpec = tween(400)
+    ) + fadeOut(animationSpec = tween(400))
+
     NavHost(
         navController = navController,
-        startDestination = startDestination!!
+        startDestination = startDestination!!,
+        enterTransition = { horizontalEnter },
+        exitTransition = { horizontalExit },
+        popEnterTransition = { horizontalPopEnter },
+        popExitTransition = { horizontalPopExit }
     ) {
         composable("welcome") {
             WelcomeRoute(
@@ -122,25 +140,7 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
             )
         }
         composable(
-            route = "habit_detail/{habitId}",
-            enterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(400))
-            },
-            popEnterTransition = {
-                fadeIn(animationSpec = tween(400))
-            },
-            popExitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(400)
-                ) + fadeOut(animationSpec = tween(400))
-            }
+            route = "habit_detail/{habitId}"
         ) {
             HabitDetailRoute(
                 onBackClick = { navController.popBackStack() },

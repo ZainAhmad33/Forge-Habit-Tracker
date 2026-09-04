@@ -43,6 +43,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -86,6 +88,7 @@ fun ProfileDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()) }
+    val haptic = LocalHapticFeedback.current
 
     Box(
         modifier = modifier
@@ -123,7 +126,10 @@ fun ProfileDetailsScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onBackClick) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onBackClick()
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                                 contentDescription = "Back"
@@ -143,7 +149,10 @@ fun ProfileDetailsScreen(
                         .padding(horizontal = 24.dp, vertical = 32.dp)
                 ) {
                     Button(
-                        onClick = onEditClick,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onEditClick()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(60.dp),

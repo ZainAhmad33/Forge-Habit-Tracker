@@ -53,8 +53,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -105,6 +107,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
+    val haptic = LocalHapticFeedback.current
     var showDatePicker by remember { mutableStateOf(false) }
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
@@ -151,7 +154,10 @@ fun ProfileScreen(
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = onBackClick) {
+                            IconButton(onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onBackClick()
+                            }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                                     contentDescription = "Back"
@@ -172,7 +178,10 @@ fun ProfileScreen(
                         .padding(horizontal = 24.dp, vertical = 32.dp)
                 ) {
                     Button(
-                        onClick = onSaveClick,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSaveClick()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(60.dp),
@@ -308,7 +317,10 @@ fun ProfileScreen(
                                 { Text("Date of birth is required") }
                             } else null,
                             trailingIcon = {
-                                IconButton(onClick = { showDatePicker = true }) {
+                                IconButton(onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    showDatePicker = true
+                                }) {
                                     Icon(
                                         imageVector = Icons.Rounded.CalendarToday,
                                         contentDescription = "Select Date",

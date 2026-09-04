@@ -48,7 +48,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,6 +72,7 @@ fun HomeAppBar(
     var isSearchActive by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(isSearchActive) {
         if (isSearchActive) {
@@ -115,6 +118,7 @@ fun HomeAppBar(
                     ) {
                         IconButton(
                             onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 isSearchActive = false
                                 onSearchQueryChange("")
                                 focusManager.clearFocus()
@@ -150,7 +154,10 @@ fun HomeAppBar(
                                     enter = fadeIn(),
                                     exit = fadeOut()
                                 ) {
-                                    IconButton(onClick = { onSearchQueryChange("") }) {
+                                    IconButton(onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onSearchQueryChange("")
+                                    }) {
                                         Icon(
                                             imageVector = Icons.Rounded.Clear,
                                             contentDescription = "Clear search text",
@@ -183,7 +190,10 @@ fun HomeAppBar(
                             )
                         },
                         actions = {
-                            IconButton(onClick = { isSearchActive = true }) {
+                            IconButton(onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isSearchActive = true
+                            }) {
                                 Icon(
                                     imageVector = Icons.Rounded.Search,
                                     contentDescription = "Open Search",
@@ -197,7 +207,10 @@ fun HomeAppBar(
                                     .size(36.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.primaryContainer)
-                                    .clickable { onProfileClick() },
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onProfileClick()
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
