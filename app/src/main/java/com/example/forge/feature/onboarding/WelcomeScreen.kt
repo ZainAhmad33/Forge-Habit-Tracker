@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.filled.GridView
@@ -89,9 +90,9 @@ fun WelcomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // App Icon
             Icon(
@@ -101,50 +102,45 @@ fun WelcomeScreen(
                 tint = Color.Unspecified
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
             // Welcome Message
-            Text(
-                text = "Welcome to Forge",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Welcome to Forge",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.5.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-            Text(
-                text = "Build better routines, one day at a time.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(64.dp))
+                Text(
+                    text = "Build better routines, one day at a time.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
 
             // Features
-            FeatureItem(
-                icon = Icons.Default.GridView,
-                title = "Track any kind of habit",
-                description = "Yes/no, quantity, or count-based goals"
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                FeatureItem(
+                    icon = Icons.Default.GridView,
+                    title = "Track any kind of habit",
+                    description = "Yes/no, quantity, or count-based goals"
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                FeatureItem(
+                    icon = Icons.Default.LocalFireDepartment,
+                    title = "Stay motivated",
+                    description = "Streaks, milestones, and weekly insights"
+                )
 
-            FeatureItem(
-                icon = Icons.Default.LocalFireDepartment,
-                title = "Stay motivated",
-                description = "Streaks, milestones, and weekly insights"
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            FeatureItem(
-                icon = Icons.Default.Lock,
-                title = "Your data stays private",
-                description = "Everything is stored on this device — no account required"
-            )
+                FeatureItem(
+                    icon = Icons.Default.Lock,
+                    title = "Your data stays private",
+                    description = "Everything is stored on this device — no account required"
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(48.dp))
@@ -158,7 +154,7 @@ fun WelcomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = MaterialTheme.shapes.large,
+                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )

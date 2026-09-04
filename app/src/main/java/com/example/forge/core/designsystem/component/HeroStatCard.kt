@@ -1,6 +1,7 @@
 package com.example.forge.core.designsystem.component
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -63,16 +64,16 @@ private fun StatItem(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Surface(
-            modifier = Modifier.size(36.dp),
-            shape = MaterialTheme.shapes.small,
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            modifier = Modifier.size(40.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = item.icon,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
@@ -82,7 +83,8 @@ private fun StatItem(
                 Text(
                     text = item.value,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (item.delta != null && item.delta != 0) {
                     val color = if (item.delta > 0) Color(0xFF4CAF50) else Color(0xFFF44336)

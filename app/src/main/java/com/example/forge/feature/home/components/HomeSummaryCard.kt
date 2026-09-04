@@ -46,29 +46,31 @@ fun HomeSummaryCard(
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
                 Text(
-                    text = "${summary.weeklyCompletionPercent}% Complete Today",
+                    text = "${summary.weeklyCompletionPercent}% complete today",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight(700),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(0.dp, 8.dp)
                 )
                 LinearWavyProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     stroke = Stroke(17f),
                     amplitude = { 1f }
                 )
             }
-            Column (verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column (verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "${summary.completedCount} of ${summary.totalCount} habits completed",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer,

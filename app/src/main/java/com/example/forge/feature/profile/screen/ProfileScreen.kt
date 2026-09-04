@@ -184,8 +184,8 @@ fun ProfileScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
                         enabled = !uiState.isSaving,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
@@ -207,34 +207,32 @@ fun ProfileScreen(
                     .padding(innerPadding)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                Spacer(modifier = Modifier.height(64.dp))
+                // Header Info
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Set up your profile",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                // Header
-                Text(
-                    text = "Set up your profile",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                    text = "Everything stays on your device — no account needed.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-
-                Spacer(modifier = Modifier.height(48.dp))
+                    Text(
+                        text = "Everything stays on your device — no account needed.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 // Form Fields
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(

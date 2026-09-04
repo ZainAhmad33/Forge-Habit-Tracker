@@ -168,8 +168,8 @@ fun HomeScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(innerPadding)
-                        .padding(PaddingValues(horizontal = 20.dp, vertical = 18.dp)),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                        .padding(PaddingValues(horizontal = 20.dp, vertical = 24.dp)),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     HomeHeader(
                         greetingMessage = uiState.greetingMessage,

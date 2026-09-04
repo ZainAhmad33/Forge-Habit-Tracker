@@ -155,8 +155,8 @@ fun ProfileDetailsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -177,68 +177,64 @@ fun ProfileDetailsScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Header
-                Text(
-                    text = "${uiState.user?.firstName ?: ""} ${uiState.user?.lastName ?: ""}".trim(),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                uiState.stats?.let { stats ->
+                // Header Info
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Member since ${dateFormatter.format(stats.joinedDate)}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
+                        text = "${uiState.user?.firstName ?: ""} ${uiState.user?.lastName ?: ""}".trim(),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                }
 
-                Spacer(modifier = Modifier.height(48.dp))
+                    uiState.stats?.let { stats ->
+                        Text(
+                            text = "Member since ${dateFormatter.format(stats.joinedDate)}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
                 // Stats Section
-                Text(
-                    text = "Performance Overview",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (uiState.stats != null) {
-                    val statItems = listOf(
-                        HeroStatItem(
-                            label = "Total Habits",
-                            value = uiState.stats.totalHabits.toString(),
-                            icon = Icons.Rounded.FactCheck
-                        ),
-                        HeroStatItem(
-                            label = "Joining Date",
-                            value = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(uiState.stats.joinedDate),
-                            icon = Icons.Rounded.History
-                        ),
-                        HeroStatItem(
-                            label = "Total Logs",
-                            value = uiState.stats.totalCompletions.toString(),
-                            icon = Icons.Rounded.Insights
-                        ),
-                        HeroStatItem(
-                            label = "Avg. Rate",
-                            value = "${uiState.stats.averageCompletionRate}%",
-                            icon = Icons.Rounded.Insights // Or another icon like Rounded.TrendingUp if available
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Performance Overview",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    HeroStatCard(items = statItems)
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    if (uiState.stats != null) {
+                        val statItems = listOf(
+                            HeroStatItem(
+                                label = "Total Habits",
+                                value = uiState.stats.totalHabits.toString(),
+                                icon = Icons.Rounded.FactCheck
+                            ),
+                            HeroStatItem(
+                                label = "Joining Date",
+                                value = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(uiState.stats.joinedDate),
+                                icon = Icons.Rounded.History
+                            ),
+                            HeroStatItem(
+                                label = "Total Logs",
+                                value = uiState.stats.totalCompletions.toString(),
+                                icon = Icons.Rounded.Insights
+                            ),
+                            HeroStatItem(
+                                label = "Avg. Rate",
+                                value = "${uiState.stats.averageCompletionRate}%",
+                                icon = Icons.Rounded.Insights
+                            )
+                        )
+                        HeroStatCard(items = statItems)
+                    }
+                }
             }
         }
     }

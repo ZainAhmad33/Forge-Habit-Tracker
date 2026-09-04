@@ -209,12 +209,10 @@ fun NewHabitScreen(
                 .consumeWindowInsets(innerPadding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
             // 1. Emoji Preview
             EmojiPreviewCard(emoji = uiState.selectedEmoji)
 
@@ -260,15 +258,14 @@ fun NewHabitScreen(
             )
 
             // 4. Category Picker
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "Category",
-                    style = MaterialTheme.typography.labelLarge.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
-                Spacer(modifier = Modifier.height(8.dp))
                 HabitCategoryChips(
                     categories = uiState.categories,
                     selectedCategory = uiState.selectedCategory,
@@ -280,15 +277,14 @@ fun NewHabitScreen(
             }
 
             // 5. Habit Type Selection
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "How do you want to track it?",
-                    style = MaterialTheme.typography.labelLarge.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
-                Spacer(modifier = Modifier.height(12.dp))
                 HabitTypeSelector(
                     selectedType = uiState.selectedType,
                     onTypeSelected = {
