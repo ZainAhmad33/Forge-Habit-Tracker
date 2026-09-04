@@ -72,6 +72,7 @@ fun HomeRoute(
     onAddHabitClick: () -> Unit,
     onHabitDetailsClick: (String) -> Unit,
     onNavigateToInsights: () -> Unit,
+    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -86,6 +87,7 @@ fun HomeRoute(
         onAddHabitClick = onAddHabitClick,
         onHabitDetailsClick = onHabitDetailsClick,
         onNavigateToInsights = onNavigateToInsights,
+        onProfileClick = onProfileClick,
         modifier = modifier,
         searchHabits = viewModel::searchHabits,
         onHabitCardClick = viewModel::onHabitClick,
@@ -104,6 +106,7 @@ fun HomeScreen(
     onAddHabitClick: () -> Unit,
     onHabitDetailsClick: (String) -> Unit,
     onNavigateToInsights: () -> Unit,
+    onProfileClick: () -> Unit,
     onHabitCardClick: (habit: HomeHabit) -> Unit,
     onLogProgress: (String, Int) -> Unit,
     onDismissBottomSheet: () -> Unit,
@@ -140,9 +143,7 @@ fun HomeScreen(
                 onSearchSubmitted = {
                     searchHabits(query)
                 },
-                onProfileClick = {
-                    // Navigate to Profile Screen
-                },
+                onProfileClick = onProfileClick,
                 backdropColor = MaterialTheme.colorScheme.surface.copy(),
 
             )
@@ -259,8 +260,8 @@ private fun EmptyHabitState() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_seedling),
-            contentDescription = "Seedling icon",
+            painter = painterResource(id = R.drawable.ic_forge_flame),
+            contentDescription = "Forge flame icon",
             modifier = Modifier.size(200.dp)
         )
 
@@ -363,7 +364,8 @@ private fun HomeScreenPreview() {
             onNavigateToInsights = {},
             onHabitCardClick = {},
             onLogProgress = { _, _ -> },
-            onDismissBottomSheet = {}
+            onDismissBottomSheet = {},
+            onProfileClick = {}
         )
     }
 }

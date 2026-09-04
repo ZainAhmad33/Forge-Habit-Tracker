@@ -24,8 +24,10 @@ object DatabaseModule {
             context,
             ForgeDatabase::class.java,
             ForgeDatabase.DATABASE_NAME
-        ).fallbackToDestructiveMigration()
-         .build()
+        ).addMigrations(
+            ForgeDatabase.MIGRATION_2_3,
+            ForgeDatabase.MIGRATION_3_4
+        ).build()
     }
 
     @Provides

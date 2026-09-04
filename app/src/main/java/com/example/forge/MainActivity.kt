@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,6 +28,8 @@ import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.feature.habits.screen.HabitDetailRoute
 import com.example.forge.feature.home.screen.HomeRoute
 import com.example.forge.feature.insights.screen.InsightsRoute
+import com.example.forge.feature.onboarding.WelcomeRoute
+import com.example.forge.feature.profile.screen.ProfileRoute
 import com.example.forge.feature.upserthabit.screen.NewHabitRoute
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
@@ -48,12 +53,34 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ForgeApp() {
+fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
+    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+
+    if (startDestination == null) return
+
     NavHost(
         navController = navController,
-        startDestination = "home"
+        startDestination = startDestination!!
     ) {
+        composable("welcome") {
+            WelcomeRoute(
+                onGetStartedClick = { navController.navigate("profile") }
+            )
+        }
+        composable("profile") {
+            ProfileRoute(
+                onSaveSuccess = {
+                    // If we came from onboarding, navigate to home and clear stack
+                    // If we came from home (edit mode), just pop back
+                    if (!navController.popBackStack()) {
+                        navController.navigate("home") {
+                            popUpTo("welcome") { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
         composable("home") {
             HomeRoute(
                 onAddHabitClick = { navController.navigate("new_habit") },
@@ -66,6 +93,9 @@ fun ForgeApp() {
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                onProfileClick = {
+                    navController.navigate("profile")
                 }
             )
         }

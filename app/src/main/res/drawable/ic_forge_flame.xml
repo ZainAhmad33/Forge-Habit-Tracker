@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
-    android:width="108dp"
-    android:height="108dp"
+    android:width="24dp"
+    android:height="24dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <!-- Layer 1: Outer Flame -->
@@ -65,7 +65,7 @@
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Left Ember -->
+    <!-- Embers -->
     <path android:pathData="M 37.55 28.48 C 35.01 31.64, 35.01 34.8, 37.55 36.91 C 40.08 34.8, 40.08 31.64, 37.55 28.48 Z">
         <aapt:attr name="android:fillColor">
             <gradient
@@ -79,7 +79,6 @@
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Right Ember -->
     <path android:pathData="M 76.99 40.08 C 74.88 42.61, 74.88 45.14, 76.99 46.83 C 79.1 45.14, 79.1 42.61, 76.99 40.08 Z">
         <aapt:attr name="android:fillColor">
             <gradient
@@ -93,8 +92,4 @@
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Small Sparks -->
-    <path android:pathData="M 26.37 40.08 a 1.05 1.05 0 1 0 0 2.1 a 1.05 1.05 0 1 0 0 -2.1 Z" android:fillColor="#FFFF7700"/>
-    <path android:pathData="M 84.38 59.28 a 0.84 0.84 0 1 0 0 1.68 a 0.84 0.84 0 1 0 0 -1.68 Z" android:fillColor="#FFFF7700"/>
-    <path android:pathData="M 74.88 31.01 a 0.63 0.63 0 1 0 0 1.26 a 0.63 0.63 0 1 0 0 -1.26 Z" android:fillColor="#FFFFAA00"/>
 </vector>

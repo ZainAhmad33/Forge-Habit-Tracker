@@ -11,4 +11,5 @@ data class User (
     val firstName: String,
     val lastName: String,
     val dob: Date,
-    )
+    val joinedDate: Date = Date()
+)
