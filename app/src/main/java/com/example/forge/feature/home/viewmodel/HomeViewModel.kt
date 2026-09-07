@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.services.interfaces.IHabitActivityService
+import com.example.forge.core.services.interfaces.IHabitMaintenanceService
 import com.example.forge.core.services.interfaces.IHomeService
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.HomeHabit
@@ -25,8 +26,15 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val homeService: IHomeService,
-    private val activityService: IHabitActivityService
+    private val activityService: IHabitActivityService,
+    private val maintenanceService: IHabitMaintenanceService
 ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            maintenanceService.performMaintenanceForAll()
+        }
+    }
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedCategory = MutableStateFlow(HabitCategory.All)
@@ -69,7 +77,9 @@ class HomeViewModel @Inject constructor(
         if (habit.habitType == HabitType.YesNo) {
             if (!habit.isCompletedToday) {
                 viewModelScope.launch {
-                    activityService.logHabitActivity(UUID.fromString(habit.id), 1)
+                    val uuid = UUID.fromString(habit.id)
+                    activityService.logHabitActivity(uuid, 1)
+                    maintenanceService.performMaintenance(uuid)
                 }
             }
         } else {
@@ -79,7 +89,9 @@ class HomeViewModel @Inject constructor(
 
     fun onLogProgress(habitId: String, quantity: Int) {
         viewModelScope.launch {
-            activityService.logHabitActivity(UUID.fromString(habitId), quantity)
+            val uuid = UUID.fromString(habitId)
+            activityService.logHabitActivity(uuid, quantity)
+            maintenanceService.performMaintenance(uuid)
         }
         _selectedHabitIdForLogging.value = null
     }

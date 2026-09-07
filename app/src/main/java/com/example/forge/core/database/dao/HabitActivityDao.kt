@@ -18,6 +18,9 @@ interface HabitActivityDao {
     @Query("SELECT habitId, date(createdAt / 1000, 'unixepoch', 'localtime') as day, SUM(quantity) as totalQuantity FROM habit_activities WHERE habitId = :habitId GROUP BY day")
     fun getDailyQuantitiesForHabit(habitId: UUID): Flow<List<DailyHabitQuantity>>
 
+    @Query("SELECT habitId, date(createdAt / 1000, 'unixepoch', 'localtime') as day, SUM(quantity) as totalQuantity FROM habit_activities WHERE habitId = :habitId GROUP BY day")
+    suspend fun getDailyQuantitiesForHabitSync(habitId: UUID): List<DailyHabitQuantity>
+
     @Query("SELECT habitId, date(createdAt / 1000, 'unixepoch', 'localtime') as day, SUM(quantity) as totalQuantity FROM habit_activities GROUP BY habitId, day")
     fun getAllDailyQuantities(): Flow<List<DailyHabitQuantity>>
 

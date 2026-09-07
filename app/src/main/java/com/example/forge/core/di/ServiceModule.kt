@@ -1,6 +1,7 @@
 package com.example.forge.core.di
 
 import com.example.forge.core.services.implementations.HabitActivityService
+import com.example.forge.core.services.implementations.HabitMaintenanceService
 import com.example.forge.core.services.implementations.HabitsService
 import com.example.forge.core.services.implementations.HomeService
 import com.example.forge.core.services.implementations.HabitStatsService
@@ -8,6 +9,7 @@ import com.example.forge.core.services.implementations.TimeService
 import com.example.forge.core.services.implementations.InsightsService
 import com.example.forge.core.services.implementations.UserService
 import com.example.forge.core.services.interfaces.IHabitActivityService
+import com.example.forge.core.services.interfaces.IHabitMaintenanceService
 import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.IHomeService
@@ -53,6 +55,12 @@ abstract class ServiceModule {
     abstract fun bindHabitStatsService(
         impl: HabitStatsService
     ): IHabitStatsService
+
+    @Binds
+    @Singleton
+    abstract fun bindHabitMaintenanceService(
+        impl: HabitMaintenanceService
+    ): IHabitMaintenanceService
 
     @Binds
     @Singleton

@@ -20,6 +20,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :habitId")
     suspend fun getHabitById(habitId: UUID): Habit?
 
+    @Query("SELECT * FROM habits")
+    suspend fun getAllHabitsSync(): List<Habit>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
 

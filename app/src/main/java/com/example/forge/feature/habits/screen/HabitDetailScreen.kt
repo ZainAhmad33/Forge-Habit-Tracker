@@ -53,15 +53,17 @@ import com.example.forge.core.services.interfaces.MonthlyRate
 import com.example.forge.core.services.interfaces.TrendData
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.feature.habits.components.AdditionalDetailsSection
-import com.example.forge.feature.habits.components.MonthlyCompletionPager
 import com.example.forge.feature.habits.components.HabitDetailHeader
+import com.example.forge.feature.habits.components.HabitLockedWidget
 import com.example.forge.feature.habits.components.HistoricalActivitiesSection
 import com.example.forge.feature.habits.components.LogsSection
+import com.example.forge.feature.habits.components.MonthlyCompletionPager
 import com.example.forge.feature.habits.components.QuarterlyProgressCards
 import com.example.forge.feature.habits.components.SkipDaysInfoSection
 import com.example.forge.feature.habits.components.TrendsAndConsistencySection
 import com.example.forge.feature.habits.state.HabitDetailUiState
 import com.example.forge.feature.habits.viewmodel.HabitDetailViewModel
+import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.feature.home.components.HabitLogBottomSheet
 import java.time.LocalDate
 import java.time.YearMonth
@@ -157,10 +159,9 @@ fun HabitDetailScreen(
                 FloatingActionButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if(uiState.habit!!.habitType != HabitType.YesNo){
+                        if (uiState.habit!!.habitType != HabitType.YesNo) {
                             showBottomSheet = true
-                        }
-                        else{
+                        } else {
                             onMarkCompleted()
                         }
                     },
@@ -206,49 +207,63 @@ fun HabitDetailScreen(
                     currentStreak = stats.currentStreak,
                     bestStreak = stats.bestStreak,
                     overallCompletionRate = stats.overallCompletionRate,
-                    currentStreakStartDate = stats.currentStreakStartDate
+                    currentStreakStartDate = stats.currentStreakStartDate,
+                    isLocked = habit.isLocked
                 )
 
-                TrendsAndConsistencySection(
-                    weeklyTrend = stats.trends?.weeklyTrend,
-                    monthlyTrend = stats.trends?.monthlyTrend,
-                    longestGapDays = stats.trends?.longestGap?.days ?: 0,
-                    longestGapStartDate = stats.trends?.longestGap?.startDate,
-                    longestGapEndDate = stats.trends?.longestGap?.endDate,
-                    allTimeAverage = stats.trends?.allTimeAverage ?: 0f,
-                    bestWeekRate = stats.trends?.bestWeek?.rate ?: 0f,
-                    bestWeekStartDate = stats.trends?.bestWeek?.startDate,
-                    bestWeekEndDate = stats.trends?.bestWeek?.endDate
-                )
+                if (habit.isLocked) {
+                    val lockedAt = habit.lockedAt?.let {
+                        val instant = it.toInstant()
+                        val zone = java.time.ZoneId.systemDefault()
+                        instant.atZone(zone).toLocalDate()
+                    } ?: uiState.today
+                    
+                    HabitLockedWidget(
+                        lockedAt = lockedAt,
+                        today = uiState.today
+                    )
+                } else {
+                    TrendsAndConsistencySection(
+                        weeklyTrend = stats.trends?.weeklyTrend,
+                        monthlyTrend = stats.trends?.monthlyTrend,
+                        longestGapDays = stats.trends?.longestGap?.days ?: 0,
+                        longestGapStartDate = stats.trends?.longestGap?.startDate,
+                        longestGapEndDate = stats.trends?.longestGap?.endDate,
+                        allTimeAverage = stats.trends?.allTimeAverage ?: 0f,
+                        bestWeekRate = stats.trends?.bestWeek?.rate ?: 0f,
+                        bestWeekStartDate = stats.trends?.bestWeek?.startDate,
+                        bestWeekEndDate = stats.trends?.bestWeek?.endDate
+                    )
 
-                SkipDaysInfoSection(habit.skipDaysUnlocked, stats.currentStreak)
+                    SkipDaysInfoSection(habit.skipDaysAllowed, stats.currentStreak)
 
-                MonthlyCompletionPager(
-                    allData = uiState.allMonthlyCompletion,
-                    months = uiState.completionMonths,
-                    selectedMonth = uiState.selectedCompletionMonth,
-                    onMonthChanged = onCompletionMonthChanged,
-                    target = habit.completionTargetPerDay,
-                    today = uiState.today
-                )
+                    MonthlyCompletionPager(
+                        allData = uiState.allMonthlyCompletion,
+                        months = uiState.completionMonths,
+                        selectedMonth = uiState.selectedCompletionMonth,
+                        onMonthChanged = onCompletionMonthChanged,
+                        target = habit.completionTargetPerDay,
+                        today = uiState.today
+                    )
 
-                QuarterlyProgressCards(stats.quarterlyCompletionRates)
+                    QuarterlyProgressCards(stats.quarterlyCompletionRates)
 
-                AdditionalDetailsSection(habit)
+                    AdditionalDetailsSection(habit)
 
-                LogsSection(
-                    todayLogs = uiState.todayLogs,
-                    onDeleteLog = onDeleteLog,
-                    unit = if (habit.habitType == HabitType.Quantity) habit.targetUnit else ""
-                )
+                    LogsSection(
+                        todayLogs = uiState.todayLogs,
+                        onDeleteLog = onDeleteLog,
+                        unit = if (habit.habitType == HabitType.Quantity) habit.targetUnit else ""
+                    )
 
-                HistoricalActivitiesSection(
-                    startDate = uiState.startDate ?: LocalDate.now(),
-                    currentMonth = uiState.selectedCalendarMonth,
-                    monthlyActivities = uiState.monthlyCalendarData,
-                    onMonthChanged = onCalendarMonthChanged,
-                    today = uiState.today
-                )
+                    HistoricalActivitiesSection(
+                        startDate = uiState.startDate ?: LocalDate.now(),
+                        currentMonth = uiState.selectedCalendarMonth,
+                        monthlyActivities = uiState.monthlyCalendarData,
+                        onMonthChanged = onCalendarMonthChanged,
+                        today = uiState.today
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs
             }
@@ -356,6 +371,57 @@ fun HabitDetailScreenPreview() {
             onCalendarMonthChanged = {},
             onCompletionMonthChanged = {},
             getCompletionQuantity = {100},
+            onLogProgress = { _, _ -> }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HabitDetailScreenLockedPreview() {
+    ForgeTheme {
+        val habit = com.example.forge.core.database.entity.Habit(
+            id = UUID.randomUUID(),
+            title = "Morning Meditation",
+            category = HabitCategory.Mindfulness,
+            emoji = "🧘",
+            habitType = HabitType.YesNo,
+            reminders = emptyList(),
+            frequencyType = HabitFrequency.EveryDay,
+            numberOfTrackedDays = 7,
+            completionTargetPerDay = 1,
+            targetUnit = "Per Day",
+            progressShape = ProgressShape.Pill,
+            isLocked = true,
+            lockedAt = Date(System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 12), // 12 days ago
+            createdAt = Date(),
+            updatedAt = Date()
+        )
+        val stats = HabitStats(
+            currentStreak = 0,
+            bestStreak = 25,
+            overallCompletionRate = 0.85f,
+            monthlyCompletionData = emptyList(),
+            quarterlyCompletionRates = emptyList(),
+            currentStreakStartDate = null,
+            trends = null
+        )
+        val uiState = HabitDetailUiState(
+            habit = habit,
+            stats = stats,
+            isLoading = false,
+            today = LocalDate.now()
+        )
+        HabitDetailScreen(
+            uiState = uiState,
+            onBackClick = {},
+            onEditClick = {},
+            onDeleteHabit = {},
+            onMarkCompleted = {},
+            onDeleteLog = {},
+            onCalendarMonthChanged = {},
+            onCompletionMonthChanged = {},
+            getCompletionQuantity = {0},
             onLogProgress = { _, _ -> }
         )
     }

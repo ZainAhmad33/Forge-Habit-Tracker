@@ -15,5 +15,6 @@ data class HomeHabit(
     val progressShape: ProgressShape,
     val habitType: HabitType,
     val isScheduledForToday: Boolean,
-    val quantityLoggedToday: Int
+    val quantityLoggedToday: Int,
+    val isLocked: Boolean = false
 )

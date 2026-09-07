@@ -8,6 +8,7 @@ import com.example.forge.core.services.interfaces.ITimeService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
@@ -22,6 +23,16 @@ class HabitActivityService @Inject constructor(
         val activity = HabitActivity(
             habitId = habitId,
             quantity = quantity
+        )
+        activityRepository.logActivity(activity)
+    }
+
+    override suspend fun logSkipActivity(habitId: UUID, quantity: Int, date: Date) {
+        val activity = HabitActivity(
+            habitId = habitId,
+            quantity = quantity,
+            isSkip = true,
+            createdAt = date
         )
         activityRepository.logActivity(activity)
     }
@@ -54,6 +65,14 @@ class HabitActivityService @Inject constructor(
 
     override fun getDailyQuantitiesForHabit(habitId: UUID): Flow<List<DailyHabitQuantity>> {
         return activityRepository.getDailyQuantitiesForHabit(habitId)
+    }
+
+    override suspend fun getDailyQuantitiesForHabitSync(habitId: UUID): List<DailyHabitQuantity> {
+        return activityRepository.getDailyQuantitiesForHabitSync(habitId)
+    }
+
+    override suspend fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int> {
+        return activityRepository.getCompletedQuantityByRange(habitId, from, to)
     }
 
     override suspend fun deleteHabitActivity(activityId: UUID) {

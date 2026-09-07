@@ -21,5 +21,6 @@ data class HabitActivity(
     @PrimaryKey val id: UUID = UUID.randomUUID(),
     val habitId: UUID,
     val quantity: Int,
+    val isSkip: Boolean = false,
     val createdAt: Date = Date()
 )

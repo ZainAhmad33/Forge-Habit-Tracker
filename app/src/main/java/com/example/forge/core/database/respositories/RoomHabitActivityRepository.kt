@@ -42,6 +42,10 @@ class RoomHabitActivityRepository @Inject constructor(
         return activityDao.getDailyQuantitiesForHabit(habitId)
     }
 
+    override suspend fun getDailyQuantitiesForHabitSync(habitId: UUID): List<DailyHabitQuantity> {
+        return activityDao.getDailyQuantitiesForHabitSync(habitId)
+    }
+
     override suspend fun deleteActivity(activityId: UUID) {
         activityDao.deleteActivityById(activityId)
     }

@@ -22,7 +22,11 @@ class Habit (
     var completionTargetPerDay: Int, // 1 in case of HabitType==YesOrNo otherwise >= 1
     var targetUnit: String, // "Per Day" in case of HabitType==Count/YesOrNo, otherwise string input for quantity
     var progressShape: ProgressShape,
-    var skipDaysUnlocked: Int = 0,
+    var skipDaysAllowed: Int = 0,
+    var lastMilestoneRewarded: Int = 0,
+    var isLocked: Boolean = false,
+    var lockedAt: Date? = null,
+    var lastMaintenanceDate: Date? = null,
     var createdAt: Date,
     var updatedAt: Date
 )

@@ -86,7 +86,11 @@ class HabitsService @Inject constructor(
             completionTargetPerDay = habitForm.dailyGoal,
             targetUnit = unit,
             progressShape = existingHabit?.progressShape ?: ProgressShape.getRandom(),
-            skipDaysUnlocked = existingHabit?.skipDaysUnlocked ?: 0,
+            skipDaysAllowed = existingHabit?.skipDaysAllowed ?: 0,
+            lastMilestoneRewarded = existingHabit?.lastMilestoneRewarded ?: 0,
+            isLocked = existingHabit?.isLocked ?: false,
+            lockedAt = existingHabit?.lockedAt,
+            lastMaintenanceDate = existingHabit?.lastMaintenanceDate,
             createdAt = existingHabit?.createdAt ?: Date(),
             updatedAt = Date(),
         )

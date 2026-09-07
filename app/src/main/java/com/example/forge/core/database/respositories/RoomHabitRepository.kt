@@ -22,4 +22,6 @@ class RoomHabitRepository @Inject constructor(
     override suspend fun createHabit(habit: Habit) = habitDao.insertHabit(habit)
 
     override suspend fun deleteHabit(habit: Habit) = habitDao.deleteHabit(habit)
+
+    override suspend fun getAllHabitsSync(): List<Habit> = habitDao.getAllHabitsSync()
 }

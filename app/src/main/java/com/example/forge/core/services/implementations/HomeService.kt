@@ -71,7 +71,8 @@ class HomeService @Inject constructor(
                     isCompletedToday = todayQuantity >= habit.completionTargetPerDay,
                     isScheduledForToday = isScheduledForToday,
                     streak = streak.count,
-                    todayQuantity
+                    quantityLoggedToday = todayQuantity,
+                    isLocked = habit.isLocked
                 )
             }
 
@@ -206,7 +207,8 @@ class HomeService @Inject constructor(
         isCompletedToday: Boolean,
         isScheduledForToday: Boolean,
         streak: Int,
-        quantityLoggedToday: Int
+        quantityLoggedToday: Int,
+        isLocked: Boolean
     ): HomeHabit {
         return HomeHabit(
             habit.id.toString(),
@@ -220,7 +222,8 @@ class HomeService @Inject constructor(
             habit.progressShape,
             habit.habitType,
             isScheduledForToday,
-            quantityLoggedToday
+            quantityLoggedToday,
+            isLocked
         )
     }
 }

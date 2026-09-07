@@ -128,6 +128,14 @@ class HabitStatsService @Inject constructor(
         }.flowOn(Dispatchers.Default)
     }
 
+    override suspend fun getStreakInfo(habitId: UUID): StreakInfo {
+        val habit = habitRepository.getHabitById(habitId) ?: return StreakInfo(0, null)
+        val activityList = activityService.getDailyQuantitiesForHabitSync(habitId)
+        val dailyTotals = activityList.associate { it.day to it.totalQuantity }
+        val today = timeService.getCurrentDate()
+        return calculateCurrentStreak(habit, dailyTotals, habit.completionTargetPerDay, today)
+    }
+
     internal fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): StreakInfo {
         if (habit.frequencyType == HabitFrequency.DaysPerWeek) {
             return calculateCurrentStreakForDaysPerWeek(habit, today, dailyTotals, target)

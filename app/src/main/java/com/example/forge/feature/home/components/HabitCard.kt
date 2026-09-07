@@ -5,27 +5,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.LocalFireDepartment
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +44,6 @@ fun HabitCard(
     habit: HomeHabit,
     modifier: Modifier = Modifier,
     onDetailsClick: () -> Unit = {},
-
     onHabitCardClick: (habit: HomeHabit) -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -70,8 +54,8 @@ fun HabitCard(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy, // less floaty than HighBouncy
-            stiffness = Spring.StiffnessLow              // ~1500, reaches target fast
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessLow
         ),
         label = "habit_card_scale"
     )
@@ -121,6 +105,26 @@ fun HabitCard(
                     strokeWidth = 7.dp,
                     showCheckMark = true
                 )
+                if (habit.isLocked) {
+                    Surface(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-8).dp, y = 8.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        shadowElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.Lock,
+                                contentDescription = "Locked",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             // 2. Centered Title & Schedule
@@ -202,11 +206,6 @@ fun HabitCard(
         }
     }
 }
-private data class HabitAccentColors(
-    val container: Color,
-    val content: Color,
-)
-
 
 @Preview(showBackground = true)
 @Composable
@@ -216,7 +215,7 @@ private fun HabitCardPreview() {
             habit = HomeHabit(
                 id = "1",
                 title = "Drink Water",
-                category = HabitCategory.Work, // Adjust based on your enum values
+                category = HabitCategory.Health,
                 targetLabel = "Every Day",
                 streakDays = 12,
                 progressPercent = 100,
@@ -225,12 +224,11 @@ private fun HabitCardPreview() {
                 progressShape = ProgressShape.Puffy,
                 habitType = HabitType.YesNo,
                 isScheduledForToday = true,
-                quantityLoggedToday = 2500
+                quantityLoggedToday = 2500,
+                isLocked = true
             ),
             onDetailsClick = {  },
             onHabitCardClick = {  }
         )
     }
 }
-
-

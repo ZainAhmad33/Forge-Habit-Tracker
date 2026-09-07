@@ -17,4 +17,5 @@ interface IHabitRepository {
     suspend fun getHabitById(habitId: UUID): Habit?
     suspend fun createHabit(habit: Habit)
     suspend fun deleteHabit(habit: Habit)
+    suspend fun getAllHabitsSync(): List<Habit>
 }

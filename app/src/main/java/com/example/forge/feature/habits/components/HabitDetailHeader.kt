@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.forge.core.designsystem.component.HeroStatCard
 import com.example.forge.core.uiEntities.HeroStatItem
+import androidx.compose.material.icons.rounded.Lock
 
 @Composable
 fun HabitDetailHeader(
@@ -43,7 +44,8 @@ fun HabitDetailHeader(
     currentStreak: Int,
     bestStreak: Int,
     overallCompletionRate: Float,
-    currentStreakStartDate: LocalDate?
+    currentStreakStartDate: LocalDate?,
+    isLocked: Boolean = false
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -51,13 +53,35 @@ fun HabitDetailHeader(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Surface(
-                modifier = Modifier.size(100.dp),
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(text = emoji, fontSize = 48.sp)
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Surface(
+                    modifier = Modifier.size(100.dp),
+                    shape = RoundedCornerShape(32.dp),
+                    color = if (isLocked) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(text = emoji, fontSize = 48.sp)
+                    }
+                }
+                if (isLocked) {
+                    Surface(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .offset(x = 8.dp, y = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        shadowElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.Lock,
+                                contentDescription = "Locked",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.size(24.dp))

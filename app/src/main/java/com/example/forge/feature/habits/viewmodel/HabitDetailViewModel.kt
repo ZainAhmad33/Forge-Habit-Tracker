@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.services.implementations.HabitsService
 import com.example.forge.core.services.interfaces.IHabitActivityService
+import com.example.forge.core.services.interfaces.IHabitMaintenanceService
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.feature.habits.state.HabitDetailUiState
@@ -27,7 +28,8 @@ class HabitDetailViewModel @Inject constructor(
     private val habitsService: HabitsService,
     private val statsService: IHabitStatsService,
     private val activityService: IHabitActivityService,
-    private val timeService: ITimeService
+    private val timeService: ITimeService,
+    private val maintenanceService: IHabitMaintenanceService
 ) : ViewModel() {
 
     private val habitIdString: String = checkNotNull(savedStateHandle["habitId"])
@@ -57,6 +59,9 @@ class HabitDetailViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     init {
+        viewModelScope.launch {
+            maintenanceService.performMaintenance(habitId)
+        }
         loadHabitData()
         observeMonthSelections()
     }
@@ -143,6 +148,7 @@ class HabitDetailViewModel @Inject constructor(
             if (habit.habitType == HabitType.YesNo) {
                 if (!habitsService.isHabitCompletedToday(habit.id, habit.completionTargetPerDay)) {
                     activityService.logHabitActivity(habit.id, 1)
+                    maintenanceService.performMaintenance(habitId)
                 }
             }
         }
@@ -151,6 +157,7 @@ class HabitDetailViewModel @Inject constructor(
     fun onLogProgress(habitId: String, quantity: Int) {
         viewModelScope.launch {
             activityService.logHabitActivity(UUID.fromString(habitId), quantity)
+            maintenanceService.performMaintenance(UUID.fromString(habitId))
         }
     }
 
