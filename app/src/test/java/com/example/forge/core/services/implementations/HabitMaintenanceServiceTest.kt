@@ -254,22 +254,43 @@ class HabitMaintenanceServiceTest {
     }
 
     @Test
-    fun `Unlock journey - Earns skip day to unlock early`() = runBlocking {
+    fun `New habit created yesterday - should not lock today if not completed yet`() = runBlocking {
         val habitId = UUID.randomUUID()
-        val lockDate = LocalDate.of(2026, 9, 1)
-        val habit = createHabit(id = habitId, createdAt = lockDate.minusDays(5), lastMaintenance = lockDate)
-        habit.isLocked = true
-        habit.lockedAt = Date.from(lockDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        val yesterday = LocalDate.now().minusDays(1)
+        val habit = createHabit(id = habitId, createdAt = yesterday, lastMaintenance = null)
         habitRepo.habits[habitId] = habit
 
-        // Rebuild streak to 30
-        statsService.streakOverride = StreakInfo(30, lockDate)
+        // Today is now
+        timeService.mockedCurrentDate = LocalDate.now()
+        
+        // Yesterday was completed
+        activityService.addCompletion(habitId, yesterday, 1)
+
+        // Today is NOT completed yet
+        // performMaintenance runs
+        service.performMaintenance(habitId)
+        
+        val updatedHabit = habitRepo.habits[habitId]!!
+        assertFalse("Habit should not be locked for today's miss", updatedHabit.isLocked)
+    }
+
+    @Test
+    fun `New habit created yesterday - should lock if yesterday was missed`() = runBlocking {
+        val habitId = UUID.randomUUID()
+        val yesterday = LocalDate.now().minusDays(1)
+        val habit = createHabit(id = habitId, createdAt = yesterday, lastMaintenance = null)
+        habitRepo.habits[habitId] = habit
+
+        // Today is now
+        timeService.mockedCurrentDate = LocalDate.now()
+        
+        // Yesterday was NOT completed
         
         service.performMaintenance(habitId)
         
-        val updated = habitRepo.habits[habitId]!!
-        assertFalse(updated.isLocked)
-        assertEquals(0, updated.skipDaysAllowed)
+        val updatedHabit = habitRepo.habits[habitId]!!
+        assertTrue("Habit should be locked if yesterday was missed", updatedHabit.isLocked)
+        assertEquals(yesterday, updatedHabit.lockedAt?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate())
     }
 
     // --- Fakes ---

@@ -54,12 +54,24 @@ class HabitMaintenanceService @Inject constructor(
 
         // 2. Handle Skip Days Logic if Not Locked
         if (!habit.isLocked) {
-            var currentDate = lastMaintenanceLocalDate.plusDays(1)
+            // Start from the day of creation if never maintained, otherwise the day after last maintenance
+            var currentDate = if (habit.lastMaintenanceDate == null) lastMaintenanceLocalDate else lastMaintenanceLocalDate.plusDays(1)
+            
+            val from = timeService.toStartOfDayDate(currentDate)
+            val to = timeService.toEndOfDayDate(today)
+            var currentCompletedQuantityMap = activityService.getCompletedQuantityByRange(habit.id, from, to)
+
             while (!currentDate.isAfter(today)) {
                 // If it was already locked during this loop, stop
                 if (habit.isLocked) break
 
-                val isMissed = isDayMissed(habit, currentDate)
+                // For EveryDay and SpecificDays, we only lock after the day has passed.
+                // For DaysPerWeek, we can lock as soon as the goal becomes unachievable.
+                if (currentDate == today && habit.frequencyType != com.example.forge.core.database.entity.HabitFrequency.DaysPerWeek) {
+                    break
+                }
+
+                val isMissed = isDayMissedInternal(habit, currentDate, currentCompletedQuantityMap)
                 if (isMissed) {
                     if (habit.skipDaysAllowed > 0) {
                         // Consume skip day
@@ -69,6 +81,10 @@ class HabitMaintenanceService @Inject constructor(
                             quantity = habit.completionTargetPerDay,
                             date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
                         )
+                        // Update the map locally so subsequent checks (e.g. for DaysPerWeek) see the skip
+                        currentCompletedQuantityMap = currentCompletedQuantityMap.toMutableMap().apply {
+                            this[currentDate] = habit.completionTargetPerDay
+                        }
                     } else {
                         // Lock habit
                         habit.isLocked = true
@@ -108,15 +124,10 @@ class HabitMaintenanceService @Inject constructor(
         habitRepository.createHabit(habit) // Room @Insert(onConflict = REPLACE)
     }
 
-    private suspend fun isDayMissed(habit: Habit, date: LocalDate): Boolean {
+    private fun isDayMissedInternal(habit: Habit, date: LocalDate, completedQuantityMap: Map<LocalDate, Int>): Boolean {
         if (habit.frequencyType == com.example.forge.core.database.entity.HabitFrequency.DaysPerWeek) {
             val weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
             val weekEnd = weekStart.plusDays(6)
-            
-            val from = timeService.toStartOfDayDate(weekStart)
-            val to = timeService.toEndOfDayDate(date)
-            
-            val completedQuantityMap = activityService.getCompletedQuantityByRange(habit.id, from, to)
             
             var completionsSoFar = 0
             var curr = weekStart
@@ -127,24 +138,22 @@ class HabitMaintenanceService @Inject constructor(
                 curr = curr.plusDays(1)
             }
             
-            val daysRemaining = ChronoUnit.DAYS.between(date, weekEnd).toInt() // end exclusive, so if date is Sunday (weekEnd), daysRemaining is 0.
+            val daysRemaining = ChronoUnit.DAYS.between(date, weekEnd).toInt()
             
             return (completionsSoFar + daysRemaining) < habit.numberOfTrackedDays
         }
 
-        // Only check if it's a scheduled day
+        // Only check if it's a scheduled day and after creation
         if (!isScheduledForDate(habit, date)) return false
         
-        val from = timeService.toStartOfDayDate(date)
-        val to = timeService.toEndOfDayDate(date)
-        
-        val completedQuantityMap = activityService.getCompletedQuantityByRange(habit.id, from, to)
         val quantity = completedQuantityMap[date] ?: 0
-        
         return quantity < habit.completionTargetPerDay
     }
 
     private fun isScheduledForDate(habit: Habit, date: LocalDate): Boolean {
+        val habitStartDate = timeService.toLocalDate(habit.createdAt)
+        if (date.isBefore(habitStartDate)) return false
+
         return when (habit.frequencyType) {
             com.example.forge.core.database.entity.HabitFrequency.EveryDay -> true
             com.example.forge.core.database.entity.HabitFrequency.DaysPerWeek -> true

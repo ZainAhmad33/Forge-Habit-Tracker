@@ -1,9 +1,8 @@
 package com.example.forge.core.database.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.example.forge.core.database.entity.HabitActivity
 import com.example.forge.core.database.pojo.DailyHabitQuantity
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +35,7 @@ interface HabitActivityDao {
     @Query("SELECT * FROM habit_activities WHERE habitId = :habitId AND createdAt BETWEEN :from AND :to")
     suspend fun getActivitiesByRange(habitId: UUID, from: Date, to: Date): List<HabitActivity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertActivity(activity: HabitActivity)
 
     @Query("DELETE FROM habit_activities WHERE id = :activityId")

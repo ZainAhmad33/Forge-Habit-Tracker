@@ -2,9 +2,8 @@ package com.example.forge.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.example.forge.core.database.entity.Habit
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
@@ -23,7 +22,7 @@ interface HabitDao {
     @Query("SELECT * FROM habits")
     suspend fun getAllHabitsSync(): List<Habit>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertHabit(habit: Habit)
 
     @Delete

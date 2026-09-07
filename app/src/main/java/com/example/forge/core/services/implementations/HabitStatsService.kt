@@ -194,6 +194,7 @@ class HabitStatsService @Inject constructor(
 
         var weekStart = currentWeekStart
         var isCurrentWeek = true
+        var foundCompletion = false
 
         while (!weekStart.isBefore(startOfFirstWeek)) {
             val weekEnd = weekStart.plusDays(6)
@@ -208,6 +209,7 @@ class HabitStatsService @Inject constructor(
                 if (d.isAfter(today)) continue
                 if ((dailyTotals[d] ?: 0) >= target) {
                     completionsInWeek++
+                    foundCompletion = true
                     if (continueWeeksCompletion)
                         completionsBeforeFirstMiss += 1
                 } else {
@@ -224,46 +226,32 @@ class HabitStatsService @Inject constructor(
                 if (goalMet) {
                     if (weekStart.isBefore(habitStart)){
                         streak += ChronoUnit.DAYS.between(habitStart, today).toInt() + 1
-                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
-                        // unless it's the first week of the habit
                         streakStartDate = habitStart
                     }
                     else{
                         streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
-                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
-                        // unless it's the first week of the habit
-                        streakStartDate = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                        streakStartDate = weekStart
                     }
                 } else {
                     // Check if still possible
                     val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt() + 1
                     if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
-                        return StreakInfo(0, null)
+                        return if (foundCompletion) StreakInfo(0, null) else StreakInfo(0, null) // Corrected to just return 0
                     }
-                    if (today == weekEnd){
-                        streak += ChronoUnit.DAYS.between(weekStart, today).toInt()
-                    }
-                    else{
-                        // Still possible, continue checking previous weeks without incrementing streak
-                        streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
-                    }
+                    // Still possible, but streak only starts if we found at least one completion so far in this sequence
+                    streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
                 }
                 isCurrentWeek = false
             } else {
                 if (goalMet) {
                     if (weekStart.isBefore(habitStart)){
                         streak += ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
-                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
-                        // unless it's the first week of the habit
                         streakStartDate = habitStart
                     }
                     else{
                         streak += 7
-                        // For previous full weeks, the streak starts at the beginning of the week (Monday)
-                        // unless it's the first week of the habit
-                        streakStartDate = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                        streakStartDate = weekStart
                     }
-
                 } else {
                     streak += completionsBeforeFirstMiss
                     if (completionsBeforeFirstMiss > 0) {
@@ -275,7 +263,8 @@ class HabitStatsService @Inject constructor(
             }
             weekStart = weekStart.minusWeeks(1)
         }
-        return StreakInfo(streak, streakStartDate)
+        
+        return if (foundCompletion) StreakInfo(streak, streakStartDate) else StreakInfo(0, null)
     }
 
     private fun calculateBestStreakForDaysPerWeek(
