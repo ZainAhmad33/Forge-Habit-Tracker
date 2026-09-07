@@ -130,6 +130,7 @@ class HabitStatsService @Inject constructor(
 
     override suspend fun getStreakInfo(habitId: UUID): StreakInfo {
         val habit = habitRepository.getHabitById(habitId) ?: return StreakInfo(0, null)
+        if (habit.isLocked) return StreakInfo(0, null)
         val activityList = activityService.getDailyQuantitiesForHabitSync(habitId)
         val dailyTotals = activityList.associate { it.day to it.totalQuantity }
         val today = timeService.getCurrentDate()
@@ -137,6 +138,8 @@ class HabitStatsService @Inject constructor(
     }
 
     internal fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): StreakInfo {
+        if (habit.isLocked) return StreakInfo(0, null)
+        
         if (habit.frequencyType == HabitFrequency.DaysPerWeek) {
             return calculateCurrentStreakForDaysPerWeek(habit, today, dailyTotals, target)
         }
@@ -181,6 +184,8 @@ class HabitStatsService @Inject constructor(
         dailyTotals: Map<LocalDate, Int>,
         target: Int
     ): StreakInfo {
+        if (habit.isLocked) return StreakInfo(0, null)
+        
         var streak = 0
         var streakStartDate: LocalDate? = null
         val habitStart = timeService.toLocalDate(habit.createdAt)

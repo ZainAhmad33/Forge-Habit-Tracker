@@ -51,6 +51,7 @@ class InsightsServiceTest {
         override suspend fun getHabitById(habitId: UUID) = null
         override suspend fun createHabit(habit: Habit) {}
         override suspend fun deleteHabit(habit: Habit) {}
+        override suspend fun getAllHabitsSync(): List<Habit> = emptyList()
     }
 
     private fun stubActivityService() = object : IHabitActivityService {
@@ -62,6 +63,9 @@ class InsightsServiceTest {
         override fun getAllDailyQuantities() = flowOf(emptyList<DailyHabitQuantity>())
         override fun getDailyQuantitiesForHabit(habitId: UUID) = flowOf(emptyList<DailyHabitQuantity>())
         override suspend fun deleteHabitActivity(activityId: UUID) {}
+        override suspend fun logSkipActivity(habitId: UUID, quantity: Int, date: Date) {}
+        override suspend fun getDailyQuantitiesForHabitSync(habitId: UUID): List<DailyHabitQuantity> = emptyList()
+        override suspend fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int> = emptyMap()
     }
 
     @Test

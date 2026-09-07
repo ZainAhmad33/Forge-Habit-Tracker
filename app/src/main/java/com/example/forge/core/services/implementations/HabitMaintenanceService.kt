@@ -34,9 +34,6 @@ class HabitMaintenanceService @Inject constructor(
     override suspend fun performMaintenance(habitId: UUID) {
         val habit = habitRepository.getHabitById(habitId) ?: return
         val today = timeService.getCurrentDate()
-        val lastMaintenance = habit.lastMaintenanceDate ?: habit.createdAt
-        
-        val lastMaintenanceLocalDate = timeService.toLocalDate(lastMaintenance)
         
         // 1. Handle Unlock Logic if Locked
         if (habit.isLocked) {
@@ -46,9 +43,14 @@ class HabitMaintenanceService @Inject constructor(
                 if (daysServed >= 30) {
                     habit.isLocked = false
                     habit.lockedAt = null
+                    // Reset last maintenance to today so we don't penalize for days served
+                    habit.lastMaintenanceDate = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant())
                 }
             }
         }
+
+        val lastMaintenance = habit.lastMaintenanceDate ?: habit.createdAt
+        val lastMaintenanceLocalDate = timeService.toLocalDate(lastMaintenance)
 
         // 2. Handle Skip Days Logic if Not Locked
         if (!habit.isLocked) {

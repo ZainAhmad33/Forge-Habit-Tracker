@@ -42,6 +42,7 @@ class HabitStatsServiceTest {
                 override suspend fun getHabitById(habitId: UUID): Habit? = null
                 override suspend fun createHabit(habit: Habit) {}
                 override suspend fun deleteHabit(habit: Habit) {}
+                override suspend fun getAllHabitsSync(): List<Habit> = emptyList()
             },
             activityService = object : IHabitActivityService {
                 override suspend fun logHabitActivity(habitId: UUID, quantity: Int) {}
@@ -52,6 +53,9 @@ class HabitStatsServiceTest {
                 override fun getAllDailyQuantities() = kotlinx.coroutines.flow.emptyFlow<List<com.example.forge.core.database.pojo.DailyHabitQuantity>>()
                 override fun getDailyQuantitiesForHabit(habitId: UUID) = kotlinx.coroutines.flow.emptyFlow<List<com.example.forge.core.database.pojo.DailyHabitQuantity>>()
                 override suspend fun deleteHabitActivity(activityId: UUID) {}
+                override suspend fun logSkipActivity(habitId: UUID, quantity: Int, date: Date) {}
+                override suspend fun getDailyQuantitiesForHabitSync(habitId: UUID): List<com.example.forge.core.database.pojo.DailyHabitQuantity> = emptyList()
+                override suspend fun getCompletedQuantityByRange(habitId: UUID, from: Date, to: Date): Map<LocalDate, Int> = emptyMap()
             },
             timeService = fakeTimeService
         )
@@ -388,21 +392,20 @@ class HabitStatsServiceTest {
         // Aug 2026 has approx 4.4 weeks
         // If user completed exactly 2 days per week
         val dailyTotals = mutableMapOf<LocalDate, Int>()
-        // Aug 3 (Mon), Aug 4 (Tue)
-        dailyTotals[LocalDate.of(2026, 8, 3)] = 1
-        dailyTotals[LocalDate.of(2026, 8, 4)] = 1
-        // Aug 10, 11
-        dailyTotals[LocalDate.of(2026, 8, 10)] = 1
-        dailyTotals[LocalDate.of(2026, 8, 11)] = 1
-        // Aug 17, 18
-        dailyTotals[LocalDate.of(2026, 8, 17)] = 1
-        dailyTotals[LocalDate.of(2026, 8, 18)] = 1
-        // Aug 24, 25
-        dailyTotals[LocalDate.of(2026, 8, 24)] = 1
-        dailyTotals[LocalDate.of(2026, 8, 25)] = 1
-        // Aug 31 (Mon) - 1st day of next week, but still in Aug. 
-        // Goal is 2 per week. 
-        dailyTotals[LocalDate.of(2026, 8, 31)] = 1
+        // Aug 2026 starts on Saturday Aug 1.
+        val startOfMonth = LocalDate.of(2026, 8, 1)
+        // Add completions for first weekend to meet the 2-day-per-week goal
+        dailyTotals[LocalDate.of(2026, 8, 1)] = 1
+        dailyTotals[LocalDate.of(2026, 8, 2)] = 1
+        
+        for (i in 0 until 31) {
+            val date = startOfMonth.plusDays(i.toLong())
+            val dayOfWeek = date.dayOfWeek
+            // Complete 2 days a week (Mon, Tue)
+            if (dayOfWeek == java.time.DayOfWeek.MONDAY || dayOfWeek == java.time.DayOfWeek.TUESDAY) {
+                dailyTotals[date] = 1
+            }
+        }
 
         val rates = service.calculateQuarterlyRates(habit, dailyTotals, today)
         val augRate = rates.find { it.monthName == "Aug" }
