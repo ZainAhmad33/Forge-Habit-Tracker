@@ -4,6 +4,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -111,6 +114,7 @@ fun NewHabitRoute(
         onRemindersEnabledChange = viewModel::onRemindersEnabledChange,
         onRemoveReminder = viewModel::removeReminder,
         onAddReminderClick = viewModel::addReminder,
+        onLockingEnabledChange = viewModel::onLockingEnabledChange,
         onCreateHabitClick = {
             if (viewModel.onCreateHabitClick()) {
                 onBackClick()
@@ -140,6 +144,7 @@ fun NewHabitScreen(
     onRemindersEnabledChange: (Boolean) -> Unit,
     onRemoveReminder: (LocalTime) -> Unit,
     onAddReminderClick: (LocalTime) -> Unit,
+    onLockingEnabledChange: (Boolean) -> Unit,
     onCreateHabitClick: () -> Unit,
     onOtherUnitInputChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -382,6 +387,42 @@ fun NewHabitScreen(
                 },
                 isError = uiState.remindersError
             )
+
+            // 10. Habit Locking Toggle
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Lock habit on missed goal",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                        Text(
+                            text = "If enabled, your habit will be locked after missing a goal with zero skip days banked.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                    Switch(
+                        checked = uiState.isLockingEnabled,
+                        enabled = !uiState.isLocked,
+                        onCheckedChange = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onLockingEnabledChange(it)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -434,6 +475,7 @@ private fun NewHabitScreenPreview() {
             onRemindersEnabledChange = {},
             onRemoveReminder = {},
             onAddReminderClick = {},
+            onLockingEnabledChange = {},
             onCreateHabitClick = {},
             onOtherUnitInputChange = {},
             pageTitle = "New Habit"

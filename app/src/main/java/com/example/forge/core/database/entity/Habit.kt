@@ -25,6 +25,7 @@ class Habit (
     var skipDaysAllowed: Int = 0,
     var lastMilestoneRewarded: Int = 0,
     var isLocked: Boolean = false,
+    var isLockingEnabled: Boolean = true,
     var lockedAt: Date? = null,
     var lastMaintenanceDate: Date? = null,
     var createdAt: Date,

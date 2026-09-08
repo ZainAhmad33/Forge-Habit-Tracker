@@ -6,6 +6,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.EventRepeat
 import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -63,13 +65,27 @@ fun AdditionalDetailsSection(habit: Habit) {
             }
             val formatter = DateTimeFormatter.ofPattern("h:mm a")
             val reminders = habit.reminders.map { it.format(formatter) }.joinToString(", ")
-            DetailRow(Icons.Rounded.Flag, "Target", "${habit.completionTargetPerDay} ${habit.targetUnit}", 0, 4)
-            DetailRow(Icons.Rounded.EventRepeat, "Frequency", "$frequency", 1, 4)
+            
+            val totalRows = 4 + (if (habit.reminders.isNotEmpty()) 1 else 0)
+            var rowIndex = 0
+            
+            DetailRow(Icons.Rounded.Flag, "Target", "${habit.completionTargetPerDay} ${habit.targetUnit}", rowIndex++, totalRows)
+            DetailRow(Icons.Rounded.EventRepeat, "Frequency", "$frequency", rowIndex++, totalRows)
+            
             if (habit.reminders.isNotEmpty()){
-                DetailRow(Icons.Rounded.Notifications, "Reminders", "$reminders", 2, 4)
+                DetailRow(Icons.Rounded.Notifications, "Reminders", "$reminders", rowIndex++, totalRows)
             }
+            
+            DetailRow(
+                icon = if (habit.isLockingEnabled) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                label = "Locking",
+                value = if (habit.isLockingEnabled) "Enabled" else "Disabled",
+                index = rowIndex++,
+                totalItems = totalRows
+            )
+            
             val formatterDT = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
-            DetailRow(Icons.Rounded.CalendarMonth, "Created On", "${habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).format(formatterDT)}", 3, 4)
+            DetailRow(Icons.Rounded.CalendarMonth, "Created On", "${habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).format(formatterDT)}", rowIndex++, totalRows)
         }
     }
 }

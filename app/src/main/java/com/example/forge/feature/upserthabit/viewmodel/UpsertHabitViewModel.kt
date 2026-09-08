@@ -92,6 +92,10 @@ class UpsertHabitViewModel @Inject constructor(
         _uiState.update { it.copy(remindersEnabled = enabled, remindersError = false) }
     }
 
+    fun onLockingEnabledChange(enabled: Boolean) {
+        _uiState.update { it.copy(isLockingEnabled = enabled) }
+    }
+
     fun onOtherUnitInputChange(unitInput: String){
         _uiState.update { it.copy(otherUnitInput = unitInput, otherUnitError = false) }
     }
@@ -114,7 +118,9 @@ class UpsertHabitViewModel @Inject constructor(
                         specificDays = habit.trackedDays,
                         daysPerWeek = habit.numberOfTrackedDays,
                         remindersEnabled = habit.reminders.isNotEmpty(),
-                        reminders = habit.reminders
+                        reminders = habit.reminders,
+                        isLockingEnabled = habit.isLockingEnabled,
+                        isLocked = habit.isLocked
                     )
                 }
             }

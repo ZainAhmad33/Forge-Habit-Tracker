@@ -92,6 +92,7 @@ class HabitsService @Inject constructor(
             skipDaysAllowed = existingHabit?.skipDaysAllowed ?: 0,
             lastMilestoneRewarded = existingHabit?.lastMilestoneRewarded ?: 0,
             isLocked = existingHabit?.isLocked ?: false,
+            isLockingEnabled = habitForm.isLockingEnabled,
             lockedAt = existingHabit?.lockedAt,
             lastMaintenanceDate = existingHabit?.lastMaintenanceDate,
             createdAt = existingHabit?.createdAt ?: Date(),

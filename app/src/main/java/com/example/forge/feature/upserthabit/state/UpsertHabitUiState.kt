@@ -26,6 +26,8 @@ data class UpsertHabitUiState(
     val remindersError: Boolean = false,
     val otherUnitInput: String = "",
     val otherUnitError: Boolean = false,
+    val isLockingEnabled: Boolean = true,
+    val isLocked: Boolean = false,
     val popularEmojis: List<String> = listOf("💧", "🏃", "📖", "🧘", "🙏", "🍎", "😴"),
     val availableUnits: List<String> = listOf("Liters", "Minutes", "Hours", "Pages", "Glasses", "Kilometers", "Miles", "Other")
 )

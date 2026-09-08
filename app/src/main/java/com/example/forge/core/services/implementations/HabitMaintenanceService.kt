@@ -33,6 +33,10 @@ class HabitMaintenanceService @Inject constructor(
 
     override suspend fun performMaintenance(habitId: UUID) {
         val habit = habitRepository.getHabitById(habitId) ?: return
+        
+        // Skip maintenance if locking is disabled.
+        if (!habit.isLockingEnabled) return
+
         val today = timeService.getCurrentDate()
         
         // 1. Handle Unlock Logic if Locked
@@ -68,7 +72,7 @@ class HabitMaintenanceService @Inject constructor(
                         currentCompletedQuantityMap = currentCompletedQuantityMap.toMutableMap().apply {
                             this[currentDate] = habit.completionTargetPerDay
                         }
-                    } else {
+                    } else if (habit.isLockingEnabled) {
                         // Lock habit
                         habit.isLocked = true
                         habit.lockedAt = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
