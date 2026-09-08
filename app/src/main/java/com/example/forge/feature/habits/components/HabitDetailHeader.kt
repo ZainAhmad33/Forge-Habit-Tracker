@@ -110,7 +110,7 @@ fun HabitDetailHeader(
                 val formatter = DateTimeFormatter.ofPattern("MMM, d", Locale.getDefault())
                 "${currentStreakStartDate.format(formatter)}"
             } else {
-                "No active streak"
+                "-"
             }
         }
         val statItems = listOf(
@@ -125,7 +125,7 @@ fun HabitDetailHeader(
                 icon = Icons.Rounded.EmojiEvents
             ),
             HeroStatItem(
-                label = if (streakLabel == "No active streak") "" else "Streak started",
+                label = if (streakLabel == "-") "No active streak" else "Streak started",
                 value = streakLabel,
                 icon = Icons.Rounded.CalendarMonth
             ),

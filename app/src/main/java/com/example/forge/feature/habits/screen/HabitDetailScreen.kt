@@ -220,7 +220,8 @@ fun HabitDetailScreen(
                     
                     HabitLockedWidget(
                         lockedAt = lockedAt,
-                        today = uiState.today
+                        today = uiState.today,
+                        currentStreak = stats.currentStreak
                     )
                 } else {
                     TrendsAndConsistencySection(

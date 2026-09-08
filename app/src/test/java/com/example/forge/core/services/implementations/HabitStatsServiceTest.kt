@@ -169,7 +169,7 @@ class HabitStatsServiceTest {
         )
 
         val streak = service.calculateCurrentStreak(habit, dailyTotals, 1, today)
-        assertEquals(17, streak.count)
+        assertEquals(18, streak.count)
     }
 
     @Test

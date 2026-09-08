@@ -105,26 +105,6 @@ fun HabitCard(
                     strokeWidth = 7.dp,
                     showCheckMark = true
                 )
-                if (habit.isLocked) {
-                    Surface(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.TopEnd)
-                            .offset(x = (-8).dp, y = 8.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError,
-                        shadowElevation = 4.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.Lock,
-                                contentDescription = "Locked",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
             }
 
             // 2. Centered Title & Schedule
@@ -178,30 +158,53 @@ fun HabitCard(
                     )
                 }
 
-                // Streak Pill
-                Surface(
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    shape = CircleShape
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                if (habit.isLocked) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.error,
+
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.LocalFireDepartment,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Text(
-                            text = habit.streakDays.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Lock,
+                                contentDescription = "Locked",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
+                else{
+
+                    // Streak Pill
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        shape = CircleShape
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.LocalFireDepartment,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                text = habit.streakDays.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+
             }
         }
     }

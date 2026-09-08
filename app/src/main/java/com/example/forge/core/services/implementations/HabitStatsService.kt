@@ -130,7 +130,6 @@ class HabitStatsService @Inject constructor(
 
     override suspend fun getStreakInfo(habitId: UUID): StreakInfo {
         val habit = habitRepository.getHabitById(habitId) ?: return StreakInfo(0, null)
-        if (habit.isLocked) return StreakInfo(0, null)
         val activityList = activityService.getDailyQuantitiesForHabitSync(habitId)
         val dailyTotals = activityList.associate { it.day to it.totalQuantity }
         val today = timeService.getCurrentDate()
@@ -138,8 +137,6 @@ class HabitStatsService @Inject constructor(
     }
 
     internal fun calculateCurrentStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): StreakInfo {
-        if (habit.isLocked) return StreakInfo(0, null)
-        
         if (habit.frequencyType == HabitFrequency.DaysPerWeek) {
             return calculateCurrentStreakForDaysPerWeek(habit, today, dailyTotals, target)
         }
@@ -149,25 +146,35 @@ class HabitStatsService @Inject constructor(
         var streak = 0
         var current = lastDate
         var streakStartDate: LocalDate? = null
+        var completionsCount = 0
 
+        // Handle today
         if (isScheduledForDate(habit, current)) {
             if ((dailyTotals[current] ?: 0) >= target) {
                 streak++
                 streakStartDate = current
+                completionsCount++
+            } else {
+                // Today is scheduled but not done yet. 
+                // We don't increment streak for today, but we continue backwards
+                // to see if previous days maintain the streak.
             }
         } else {
+            // Not scheduled for today (rest day), streak continues
             streak++
             streakStartDate = current
         }
-        current = current.minusDays(1)
 
+        // Check previous days
+        current = current.minusDays(1)
         while (!current.isBefore(firstDate)) {
             if (isScheduledForDate(habit, current)) {
                 if ((dailyTotals[current] ?: 0) >= target) {
                     streak++
                     streakStartDate = current
+                    completionsCount++
                 } else {
-                    return StreakInfo(streak, streakStartDate)
+                    return if (completionsCount > 0) StreakInfo(streak, streakStartDate) else StreakInfo(0, null)
                 }
             } else {
                 streak++
@@ -175,7 +182,8 @@ class HabitStatsService @Inject constructor(
             }
             current = current.minusDays(1)
         }
-        return StreakInfo(streak, streakStartDate)
+
+        return if (completionsCount > 0) StreakInfo(streak, streakStartDate) else StreakInfo(0, null)
     }
 
     private fun calculateCurrentStreakForDaysPerWeek(
@@ -184,8 +192,6 @@ class HabitStatsService @Inject constructor(
         dailyTotals: Map<LocalDate, Int>,
         target: Int
     ): StreakInfo {
-        if (habit.isLocked) return StreakInfo(0, null)
-        
         var streak = 0
         var streakStartDate: LocalDate? = null
         val habitStart = timeService.toLocalDate(habit.createdAt)
@@ -220,7 +226,14 @@ class HabitStatsService @Inject constructor(
                 }
             }
 
-            val goalMet = completionsInWeek >= habit.numberOfTrackedDays
+            val targetForThisWeek = if (weekStart == startOfFirstWeek) {
+                val availableDaysInFirstWeek = ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
+                minOf(habit.numberOfTrackedDays, availableDaysInFirstWeek)
+            } else {
+                habit.numberOfTrackedDays
+            }
+
+            val goalMet = completionsInWeek >= targetForThisWeek
 
             if (isCurrentWeek) {
                 if (goalMet) {
@@ -235,10 +248,10 @@ class HabitStatsService @Inject constructor(
                 } else {
                     // Check if still possible
                     val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt() + 1
-                    if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
-                        return if (foundCompletion) StreakInfo(0, null) else StreakInfo(0, null) // Corrected to just return 0
+                    if (completionsInWeek + daysRemaining < targetForThisWeek) {
+                        return if (foundCompletion) StreakInfo(0, null) else StreakInfo(0, null)
                     }
-                    // Still possible, but streak only starts if we found at least one completion so far in this sequence
+                    // Still possible, continue sequence
                     streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
                 }
                 isCurrentWeek = false

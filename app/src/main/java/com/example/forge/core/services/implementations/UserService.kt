@@ -4,7 +4,9 @@ import com.example.forge.core.database.entity.User
 import com.example.forge.core.database.interfaces.IHabitActivityRepository
 import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.database.interfaces.IUserRepository
+import com.example.forge.core.services.interfaces.IInsightsService
 import com.example.forge.core.services.interfaces.IUserService
+import com.example.forge.core.services.interfaces.InsightPeriod
 import com.example.forge.core.services.interfaces.ProfileStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -17,7 +19,8 @@ import javax.inject.Singleton
 class UserService @Inject constructor(
     private val userRepository: IUserRepository,
     private val habitRepository: IHabitRepository,
-    private val activityRepository: IHabitActivityRepository
+    private val activityRepository: IHabitActivityRepository,
+    private val insightsService: IInsightsService
 ) : IUserService {
     override fun getUser(): Flow<User?> = userRepository.getUserDetails()
 
@@ -29,19 +32,14 @@ class UserService @Inject constructor(
         return combine(
             getUser(),
             habitRepository.getHabits(),
-            activityRepository.getAllActivities()
-        ) { user, habits, activities ->
+            activityRepository.getAllActivities(),
+            insightsService.getGlobalStats(InsightPeriod.AllTime)
+        ) { user, habits, activities, globalStats ->
             val totalHabits = habits.size
             val joinedDate = user?.joinedDate ?: Date()
-            val totalCompletions = activities.sumOf { it.quantity }
+            val totalCompletions = activities.size
             
-            // Simplified average completion rate calculation:
-            // (Total actual completions / Total targets) * 100
-            // This is a rough estimation for the "overall" stats.
-            val totalTarget = habits.sumOf { it.completionTargetPerDay }
-            val avgRate = if (totalTarget > 0) {
-                 (totalCompletions.toFloat() / totalTarget.toFloat() * 100).toInt().coerceIn(0, 100)
-            } else 0
+            val avgRate = (globalStats.completionRate * 100).toInt().coerceIn(0, 100)
 
             ProfileStats(
                 totalHabits = totalHabits,

@@ -22,21 +22,21 @@ import androidx.compose.ui.unit.dp
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HabitLockedWidget(
     lockedAt: LocalDate,
     today: LocalDate,
+    currentStreak: Int,
     modifier: Modifier = Modifier
 ) {
     var showInfoText by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     
-    val unlockDate = lockedAt.plusDays(30)
-    val daysServed = ChronoUnit.DAYS.between(lockedAt, today).toInt().coerceIn(0, 30)
+    val daysServed = currentStreak.coerceIn(0, 30)
     val daysRemaining = 30 - daysServed
+    val unlockDate = today.plusDays(daysRemaining.toLong())
     
     val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
 
@@ -158,7 +158,7 @@ fun HabitLockedWidget(
                         )
 
                         Text(
-                            text = "You missed your goal on ${lockedAt.format(dateFormatter)} with 0 skip days banked. Rebuild your streak to 30 days to earn a skip day and unlock this habit.",
+                            text = "You missed your goal on ${lockedAt.format(dateFormatter)} with 0 skip days banked. Rebuild your streak to 30 days to unlock this habit.",
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodySmall,
                         )
@@ -176,6 +176,7 @@ fun HabitLockedWidgetPreview() {
         HabitLockedWidget(
             lockedAt = LocalDate.now().minusDays(12),
             today = LocalDate.now(),
+            currentStreak = 15,
             modifier = Modifier.padding(16.dp)
         )
     }

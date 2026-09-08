@@ -36,19 +36,8 @@ class HabitMaintenanceService @Inject constructor(
         val today = timeService.getCurrentDate()
         
         // 1. Handle Unlock Logic if Locked
-        if (habit.isLocked) {
-            val lockedAtLocalDate = habit.lockedAt?.let { timeService.toLocalDate(it) }
-            if (lockedAtLocalDate != null) {
-                val daysServed = ChronoUnit.DAYS.between(lockedAtLocalDate, today).toInt()
-                if (daysServed >= 30) {
-                    habit.isLocked = false
-                    habit.lockedAt = null
-                    // Reset last maintenance to today so we don't penalize for days served
-                    habit.lastMaintenanceDate = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant())
-                }
-            }
-        }
-
+        // Passive unlocking removed. Habits only unlock via streak milestones (30-day streak).
+        
         val lastMaintenance = habit.lastMaintenanceDate ?: habit.createdAt
         val lastMaintenanceLocalDate = timeService.toLocalDate(lastMaintenance)
 
@@ -57,7 +46,7 @@ class HabitMaintenanceService @Inject constructor(
             // Start from the day of creation if never maintained, otherwise the day after last maintenance
             var currentDate = if (habit.lastMaintenanceDate == null) lastMaintenanceLocalDate else lastMaintenanceLocalDate.plusDays(1)
             
-            val from = timeService.toStartOfDayDate(currentDate)
+            val from = timeService.toStartOfDayDate(currentDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
             val to = timeService.toEndOfDayDate(today)
             var currentCompletedQuantityMap = activityService.getCompletedQuantityByRange(habit.id, from, to)
 
@@ -65,13 +54,7 @@ class HabitMaintenanceService @Inject constructor(
                 // If it was already locked during this loop, stop
                 if (habit.isLocked) break
 
-                // For EveryDay and SpecificDays, we only lock after the day has passed.
-                // For DaysPerWeek, we can lock as soon as the goal becomes unachievable.
-                if (currentDate == today && habit.frequencyType != com.example.forge.core.database.entity.HabitFrequency.DaysPerWeek) {
-                    break
-                }
-
-                val isMissed = isDayMissedInternal(habit, currentDate, currentCompletedQuantityMap)
+                val isMissed = isDayMissedInternal(habit, currentDate, currentCompletedQuantityMap, today)
                 if (isMissed) {
                     if (habit.skipDaysAllowed > 0) {
                         // Consume skip day
@@ -89,6 +72,8 @@ class HabitMaintenanceService @Inject constructor(
                         // Lock habit
                         habit.isLocked = true
                         habit.lockedAt = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+                        // Reset milestone progress so user only needs a 30-day streak from now to unlock
+                        habit.lastMilestoneRewarded = 0
                     }
                 }
                 currentDate = currentDate.plusDays(1)
@@ -117,30 +102,61 @@ class HabitMaintenanceService @Inject constructor(
             }
         }
 
-        habit.lastMaintenanceDate = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        // Set last maintenance to yesterday because we are lenient about today.
+        // This ensures today is re-checked next time it runs (when it will be yesterday).
+        habit.lastMaintenanceDate = Date.from(today.minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
         habit.updatedAt = Date()
         habit.skipDaysAllowed = habit.skipDaysAllowed.coerceAtLeast(0)
         
         habitRepository.createHabit(habit) // Room @Insert(onConflict = REPLACE)
     }
 
-    private fun isDayMissedInternal(habit: Habit, date: LocalDate, completedQuantityMap: Map<LocalDate, Int>): Boolean {
+    private fun isDayMissedInternal(habit: Habit, date: LocalDate, completedQuantityMap: Map<LocalDate, Int>, today: LocalDate): Boolean {
+        // 1. Lenient today: if checking "today", it's never missed yet.
+        if (date == today) return false
+
+        // 2. Leniency for the very first week the habit was created (for all frequency types)
+        val habitStartDate = timeService.toLocalDate(habit.createdAt)
+        val weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weekEnd = weekStart.plusDays(6)
+        val startOfFirstWeek = habitStartDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        
+        val targetForThisWeek = if (weekStart == startOfFirstWeek && habit.frequencyType == com.example.forge.core.database.entity.HabitFrequency.DaysPerWeek) {
+            val availableDaysInFirstWeek = ChronoUnit.DAYS.between(habitStartDate, weekEnd).toInt() + 1
+            minOf(habit.numberOfTrackedDays, availableDaysInFirstWeek)
+        } else {
+            habit.numberOfTrackedDays
+        }
+
         if (habit.frequencyType == com.example.forge.core.database.entity.HabitFrequency.DaysPerWeek) {
-            val weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-            val weekEnd = weekStart.plusDays(6)
-            
+            // For past weeks, we only evaluate the goal at the end of the week (Sunday).
+            // This prevents multiple skip days being consumed for the same week's failure
+            // and makes the check less aggressive for past weeks.
+            val isPastWeek = weekEnd.isBefore(today)
+            if (isPastWeek && date != weekEnd) return false
+
             var completionsSoFar = 0
             var curr = weekStart
-            while (!curr.isAfter(date)) {
+            // Count all completions in the week up to today
+            while (!curr.isAfter(today) && !curr.isAfter(weekEnd)) {
                 if ((completedQuantityMap[curr] ?: 0) >= habit.completionTargetPerDay) {
                     completionsSoFar++
                 }
                 curr = curr.plusDays(1)
             }
             
-            val daysRemaining = ChronoUnit.DAYS.between(date, weekEnd).toInt()
+            // Days remaining in the week after today
+            val daysRemainingAfterToday = if (today.isBefore(weekEnd)) {
+                ChronoUnit.DAYS.between(today, weekEnd).toInt()
+            } else 0
             
-            return (completionsSoFar + daysRemaining) < habit.numberOfTrackedDays
+            // If checking today, can we still complete it?
+            val isDoneToday = (completedQuantityMap[today] ?: 0) >= habit.completionTargetPerDay
+            val canStillDoToday = (today.isAfter(weekStart.minusDays(1)) && !today.isAfter(weekEnd) && !isDoneToday)
+            
+            val potentialCompletions = completionsSoFar + daysRemainingAfterToday + (if (canStillDoToday) 1 else 0)
+            
+            return potentialCompletions < targetForThisWeek
         }
 
         // Only check if it's a scheduled day and after creation
