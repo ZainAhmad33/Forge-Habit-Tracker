@@ -8,6 +8,8 @@ import com.example.forge.core.services.implementations.HabitStatsService
 import com.example.forge.core.services.implementations.TimeService
 import com.example.forge.core.services.implementations.InsightsService
 import com.example.forge.core.services.implementations.UserService
+import com.example.forge.core.services.implementations.NotificationService
+import com.example.forge.core.services.implementations.ReminderManager
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitMaintenanceService
 import com.example.forge.core.services.interfaces.IHabitsService
@@ -16,6 +18,8 @@ import com.example.forge.core.services.interfaces.IHomeService
 import com.example.forge.core.services.interfaces.IInsightsService
 import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.services.interfaces.IUserService
+import com.example.forge.core.services.interfaces.INotificationService
+import com.example.forge.core.services.interfaces.IReminderManager
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -73,4 +77,16 @@ abstract class ServiceModule {
     abstract fun bindUserService(
         impl: UserService
     ): IUserService
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationService(
+        impl: NotificationService
+    ): INotificationService
+
+    @Binds
+    @Singleton
+    abstract fun bindReminderManager(
+        impl: ReminderManager
+    ): IReminderManager
 }

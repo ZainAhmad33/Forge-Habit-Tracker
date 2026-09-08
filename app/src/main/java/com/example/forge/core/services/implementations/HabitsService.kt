@@ -8,6 +8,7 @@ import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.database.interfaces.IHabitActivityRepository
 import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.interfaces.IHabitsService
+import com.example.forge.core.services.interfaces.IReminderManager
 import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.ProgressShape
@@ -22,7 +23,8 @@ import javax.inject.Inject
 class HabitsService @Inject constructor(
     private val habitRepository: IHabitRepository,
     private val habitActivityRepository: IHabitActivityRepository,
-    private val timeService: ITimeService
+    private val timeService: ITimeService,
+    private val reminderManager: IReminderManager
 ) : IHabitsService {
     override fun getAllowedCategories(): List<CategoryPill> {
         return HabitCategory.entries
@@ -37,6 +39,7 @@ class HabitsService @Inject constructor(
     override suspend fun deleteHabit(habitId: UUID) {
         val habit = habitRepository.getHabitById(habitId)
         if (habit != null) {
+            reminderManager.cancelReminders(habitId)
             habitActivityRepository.deleteActivitiesForHabit(habitId)
             habitRepository.deleteHabit(habit)
         }
@@ -96,6 +99,12 @@ class HabitsService @Inject constructor(
         )
 
         habitRepository.createHabit(habit)
+        
+        if (habit.reminders.isNotEmpty()) {
+            reminderManager.updateReminders(habit)
+        } else {
+            reminderManager.cancelReminders(habit.id)
+        }
     }
 
     suspend fun isHabitCompletedToday(habitId: UUID, target: Int): Boolean{

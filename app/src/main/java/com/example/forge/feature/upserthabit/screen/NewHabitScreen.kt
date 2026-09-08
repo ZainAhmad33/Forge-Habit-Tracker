@@ -52,6 +52,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.designsystem.theme.ForgeTheme
@@ -139,7 +146,16 @@ fun NewHabitScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onRemindersEnabledChange(true)
+        }
+    }
 
     Scaffold(
         modifier = modifier
@@ -338,9 +354,22 @@ fun NewHabitScreen(
             // 9. Reminders
             ReminderSelector(
                 remindersEnabled = uiState.remindersEnabled,
-                onRemindersEnabledChange = {
+                onRemindersEnabledChange = { enabled ->
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onRemindersEnabledChange(it)
+                    if (enabled && Build.VERSION.SDK_INT >= 33) {
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                        
+                        if (!hasPermission) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            onRemindersEnabledChange(true)
+                        }
+                    } else {
+                        onRemindersEnabledChange(enabled)
+                    }
                 },
                 reminders = uiState.reminders,
                 onRemoveReminder = {
