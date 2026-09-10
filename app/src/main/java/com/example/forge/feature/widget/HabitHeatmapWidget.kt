@@ -50,6 +50,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.toArgb
 
 // Workaround for restricted ColorProvider factory functions
@@ -109,8 +110,12 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                         .collectAsState(initial = emptyList())
 
                     if (habit != null) {
+                        val streakCount by produceState(initialValue = 0, key1 = habitId) {
+                            value = statsService.getStreakInfo(habitId).count
+                        }
                         HeatmapWidgetContent(
                             habit = habit!!,
+                            streak = streakCount,
                             heatmapData = heatmapData
                         )
                     } else {
@@ -232,6 +237,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
     @Composable
     internal fun HeatmapWidgetContent(
         habit: Habit,
+        streak: Int,
         heatmapData: List<ActivityData>
     ) {
         val today = LocalDate.now()
@@ -253,6 +259,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Emoji
                 Text(
                     text = habit.emoji,
                     style = TextStyle(fontSize = 18.sp)
@@ -260,6 +267,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
 
                 Spacer(GlanceModifier.width(8.dp))
 
+                // Title (Consumes remaining middle space, pushing the streak pill to the right)
                 Text(
                     text = habit.title,
                     style = TextStyle(
@@ -270,6 +278,35 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     maxLines = 1,
                     modifier = GlanceModifier.defaultWeight()
                 )
+
+                Spacer(GlanceModifier.width(8.dp))
+
+                // Streak Pill
+                Row(
+                    modifier = GlanceModifier
+                        .background(GlanceTheme.colors.tertiaryContainer)
+                        .cornerRadius(16.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_forge_flame),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(14.dp),
+                        colorFilter = ColorFilter.tint(GlanceTheme.colors.onTertiaryContainer)
+                    )
+
+                    Spacer(GlanceModifier.width(4.dp))
+
+                    Text(
+                        text = streak.toString(),
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onTertiaryContainer,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
 
             Spacer(GlanceModifier.height(10.dp))

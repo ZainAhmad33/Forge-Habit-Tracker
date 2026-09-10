@@ -64,6 +64,7 @@ fun HabitHeatmapWidgetPreview() {
     GlanceTheme {
         widget.HeatmapWidgetContent(
             habit = sampleHabit,
+            streak = 10,
             heatmapData = sampleHeatmapData
         )
     }
@@ -103,6 +104,7 @@ fun HabitHeatmapWidgetLockedPreview() {
     GlanceTheme {
         widget.HeatmapWidgetContent(
             habit = lockedHabit,
+            streak = 2,
             heatmapData = emptyList()
         )
     }
@@ -155,6 +157,7 @@ fun HabitHeatmapWidgetMidWidePreview() {
     GlanceTheme {
         widget.HeatmapWidgetContent(
             habit = sampleHabit,
+            streak = 5,
             heatmapData = sampleHeatmapData
         )
     }
@@ -205,6 +208,7 @@ fun HabitHeatmapWidgetWidePreview() {
         CompositionLocalProvider(LocalSize provides DpSize(400.dp, 200.dp)) {
             widget.HeatmapWidgetContent(
                 habit = sampleHabit,
+                streak = 99,
                 heatmapData = sampleHeatmapData
             )
         }
