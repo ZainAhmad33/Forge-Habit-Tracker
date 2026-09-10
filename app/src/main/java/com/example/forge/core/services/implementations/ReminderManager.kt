@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ReminderManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
 ) : IReminderManager {
 
     private val workManager = WorkManager.getInstance(context)
@@ -37,7 +37,7 @@ class ReminderManager @Inject constructor(
                 workDataOf(
                     "habit_id" to habit.id.toString(),
                     "title" to habit.title,
-                    "emoji" to habit.emoji
+                    "emoji" to habit.emoji,
                 )
             )
             .build()
@@ -69,13 +69,12 @@ class ReminderManager @Inject constructor(
         }
 
         // 2. Find the next scheduled day
-        var nextDate = today.plusDays(1)
         // Search up to 7 days ahead
         for (i in 1..7) {
+            val nextDate = today.plusDays(i.toLong())
             if (isScheduledOn(habit, nextDate)) {
                 return LocalDateTime.of(nextDate, sortedReminders.first())
             }
-            nextDate = nextDate.plusDays(1)
         }
 
         // Fallback: tomorrow first reminder

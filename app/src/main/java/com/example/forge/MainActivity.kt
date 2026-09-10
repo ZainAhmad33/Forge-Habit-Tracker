@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
             ForgeTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background // Ensure full screen dark surface
+                    color = MaterialTheme.colorScheme.background, // Ensure full screen dark surface
                 ) {
                     ForgeApp(
                         notificationHabitId = notificationHabitId,
@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
 fun ForgeApp(
     notificationHabitId: String?,
     onNotificationHandled: () -> Unit,
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainViewModel = hiltViewModel(),
 ) {
     val navController = rememberNavController()
 
@@ -117,11 +117,11 @@ fun ForgeApp(
 
     val horizontalPopExit = slideOutHorizontally(
         targetOffsetX = { fullWidth -> fullWidth },
-        animationSpec = tween(400, easing = FastOutSlowInEasing)
+        animationSpec = tween(400, easing = FastOutSlowInEasing),
     ) + fadeOut(animationSpec = tween(400))
 
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
-        exitDirection = FloatingToolbarExitDirection.Bottom
+        exitDirection = FloatingToolbarExitDirection.Bottom,
     )
 
     val shouldShowBottomBar = currentRoute in listOf("home", "insights")
@@ -140,9 +140,9 @@ fun ForgeApp(
                 popExitTransition = { horizontalPopExit }
             ) {
                 composable("welcome") {
-                    WelcomeRoute(
-                        onGetStartedClick = { navController.navigate("profile_setup") }
-                    )
+                    WelcomeRoute {
+                        navController.navigate("profile_setup")
+                    }
                 }
                 composable("profile_setup") {
                     ProfileRoute(
@@ -153,7 +153,7 @@ fun ForgeApp(
                                 }
                             }
                         },
-                        onBackClick = { navController.popBackStack() }
+                        onBackClick = { navController.popBackStack() },
                     )
                 }
                 composable("profile_details") {
@@ -164,16 +164,8 @@ fun ForgeApp(
                 }
                 composable("home") {
                     HomeRoute(
-                        onAddHabitClick = { navController.navigate("new_habit") },
                         onHabitDetailsClick = { habitId ->
                             navController.navigate("habit_detail/$habitId")
-                        },
-                        onNavigateToInsights = {
-                            navController.navigate("insights") {
-                                popUpTo("home") { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
                         },
                         onProfileClick = {
                             navController.navigate("profile_details")
@@ -181,18 +173,7 @@ fun ForgeApp(
                     )
                 }
                 composable("insights") {
-                    InsightsRoute(
-                        onNavigateToHome = {
-                            navController.navigate("home") {
-                                popUpTo("home") {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        onAddHabitClick = { navController.navigate("new_habit") }
-                    )
+                    InsightsRoute()
                 }
                 composable(
                     route = "habit_detail/{habitId}"

@@ -15,11 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,20 +44,16 @@ import java.util.UUID
 
 @Composable
 fun InsightsRoute(
-    onNavigateToHome: () -> Unit,
-    onAddHabitClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: InsightsViewModel = hiltViewModel()
+    viewModel: InsightsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     InsightsScreen(
         uiState = uiState,
-        onNavigateToHome = onNavigateToHome,
-        onAddHabitClick = onAddHabitClick,
         onMomentumMonthSelected = viewModel::onMomentumMonthSelected,
         onHeatmapMonthSelected = viewModel::onHeatmapMonthSelected,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -68,28 +61,26 @@ fun InsightsRoute(
 @Composable
 fun InsightsScreen(
     uiState: InsightsUiState,
-    onNavigateToHome: () -> Unit,
-    onAddHabitClick: () -> Unit,
     onMomentumMonthSelected: (YearMonth) -> Unit,
     onHeatmapMonthSelected: (YearMonth) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier
             .fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { 
+                title = {
                     Text(
-                        text = "Insights", 
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    ) 
+                        text = "Insights",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    )
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
-        }
+        },
     ) { innerPadding ->
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -106,7 +97,7 @@ fun InsightsScreen(
                         .padding(innerPadding)
                         .padding(32.dp),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Icon(Icons.Rounded.BarChart, null, Modifier.size(64.dp), MaterialTheme.colorScheme.outline)
                     Spacer(Modifier.height(16.dp))
@@ -197,8 +188,7 @@ fun InsightsScreen(
                     if (uiState.momentumMonths.isNotEmpty()) {
                         val pagerState = rememberPagerState(
                             initialPage = uiState.momentumMonths.indexOf(uiState.currentMomentumMonth).coerceAtLeast(0),
-                            pageCount = { uiState.momentumMonths.size }
-                        )
+                        ) { uiState.momentumMonths.size }
 
                         LaunchedEffect(pagerState.currentPage) {
                             onMomentumMonthSelected(uiState.momentumMonths[pagerState.currentPage])
@@ -342,8 +332,6 @@ fun InsightsScreenPreview() {
     ForgeTheme {
         InsightsScreen(
             uiState = uiState,
-            onNavigateToHome = {},
-            onAddHabitClick = {},
             onMomentumMonthSelected = { currentMonth = it },
             onHeatmapMonthSelected = {}
         )

@@ -17,7 +17,7 @@ class HabitReminderWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val notificationService: INotificationService,
     private val habitRepository: IHabitRepository,
-    private val reminderManager: IReminderManager
+    private val reminderManager: IReminderManager,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
@@ -31,7 +31,7 @@ class HabitReminderWorker @AssistedInject constructor(
 
         // Reschedule the next reminder
         val habit = habitRepository.getHabitById(habitId)
-        if (habit != null && habit.reminders.isNotEmpty()) {
+        if ((habit != null) && habit.reminders.isNotEmpty()) {
             reminderManager.updateReminders(habit)
         }
 

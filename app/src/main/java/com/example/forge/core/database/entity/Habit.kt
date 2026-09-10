@@ -16,7 +16,6 @@ class Habit (
     var habitType: HabitType, // Yes/No, Quantity, Count
     var reminders: List<LocalTime> = listOf(),
     var frequencyType: HabitFrequency, // EveryDay, SpecificDays, NumberOfDays
-    var isTrackedEveryDay: Boolean = true,
     var trackedDays: List<Int> = listOf(), // to be populated only if frequencyType == SpecificDays
     var numberOfTrackedDays: Int, // to be populated only if frequencyType == DaysPerWeek,
     var completionTargetPerDay: Int, // 1 in case of HabitType==YesOrNo otherwise >= 1
@@ -29,5 +28,5 @@ class Habit (
     var lockedAt: Date? = null,
     var lastMaintenanceDate: Date? = null,
     var createdAt: Date,
-    var updatedAt: Date
+    var updatedAt: Date,
 )

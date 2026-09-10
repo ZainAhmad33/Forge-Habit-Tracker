@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UpsertHabitViewModel @Inject constructor(
-    private val habitsService: IHabitsService
+    private val habitsService: IHabitsService,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -60,11 +60,10 @@ class UpsertHabitViewModel @Inject constructor(
 
     fun toggleDay(dayIndex: Int) {
         _uiState.update { state ->
-            var newDays = state.specificDays
-            if (newDays.contains(dayIndex)) {
-                newDays = newDays - dayIndex
+            val newDays = if (state.specificDays.contains(dayIndex)) {
+                state.specificDays - dayIndex
             } else {
-                newDays = newDays + dayIndex
+                state.specificDays + dayIndex
             }
             state.copy(specificDays = newDays, specificDaysError = false)
         }
@@ -104,7 +103,7 @@ class UpsertHabitViewModel @Inject constructor(
         viewModelScope.launch {
             habitsService.getHabitById(habitId)?.let { habit ->
                 _uiState.update { state ->
-                    val isOtherUnit = !state.availableUnits.contains(habit.targetUnit) && habit.habitType == HabitType.Quantity
+                    val isOtherUnit = (!state.availableUnits.contains(habit.targetUnit)) && (habit.habitType == HabitType.Quantity)
                     state.copy(
                         habitId = habit.id,
                         title = habit.title,

@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 @Singleton
 class NotificationService @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
 ) : INotificationService {
 
     private val notificationManager =
@@ -37,7 +37,7 @@ class NotificationService @Inject constructor(
         "You've got this. Time to get it done.",
         "Stay on track with your goals!",
         "Show up for yourself today.",
-        "It's a good time to make it happen!"
+        "It's a good time to make it happen!",
     )
     companion object {
         private const val CHANNEL_ID = "habit_reminders_v2"

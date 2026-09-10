@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.forge.core.database.entity.Habit
@@ -55,15 +54,10 @@ fun AdditionalDetailsSection(habit: Habit) {
                 "Sat",  // 5
                 "Sun"     // 6
             )
-            var frequency: String
-            if (habit.frequencyType == HabitFrequency.EveryDay){
-                frequency = "Every day"
-            }
-            else if (habit.frequencyType == HabitFrequency.DaysPerWeek){
-                frequency = "${habit.numberOfTrackedDays} days per week"
-            }
-            else{
-                frequency = habit.trackedDays.map { dayNames[it] }.joinToString(", ")
+            val frequency = when (habit.frequencyType) {
+                HabitFrequency.EveryDay -> "Every day"
+                HabitFrequency.DaysPerWeek -> "${habit.numberOfTrackedDays} days per week"
+                HabitFrequency.SpecificDays -> habit.trackedDays.joinToString(", ") { dayNames[it] }
             }
             val formatter = DateTimeFormatter.ofPattern("h:mm a")
             
@@ -115,11 +109,17 @@ fun AdditionalDetailsSection(habit: Habit) {
                 label = "Locking",
                 value = if (habit.isLockingEnabled) "Enabled" else "Disabled",
                 index = rowIndex++,
-                totalItems = totalRows
+                totalItems = totalRows,
             )
-            
+
             val formatterDT = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
-            DetailRow(Icons.Rounded.CalendarMonth, "Created On", "${habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).format(formatterDT)}", rowIndex++, totalRows)
+            DetailRow(
+                icon = Icons.Rounded.CalendarMonth,
+                label = "Created On",
+                value = habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).format(formatterDT),
+                index = rowIndex,
+                totalItems = totalRows,
+            )
         }
     }
 }
@@ -206,8 +206,8 @@ fun DetailRow(
 
 @Preview
 @Composable
-fun additionalDetailsPreview(){
-    val habit = com.example.forge.core.database.entity.Habit(
+fun AdditionalDetailsPreview() {
+    val habit = Habit(
         id = UUID.randomUUID(),
         title = "Morning Meditation",
         category = HabitCategory.Mindfulness,

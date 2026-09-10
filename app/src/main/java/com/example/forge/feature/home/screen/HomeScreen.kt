@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -67,12 +64,10 @@ import java.util.Locale
 
 @Composable
 fun HomeRoute(
-    onAddHabitClick: () -> Unit,
     onHabitDetailsClick: (String) -> Unit,
-    onNavigateToInsights: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedHabitId by viewModel.selectedHabitIdForLogging.collectAsState()
@@ -82,15 +77,13 @@ fun HomeRoute(
         uiState = uiState,
         selectedHabitForLogging = selectedHabit,
         onCategorySelected = viewModel::onCategorySelected,
-        onAddHabitClick = onAddHabitClick,
         onHabitDetailsClick = onHabitDetailsClick,
-        onNavigateToInsights = onNavigateToInsights,
         onProfileClick = onProfileClick,
         modifier = modifier,
         searchHabits = viewModel::searchHabits,
         onHabitCardClick = viewModel::onHabitClick,
         onLogProgress = viewModel::onLogProgress,
-        onDismissBottomSheet = viewModel::onDismissBottomSheet
+        onDismissBottomSheet = viewModel::onDismissBottomSheet,
     )
 }
 
@@ -101,9 +94,7 @@ fun HomeScreen(
     selectedHabitForLogging: HomeHabit?,
     onCategorySelected: (HabitCategory) -> Unit,
     searchHabits: (String) -> Unit,
-    onAddHabitClick: () -> Unit,
     onHabitDetailsClick: (String) -> Unit,
-    onNavigateToInsights: () -> Unit,
     onProfileClick: () -> Unit,
     onHabitCardClick: (habit: HomeHabit) -> Unit,
     onLogProgress: (String, Int) -> Unit,
@@ -361,22 +352,21 @@ private fun HomeScreenPreview() {
     val currentDate = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)
 
-    val uiState = HomeUiState.from(
-        dashboard = HomeDashboardUIState(
-            "Good morning",
-            "Zain",
-            currentDate.format(formatter),
-
-            HomeSummary(5, 10, 10, 50),
-            List<CategoryPill>(2) { CategoryPill(HabitCategory.Home, "🏡") },
-            listOf(
+        val uiState = HomeUiState.from(
+            dashboard = HomeDashboardUIState(
+                "Good morning",
+                "Zain",
+                currentDate.format(formatter),
+                HomeSummary(5, 10, 10, 50),
+                List(2) { CategoryPill(HabitCategory.Home, "🏡") },
+                listOf(
                 HomeHabit(
-                    "1", "Water", HabitCategory.Health, "2L", 5, 50, false, "💧",
-                    ProgressShape.Circle, HabitType.Quantity, true, 1000
+                    "1", "Water", HabitCategory.Health, "2L", 5, 50, isCompletedToday = false, "💧",
+                    ProgressShape.Circle, HabitType.Quantity, isScheduledForToday = true, quantityLoggedToday = 1000
                 ),
                 HomeHabit(
-                    "2", "Read", HabitCategory.Productivity, "20p", 3, 0, false, "📚",
-                    ProgressShape.Arch, HabitType.Quantity, false, 10
+                    "2", "Read", HabitCategory.Productivity, "20p", 3, 0, isCompletedToday = false, "📚",
+                    ProgressShape.Arch, HabitType.Quantity, isScheduledForToday = false, quantityLoggedToday = 10
                 )
             )
         ),
@@ -389,9 +379,7 @@ private fun HomeScreenPreview() {
             selectedHabitForLogging = null,
             onCategorySelected = {},
             searchHabits = {},
-            onAddHabitClick = {},
             onHabitDetailsClick = {},
-            onNavigateToInsights = {},
             onHabitCardClick = {},
             onLogProgress = { _, _ -> },
             onDismissBottomSheet = {},

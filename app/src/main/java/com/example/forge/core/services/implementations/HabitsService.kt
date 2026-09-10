@@ -83,7 +83,6 @@ class HabitsService @Inject constructor(
             habitType = habitForm.selectedType,
             reminders = reminders,
             frequencyType = habitForm.selectedFrequency,
-            isTrackedEveryDay = habitForm.selectedFrequency == HabitFrequency.EveryDay,
             trackedDays = specificDays,
             numberOfTrackedDays = numOfTrackedDays,
             completionTargetPerDay = habitForm.dailyGoal,
