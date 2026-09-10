@@ -45,6 +45,13 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
+import androidx.compose.ui.graphics.toArgb
+
 // Workaround for restricted ColorProvider factory functions
 private fun fixedColorProvider(color: Color): ColorProvider = object : ColorProvider {
     override fun getColor(context: Context): Color = color
@@ -114,6 +121,99 @@ class HabitHeatmapWidget : GlanceAppWidget() {
         }
     }
 
+    private fun renderHeatmapBitmap(
+        context: Context,
+        startDate: LocalDate,
+        weeksCount: Int,
+        activities: List<ActivityData>,
+        today: LocalDate,
+        habitCreatedAt: LocalDate,
+        squareSizeDp: Float,
+        spacingDp: Float,
+        primaryColor: Int,
+        onPrimaryColor: Int,
+        surfaceVariantColor: Int,
+        onSurfaceVariantColor: Int
+    ): Bitmap {
+        val density = context.resources.displayMetrics.density
+        val squareSizePx = squareSizeDp * density
+        val spacingPx = spacingDp * density
+        val dayLabelWidthPx = 30f * density
+        val monthHeaderHeightPx = 20f * density
+
+        val totalWidthPx = (dayLabelWidthPx + (weeksCount * (squareSizePx + spacingPx))).toInt().coerceAtLeast(1)
+        val totalHeightPx = (monthHeaderHeightPx + (7 * (squareSizePx + spacingPx))).toInt().coerceAtLeast(1)
+
+        val bitmap = Bitmap.createBitmap(totalWidthPx, totalHeightPx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val activityMap = activities.associateBy { it.date }
+        val dayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+        val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = onSurfaceVariantColor
+            textSize = 10f * density
+        }
+
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = squareSizePx * 0.45f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+
+        val cellPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+        }
+
+        val labelMetrics = labelPaint.fontMetrics
+
+        // Draw Day Labels
+        for (i in dayLabels.indices) {
+            val y = monthHeaderHeightPx + (i * (squareSizePx + spacingPx)) + (squareSizePx / 2) - (labelMetrics.ascent + labelMetrics.descent) / 2
+            canvas.drawText(dayLabels[i], 0f, y, labelPaint)
+        }
+
+        // Draw Grid & Month Headers
+        val cornerRadiusPx = (squareSizePx * 0.15f).coerceAtLeast(2f * density)
+
+        for (weekIndex in 0 until weeksCount) {
+            val weekStart = startDate.plusWeeks(weekIndex.toLong())
+            val xOffset = dayLabelWidthPx + (weekIndex * (squareSizePx + spacingPx))
+
+            // Month Header
+            val monthLabel = getMonthLabel(weekStart, weekIndex)
+            if (monthLabel != null) {
+                val y = monthHeaderHeightPx / 2 - (labelMetrics.ascent + labelMetrics.descent) / 2
+                canvas.drawText(monthLabel, xOffset, y, labelPaint)
+            }
+
+            // Days
+            for (dayIndex in 0..6) {
+                val date = weekStart.plusDays(dayIndex.toLong())
+                if (date.isAfter(today) || date.isBefore(habitCreatedAt)) continue
+
+                val activity = activityMap[date]
+                val hasActivity = activity != null && activity.percentage > 0
+
+                val cellBg = if (hasActivity) primaryColor else surfaceVariantColor
+                val cellFg = if (hasActivity) onPrimaryColor else onSurfaceVariantColor
+
+                val cellTop = monthHeaderHeightPx + (dayIndex * (squareSizePx + spacingPx))
+                val rect = RectF(xOffset, cellTop, xOffset + squareSizePx, cellTop + squareSizePx)
+
+                cellPaint.color = cellBg
+                canvas.drawRoundRect(rect, cornerRadiusPx, cornerRadiusPx, cellPaint)
+
+                textPaint.color = cellFg
+                val textMetrics = textPaint.fontMetrics
+                val textY = rect.centerY() - (textMetrics.ascent + textMetrics.descent) / 2
+                canvas.drawText(date.dayOfMonth.toString(), rect.centerX(), textY, textPaint)
+            }
+        }
+
+        return bitmap
+    }
+
     @Composable
     internal fun EmptyWidgetContent() {
         Box(
@@ -135,12 +235,12 @@ class HabitHeatmapWidget : GlanceAppWidget() {
         heatmapData: List<ActivityData>
     ) {
         val today = LocalDate.now()
+        val context = LocalContext.current
 
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .padding(12.dp)
-                // Uses standard Material 3 dynamic widget background color
                 .background(GlanceTheme.colors.widgetBackground)
                 .clickable(
                     actionRunCallback<NavigateToHabitAction>(
@@ -181,18 +281,16 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                 val dayLabelWidth = 30.dp
                 val spacing = 2.dp
 
-                // Select weeks visible based on widget width
                 val calculatedWeeks = when {
                     size.width >= 320.dp -> 14
                     size.width >= 240.dp -> 10
                     else -> 7
                 }
 
-                // Calculate square size dynamically based on available width
                 val horizontalPadding = 24.dp
                 val availableWidth = size.width - horizontalPadding
                 val squareSize = ((availableWidth - dayLabelWidth - (spacing * (calculatedWeeks - 1))) / calculatedWeeks)
-                    .coerceAtLeast(10.dp)
+                    .coerceAtLeast(8.dp)
 
                 val firstVisibleMonday = today
                     .minusWeeks((calculatedWeeks - 1).toLong())
@@ -203,19 +301,35 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     .atZone(java.time.ZoneId.systemDefault())
                     .toLocalDate()
 
-                Column(
-                    modifier = GlanceModifier.defaultWeight(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    GlanceActivityCalendar(
+                val primaryColor = GlanceTheme.colors.primary.getColor(context).toArgb()
+                val onPrimaryColor = GlanceTheme.colors.onPrimary.getColor(context).toArgb()
+                val surfaceVariantColor = GlanceTheme.colors.surfaceVariant.getColor(context).toArgb()
+                val onSurfaceVariantColor = GlanceTheme.colors.onSurfaceVariant.getColor(context).toArgb()
+
+                val heatmapBitmap = remember(heatmapData, calculatedWeeks, squareSize, today, habitCreatedAt) {
+                    renderHeatmapBitmap(
+                        context = context,
                         startDate = firstVisibleMonday,
                         weeksCount = calculatedWeeks,
                         activities = heatmapData,
                         today = today,
                         habitCreatedAt = habitCreatedAt,
-                        squareSize = squareSize,
-                        spacing = spacing,
-                        modifier = GlanceModifier.fillMaxWidth()
+                        squareSizeDp = squareSize.value,
+                        spacingDp = spacing.value,
+                        primaryColor = primaryColor,
+                        onPrimaryColor = onPrimaryColor,
+                        surfaceVariantColor = surfaceVariantColor,
+                        onSurfaceVariantColor = onSurfaceVariantColor
+                    )
+                }
+
+                Box(
+                    modifier = GlanceModifier.defaultWeight().fillMaxWidth(),
+                    contentAlignment = Alignment.TopStart
+                ) {
+                    Image(
+                        provider = ImageProvider(heatmapBitmap),
+                        contentDescription = "Habit Heatmap Grid"
                     )
                 }
             }

@@ -109,7 +109,7 @@ fun HabitHeatmapWidgetLockedPreview() {
 }
 
 @OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 300, heightDp = 200)
+@Preview(widthDp = 300, heightDp = 250)
 @Composable
 fun HabitHeatmapWidgetMidWidePreview() {
     val widget = HabitHeatmapWidget()
@@ -161,7 +161,7 @@ fun HabitHeatmapWidgetMidWidePreview() {
 }
 
 @OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 400, heightDp = 200)
+@Preview(widthDp = 400, heightDp = 250)
 @Composable
 fun HabitHeatmapWidgetWidePreview() {
     val widget = HabitHeatmapWidget()
@@ -191,7 +191,7 @@ fun HabitHeatmapWidgetWidePreview() {
     )
 
     val sampleHeatmapData = remember {
-        (0..180).map { dayOffset ->
+        (0..100).map { dayOffset ->
             val date = today.minusDays(dayOffset.toLong())
             val percentage = if ((0..100).random() > 25) (25..100).random() else 0
             ActivityData(
