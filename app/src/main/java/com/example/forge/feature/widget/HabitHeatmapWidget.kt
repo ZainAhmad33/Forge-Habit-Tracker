@@ -96,8 +96,8 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     val heatmapData by statsService
                         .getRangeActivityData(
                             habitId,
-                            YearMonth.from(today.minusMonths(6)),
-                            14 // Request 14 weeks instead of 7
+                            YearMonth.from(today.minusMonths(4)),
+                            5 // Request 5 months instead of 7
                         )
                         .collectAsState(initial = emptyList())
 
@@ -217,10 +217,6 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                         spacing = spacing,
                         modifier = GlanceModifier.fillMaxWidth()
                     )
-
-                    Spacer(GlanceModifier.defaultWeight())
-
-                    GlanceHeatmapLegend()
                 }
             }
         }
@@ -427,40 +423,6 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     )
                 )
             }
-        }
-    }
-
-    @Composable
-    private fun GlanceHeatmapLegend() {
-        Row(
-            modifier = GlanceModifier.fillMaxWidth().padding(top = 4.dp),
-            horizontalAlignment = Alignment.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Less ",
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp)
-            )
-            Box(
-                modifier = GlanceModifier
-                    .size(8.dp)
-                    .background(GlanceTheme.colors.surfaceVariant)
-                    .cornerRadius(2.dp)
-            ) {}
-            Spacer(GlanceModifier.width(2.dp))
-            repeat(4) {
-                Box(
-                    modifier = GlanceModifier
-                        .size(8.dp)
-                        .background(GlanceTheme.colors.primary)
-                        .cornerRadius(2.dp)
-                ) {}
-                Spacer(GlanceModifier.width(2.dp))
-            }
-            Text(
-                text = "More",
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp)
-            )
         }
     }
 }
