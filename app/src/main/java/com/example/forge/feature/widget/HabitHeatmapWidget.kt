@@ -7,6 +7,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -20,8 +22,6 @@ import androidx.glance.ImageProvider
 import androidx.glance.ColorFilter
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
 import androidx.glance.layout.*
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
@@ -34,22 +34,15 @@ import androidx.glance.LocalContext
 import com.example.forge.MainActivity
 import com.example.forge.R
 import com.example.forge.core.database.entity.Habit
-import com.example.forge.core.database.entity.HabitCategory
-import com.example.forge.core.database.entity.HabitFrequency
-import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.core.uiEntities.ActivityData
-import com.example.forge.core.uiEntities.ProgressShape
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.YearMonth
-import java.time.temporal.ChronoUnit
-import java.util.Date
 import java.util.UUID
 
 // Workaround for restricted ColorProvider factory functions
@@ -87,22 +80,32 @@ class HabitHeatmapWidget : GlanceAppWidget() {
             GlanceTheme {
                 val prefs = currentState<androidx.datastore.preferences.core.Preferences>()
                 val habitIdString = prefs[habitIdKey]
-                val habitId = remember(habitIdString) { habitIdString?.let { UUID.fromString(it) } }
+                val habitId = remember(habitIdString) {
+                    habitIdString?.let { UUID.fromString(it) }
+                }
 
                 if (habitId == null) {
                     EmptyWidgetContent()
                 } else {
-                    val habit by habitsService.getHabitFlow(habitId).collectAsState(initial = null)
+                    val habit by habitsService
+                        .getHabitFlow(habitId)
+                        .collectAsState(initial = null)
+
                     val today = LocalDate.now()
-                    val sixMonthsAgo = today.minusMonths(6)
-                    val heatmapData by statsService.getRangeActivityData(
-                        habitId,
-                        YearMonth.from(sixMonthsAgo),
-                        7
-                    ).collectAsState(initial = emptyList())
+
+                    val heatmapData by statsService
+                        .getRangeActivityData(
+                            habitId,
+                            YearMonth.from(today.minusMonths(6)),
+                            14 // Request 14 weeks instead of 7
+                        )
+                        .collectAsState(initial = emptyList())
 
                     if (habit != null) {
-                        HeatmapWidgetContent(habit!!, heatmapData, today)
+                        HeatmapWidgetContent(
+                            habit = habit!!,
+                            heatmapData = heatmapData
+                        )
                     } else {
                         EmptyWidgetContent()
                     }
@@ -129,13 +132,15 @@ class HabitHeatmapWidget : GlanceAppWidget() {
     @Composable
     internal fun HeatmapWidgetContent(
         habit: Habit,
-        heatmapData: List<ActivityData>,
-        today: LocalDate
+        heatmapData: List<ActivityData>
     ) {
+        val today = LocalDate.now()
+
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(8.dp)
+                .padding(12.dp)
+                // Uses standard Material 3 dynamic widget background color
                 .background(GlanceTheme.colors.widgetBackground)
                 .clickable(
                     actionRunCallback<NavigateToHabitAction>(
@@ -143,6 +148,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     )
                 )
         ) {
+            // Header
             Row(
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -151,7 +157,9 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     text = habit.emoji,
                     style = TextStyle(fontSize = 18.sp)
                 )
+
                 Spacer(GlanceModifier.width(8.dp))
+
                 Text(
                     text = habit.title,
                     style = TextStyle(
@@ -159,90 +167,300 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    maxLines = 1
+                    maxLines = 1,
+                    modifier = GlanceModifier.defaultWeight()
                 )
             }
-            
-            Spacer(GlanceModifier.height(8.dp))
+
+            Spacer(GlanceModifier.height(10.dp))
 
             if (habit.isLocked) {
-                Box(
-                    modifier = GlanceModifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                LockedHabitContent()
+            } else {
+                val size = LocalSize.current
+                val dayLabelWidth = 30.dp
+                val spacing = 2.dp
+
+                // Select weeks visible based on widget width
+                val calculatedWeeks = when {
+                    size.width >= 320.dp -> 14
+                    size.width >= 240.dp -> 10
+                    else -> 7
+                }
+
+                // Calculate square size dynamically based on available width
+                val horizontalPadding = 24.dp
+                val availableWidth = size.width - horizontalPadding
+                val squareSize = ((availableWidth - dayLabelWidth - (spacing * (calculatedWeeks - 1))) / calculatedWeeks)
+                    .coerceAtLeast(10.dp)
+
+                val firstVisibleMonday = today
+                    .minusWeeks((calculatedWeeks - 1).toLong())
+                    .minusDays((today.dayOfWeek.value - 1).toLong())
+
+                val habitCreatedAt = habit.createdAt
+                    .toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+
+                Column(
+                    modifier = GlanceModifier.defaultWeight(),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(
-                            provider = ImageProvider(R.drawable.ic_lock),
-                            contentDescription = "Locked",
-                            modifier = GlanceModifier.size(32.dp),
-                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
-                        )
-                        Spacer(GlanceModifier.height(8.dp))
+                    GlanceActivityCalendar(
+                        startDate = firstVisibleMonday,
+                        weeksCount = calculatedWeeks,
+                        activities = heatmapData,
+                        today = today,
+                        habitCreatedAt = habitCreatedAt,
+                        squareSize = squareSize,
+                        spacing = spacing,
+                        modifier = GlanceModifier.fillMaxWidth()
+                    )
+
+                    Spacer(GlanceModifier.defaultWeight())
+
+                    GlanceHeatmapLegend()
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun LockedHabitContent() {
+        Box(
+            modifier = GlanceModifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    provider = ImageProvider(R.drawable.ic_lock),
+                    contentDescription = "Locked",
+                    modifier = GlanceModifier.size(32.dp),
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
+                )
+
+                Spacer(GlanceModifier.height(8.dp))
+
+                Text(
+                    text = "Habit Locked",
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+                )
+            }
+        }
+    }
+
+    private val DAY_LABELS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+    private fun getMonthLabel(weekStart: LocalDate, weekIndex: Int): String? {
+        for (dayIndex in 0..6) {
+            val date = weekStart.plusDays(dayIndex.toLong())
+            if (date.dayOfMonth == 1 || (weekIndex == 0 && dayIndex == 0)) {
+                return date.month.getDisplayName(
+                    java.time.format.TextStyle.SHORT,
+                    java.util.Locale.getDefault()
+                )
+            }
+        }
+        return null
+    }
+
+    @Composable
+    private fun GlanceActivityCalendar(
+        startDate: LocalDate,
+        weeksCount: Int,
+        activities: List<ActivityData>,
+        today: LocalDate,
+        habitCreatedAt: LocalDate,
+        squareSize: Dp,
+        spacing: Dp,
+        modifier: GlanceModifier = GlanceModifier
+    ) {
+        val activityMap = remember(activities) {
+            activities.associateBy { it.date }
+        }
+
+        val labelStyle = TextStyle(
+            color = GlanceTheme.colors.onSurfaceVariant,
+            fontSize = 10.sp
+        )
+
+        val dayNumberStyle = TextStyle(
+            fontSize = (squareSize.value * 0.45f).sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            // Day Labels
+            Column(
+                modifier = GlanceModifier
+                    .width(30.dp)
+                    .padding(top = 20.dp)
+            ) {
+                DAY_LABELS.forEach { day ->
+                    Box(
+                        modifier = GlanceModifier.height(squareSize + spacing),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
                         Text(
-                            text = "Habit Locked",
-                            style = TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
+                            text = day,
+                            style = labelStyle
                         )
                     }
                 }
-            } else {
-                val firstMonday = remember(today) {
-                    val sixMonthsAgo = today.minusMonths(6)
-                    sixMonthsAgo.minusDays((sixMonthsAgo.dayOfWeek.value - 1).toLong())
-                }
-                
-                val thisMonday = remember(today) {
-                    today.minusDays((today.dayOfWeek.value - 1).toLong())
-                }
+            }
 
-                val totalWeeks = remember(firstMonday, thisMonday) {
-                    ChronoUnit.WEEKS.between(firstMonday, thisMonday).toInt() + 1
-                }
+            // Weeks Grid
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
+            ) {
+                for (weekIndex in 0 until weeksCount) {
+                    val weekStart = startDate.plusWeeks(weekIndex.toLong())
 
-                val activityMap = remember(heatmapData) {
-                    heatmapData.associateBy { it.date }
-                }
+                    Column(
+                        modifier = GlanceModifier.width(squareSize + spacing)
+                    ) {
+                        val monthLabel = getMonthLabel(weekStart = weekStart, weekIndex = weekIndex)
 
-                val weeksList = (0 until totalWeeks).toList().reversed()
-
-                LazyColumn(
-                    modifier = GlanceModifier.fillMaxSize()
-                ) {
-                    items(weeksList) { w ->
-                        val weekStartDate = firstMonday.plusWeeks(w.toLong())
-                        Row(
-                            modifier = GlanceModifier.fillMaxWidth().padding(vertical = 2.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            modifier = GlanceModifier
+                                .height(20.dp)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
                         ) {
-                            for (d in 0 until 7) {
-                                val date = weekStartDate.plusDays(d.toLong())
-                                val activity = activityMap[date]
-                                
-                                val provider = if (activity != null && activity.percentage > 0) {
-                                    // Use primary color with alpha for intensity
-                                    // Glance doesn't have a direct way to apply alpha to a ColorProvider easily in background()
-                                    // so we use the intensity to pick an alpha level on the primary color.
-                                    val alpha = activity.intensity.coerceAtLeast(0.3f)
-                                    fixedColorProvider(
-                                        GlanceTheme.colors.primary.getColor(LocalContext.current).copy(alpha = alpha)
-                                    )
-                                } else {
-                                    GlanceTheme.colors.surfaceVariant
-                                }
-                                
-                                Box(
-                                    modifier = GlanceModifier
-                                        .size(16.dp)
-                                        .padding(1.dp)
-                                        .background(provider)
-                                ) {}
+                            if (monthLabel != null) {
+                                Text(
+                                    text = monthLabel,
+                                    style = labelStyle
+                                )
                             }
+                        }
+
+                        for (dayIndex in 0..6) {
+                            val date = weekStart.plusDays(dayIndex.toLong())
+
+                            ActivityDayCell(
+                                date = date,
+                                activity = activityMap[date],
+                                today = today,
+                                habitCreatedAt = habitCreatedAt,
+                                squareSize = squareSize,
+                                spacing = spacing,
+                                dayNumberStyle = dayNumberStyle
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun ActivityDayCell(
+        date: LocalDate,
+        activity: ActivityData?,
+        today: LocalDate,
+        habitCreatedAt: LocalDate,
+        squareSize: Dp,
+        spacing: Dp,
+        dayNumberStyle: TextStyle
+    ) {
+        val context = LocalContext.current
+        val isFuture = date.isAfter(today)
+        val isBeforeCreation = date.isBefore(habitCreatedAt)
+
+        // Outer grid cell bounds (includes right and bottom spacing)
+        if (isFuture || isBeforeCreation) {
+            Spacer(
+                modifier = GlanceModifier.size(
+                    width = squareSize + spacing,
+                    height = squareSize + spacing
+                )
+            )
+            return
+        }
+
+        val hasActivity = activity != null && activity.percentage > 0
+
+        val cellBackgroundColorProvider = if (hasActivity) {
+            GlanceTheme.colors.primary
+        } else {
+            GlanceTheme.colors.surfaceVariant
+        }
+
+        val cellTextColorProvider = if (hasActivity) {
+            GlanceTheme.colors.onPrimary
+        } else {
+            GlanceTheme.colors.onSurfaceVariant
+        }
+
+        val radius = (squareSize.value * 0.15f).coerceAtLeast(2f).dp
+
+        // Outer container reserves total cell footprint + spacing
+        Box(
+            modifier = GlanceModifier
+                .size(width = squareSize + spacing, height = squareSize + spacing)
+                .padding(end = spacing, bottom = spacing),
+            contentAlignment = Alignment.Center
+        ) {
+            // Inner actual square box
+            Box(
+                modifier = GlanceModifier
+                    .size(squareSize)
+                    .cornerRadius(radius)
+                    .background(cellBackgroundColorProvider),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    style = dayNumberStyle.copy(
+                        color = cellTextColorProvider
+                    )
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun GlanceHeatmapLegend() {
+        Row(
+            modifier = GlanceModifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalAlignment = Alignment.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Less ",
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp)
+            )
+            Box(
+                modifier = GlanceModifier
+                    .size(8.dp)
+                    .background(GlanceTheme.colors.surfaceVariant)
+                    .cornerRadius(2.dp)
+            ) {}
+            Spacer(GlanceModifier.width(2.dp))
+            repeat(4) {
+                Box(
+                    modifier = GlanceModifier
+                        .size(8.dp)
+                        .background(GlanceTheme.colors.primary)
+                        .cornerRadius(2.dp)
+                ) {}
+                Spacer(GlanceModifier.width(2.dp))
+            }
+            Text(
+                text = "More",
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp)
+            )
         }
     }
 }
@@ -263,4 +481,3 @@ class NavigateToHabitAction : ActionCallback {
         }
     }
 }
-
