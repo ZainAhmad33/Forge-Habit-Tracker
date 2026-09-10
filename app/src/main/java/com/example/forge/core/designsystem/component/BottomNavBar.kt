@@ -53,14 +53,13 @@ import androidx.compose.ui.unit.dp
 fun BottomNavBar(
     scrollBehavior: FloatingToolbarScrollBehavior,
     onAddHabitClick: () -> Unit,
-    initialSelected: String = "Home",
+    modifier: Modifier = Modifier,
+    selectedTab: String = "Home",
     onNavigateToHome: () -> Unit = {},
     onNavigateToInsights: () -> Unit = {}
 ) {
-    var selected by remember { mutableStateOf(initialSelected) }
-
     Box(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         HorizontalFloatingToolbar(
             expanded = true,
@@ -72,9 +71,8 @@ fun BottomNavBar(
                 .align(Alignment.BottomCenter),
         ) {
             SlidingTabRow(
-                selectedTab = selected,
+                selectedTab = selectedTab,
                 onTabSelected = { 
-                    selected = it
                     if (it == "Home") onNavigateToHome() else onNavigateToInsights()
                 }
             )
@@ -236,5 +234,5 @@ fun PreviewBottomNav(){
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
         exitDirection = FloatingToolbarExitDirection.Bottom
     )
-    BottomNavBar(scrollBehavior, onAddHabitClick = {}, initialSelected = "Home", onNavigateToHome = {}, onNavigateToInsights = {})
+    BottomNavBar(scrollBehavior, onAddHabitClick = {}, selectedTab = "Home", onNavigateToHome = {}, onNavigateToInsights = {})
 }

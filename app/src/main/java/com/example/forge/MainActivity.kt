@@ -1,5 +1,6 @@
 package com.example.forge
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,19 +13,32 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.forge.core.designsystem.component.BottomNavBar
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.feature.habits.screen.HabitDetailRoute
 import com.example.forge.feature.home.screen.HomeRoute
@@ -38,8 +52,11 @@ import java.util.UUID
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private var notificationHabitId by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleIntent(intent)
         enableEdgeToEdge()
         setContent {
             ForgeTheme {
@@ -47,17 +64,45 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background // Ensure full screen dark surface
                 ) {
-                    ForgeApp()
+                    ForgeApp(
+                        notificationHabitId = notificationHabitId,
+                        onNotificationHandled = { notificationHabitId = null }
+                    )
                 }
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.getStringExtra("habit_id")?.let {
+            notificationHabitId = it
+        }
+    }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
+fun ForgeApp(
+    notificationHabitId: String?,
+    onNotificationHandled: () -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
+
+    LaunchedEffect(notificationHabitId) {
+        if (notificationHabitId != null) {
+            navController.navigate("habit_detail/$notificationHabitId")
+            onNotificationHandled()
+        }
+    }
     val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     if (startDestination == null) return
 
@@ -75,115 +120,147 @@ fun ForgeApp(viewModel: MainViewModel = hiltViewModel()) {
         animationSpec = tween(400, easing = FastOutSlowInEasing)
     ) + fadeOut(animationSpec = tween(400))
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination!!,
-        enterTransition = { horizontalEnter },
-        exitTransition = { horizontalExit },
-        popEnterTransition = { horizontalPopEnter },
-        popExitTransition = { horizontalPopExit }
-    ) {
-        composable("welcome") {
-            WelcomeRoute(
-                onGetStartedClick = { navController.navigate("profile_setup") }
-            )
-        }
-        composable("profile_setup") {
-            ProfileRoute(
-                onSaveSuccess = {
-                    // If we came from onboarding, navigate to home and clear stack
-                    // If we came from details (edit mode), just pop back
-                    if (!navController.popBackStack()) {
+    val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
+        exitDirection = FloatingToolbarExitDirection.Bottom
+    )
+
+    val shouldShowBottomBar = currentRoute in listOf("home", "insights")
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior),
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            NavHost(
+                modifier = Modifier.padding(innerPadding),
+                navController = navController,
+                startDestination = startDestination!!,
+                enterTransition = { horizontalEnter },
+                exitTransition = { horizontalExit },
+                popEnterTransition = { horizontalPopEnter },
+                popExitTransition = { horizontalPopExit }
+            ) {
+                composable("welcome") {
+                    WelcomeRoute(
+                        onGetStartedClick = { navController.navigate("profile_setup") }
+                    )
+                }
+                composable("profile_setup") {
+                    ProfileRoute(
+                        onSaveSuccess = {
+                            if (!navController.popBackStack()) {
+                                navController.navigate("home") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }
+                            }
+                        },
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable("profile_details") {
+                    ProfileDetailsRoute(
+                        onBackClick = { navController.popBackStack() },
+                        onEditClick = { navController.navigate("profile_setup") }
+                    )
+                }
+                composable("home") {
+                    HomeRoute(
+                        onAddHabitClick = { navController.navigate("new_habit") },
+                        onHabitDetailsClick = { habitId ->
+                            navController.navigate("habit_detail/$habitId")
+                        },
+                        onNavigateToInsights = {
+                            navController.navigate("insights") {
+                                popUpTo("home") { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onProfileClick = {
+                            navController.navigate("profile_details")
+                        }
+                    )
+                }
+                composable("insights") {
+                    InsightsRoute(
+                        onNavigateToHome = {
+                            navController.navigate("home") {
+                                popUpTo("home") {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onAddHabitClick = { navController.navigate("new_habit") }
+                    )
+                }
+                composable(
+                    route = "habit_detail/{habitId}"
+                ) {
+                    HabitDetailRoute(
+                        onBackClick = { navController.popBackStack() },
+                        onEditClick = { habitId ->
+                            navController.navigate("new_habit?habitId=$habitId")
+                        },
+                        onHabitDeleted = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(
+                    route = "new_habit?habitId={habitId}",
+                    arguments = listOf(
+                        navArgument("habitId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    ),
+                    enterTransition = {
+                        slideInVertically(
+                            initialOffsetY = { fullHeight -> fullHeight },
+                            animationSpec = tween(400)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutVertically(
+                            targetOffsetY = { fullHeight -> fullHeight },
+                            animationSpec = tween(400)
+                        )
+                    }
+                ) { backStackEntry ->
+                    val habitIdString = backStackEntry.arguments?.getString("habitId")
+                    val habitId = habitIdString?.let { UUID.fromString(it) }
+
+                    NewHabitRoute(
+                        onBackClick = { navController.popBackStack() },
+                        habitId = habitId
+                    )
+                }
+            }
+
+            if (shouldShowBottomBar) {
+                BottomNavBar(
+                    scrollBehavior = scrollBehavior,
+                    onAddHabitClick = { navController.navigate("new_habit") },
+                    selectedTab = if (currentRoute == "home") "Home" else "Insights",
+                    onNavigateToHome = {
                         navController.navigate("home") {
-                            popUpTo("welcome") { inclusive = true }
+                            popUpTo("home") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                    }
-                },
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-        composable("profile_details") {
-            ProfileDetailsRoute(
-                onBackClick = { navController.popBackStack() },
-                onEditClick = { navController.navigate("profile_setup") }
-            )
-        }
-        composable("home") {
-            HomeRoute(
-                onAddHabitClick = { navController.navigate("new_habit") },
-                onHabitDetailsClick = { habitId ->
-                    navController.navigate("habit_detail/$habitId")
-                },
-                onNavigateToInsights = {
-                    navController.navigate("insights") {
-                        popUpTo("home") { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onProfileClick = {
-                    navController.navigate("profile_details")
-                }
-            )
-        }
-        composable("insights") {
-            InsightsRoute(
-                onNavigateToHome = {
-                    navController.navigate("home") {
-                        popUpTo("home") {
-                            saveState = true
+                    },
+                    onNavigateToInsights = {
+                        navController.navigate("insights") {
+                            popUpTo("home") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onAddHabitClick = { navController.navigate("new_habit") }
-            )
-        }
-        composable(
-            route = "habit_detail/{habitId}"
-        ) {
-            HabitDetailRoute(
-                onBackClick = { navController.popBackStack() },
-                onEditClick = { habitId ->
-                    navController.navigate("new_habit?habitId=$habitId")
-                },
-                onHabitDeleted = {
-                    navController.popBackStack()
-                }
-            )
-        }
-        composable(
-            route = "new_habit?habitId={habitId}",
-            arguments = listOf(
-                navArgument("habitId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                }
-            ),
-            // Slide up from bottom when navigating in
-            enterTransition = {
-                slideInVertically(
-                    initialOffsetY = { fullHeight -> fullHeight },
-                    animationSpec = tween(400)
-                )
-            },
-            // Slide down to bottom when pressing back or popping stack
-            popExitTransition = {
-                slideOutVertically(
-                    targetOffsetY = { fullHeight -> fullHeight },
-                    animationSpec = tween(400)
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
-        ) { backStackEntry ->
-            val habitIdString = backStackEntry.arguments?.getString("habitId")
-            val habitId = habitIdString?.let { UUID.fromString(it) }
-
-            NewHabitRoute(
-                onBackClick = { navController.popBackStack() },
-                habitId = habitId
-            )
         }
     }
 }

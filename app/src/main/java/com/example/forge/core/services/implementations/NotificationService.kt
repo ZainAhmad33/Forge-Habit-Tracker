@@ -40,7 +40,7 @@ class NotificationService @Inject constructor(
         "It's a good time to make it happen!"
     )
     companion object {
-        private const val CHANNEL_ID = "habit_reminders"
+        private const val CHANNEL_ID = "habit_reminders_v2"
         private const val CHANNEL_NAME = "Habit Reminders"
         private const val CHANNEL_DESCRIPTION = "Notifications for habit reminders"
     }
@@ -49,16 +49,18 @@ class NotificationService @Inject constructor(
         val channel = NotificationChannel(
             CHANNEL_ID,
             CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = CHANNEL_DESCRIPTION
+            enableLights(true)
+            enableVibration(true)
         }
         notificationManager.createNotificationChannel(channel)
     }
 
     override fun showHabitReminder(habitId: UUID, title: String, emoji: String) {
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("habit_id", habitId.toString())
         }
 
@@ -73,7 +75,8 @@ class NotificationService @Inject constructor(
             .setSmallIcon(R.drawable.ic_forge_flame)
             .setContentTitle("$emoji $title")
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()

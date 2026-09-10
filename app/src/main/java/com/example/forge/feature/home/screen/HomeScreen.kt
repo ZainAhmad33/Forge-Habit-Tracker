@@ -19,8 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -36,9 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +44,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.R
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.database.entity.HabitType
-import com.example.forge.core.designsystem.component.BottomNavBar
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.HomeHabit
@@ -118,13 +112,10 @@ fun HomeScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     var query by remember { mutableStateOf("") }
-    val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
-        exitDirection = FloatingToolbarExitDirection.Bottom
-    )
+    
     Scaffold(
         modifier = modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior),
+            .fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             HomeAppBar(
@@ -238,19 +229,6 @@ fun HomeScreen(
                     }
                 }
             }
-            BottomNavBar(
-                scrollBehavior = scrollBehavior,
-                onAddHabitClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onAddHabitClick()
-                },
-                initialSelected = "Home",
-                onNavigateToHome = {},
-                onNavigateToInsights = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onNavigateToInsights()
-                }
-            )
         }
 
         selectedHabitForLogging?.let { habit ->

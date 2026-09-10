@@ -11,9 +11,11 @@ import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.forge.core.database.entity.Habit
@@ -64,16 +66,48 @@ fun AdditionalDetailsSection(habit: Habit) {
                 frequency = habit.trackedDays.map { dayNames[it] }.joinToString(", ")
             }
             val formatter = DateTimeFormatter.ofPattern("h:mm a")
-            val reminders = habit.reminders.map { it.format(formatter) }.joinToString(", ")
             
             val totalRows = 4 + (if (habit.reminders.isNotEmpty()) 1 else 0)
             var rowIndex = 0
             
             DetailRow(Icons.Rounded.Flag, "Target", "${habit.completionTargetPerDay} ${habit.targetUnit}", rowIndex++, totalRows)
-            DetailRow(Icons.Rounded.EventRepeat, "Frequency", "$frequency", rowIndex++, totalRows)
+            
+            DetailRow(
+                icon = Icons.Rounded.EventRepeat,
+                label = "Frequency",
+                index = rowIndex++,
+                totalItems = totalRows
+            ) {
+                if (habit.frequencyType == HabitFrequency.SpecificDays) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        habit.trackedDays.forEach { dayIndex ->
+                            ValueChip(text = dayNames[dayIndex])
+                        }
+                    }
+                } else {
+                    ValueChip(text = frequency)
+                }
+            }
             
             if (habit.reminders.isNotEmpty()){
-                DetailRow(Icons.Rounded.Notifications, "Reminders", "$reminders", rowIndex++, totalRows)
+                DetailRow(
+                    icon = Icons.Rounded.Notifications,
+                    label = "Reminders",
+                    index = rowIndex++,
+                    totalItems = totalRows
+                ) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        habit.reminders.sorted().forEach { time ->
+                            ValueChip(text = time.format(formatter))
+                        }
+                    }
+                }
             }
             
             DetailRow(
@@ -93,20 +127,79 @@ fun AdditionalDetailsSection(habit: Habit) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DetailRow(icon: ImageVector, label: String, value: String, index: Int, totalItems: Int) {
+    DetailRow(
+        icon = icon,
+        label = label,
+        index = index,
+        totalItems = totalItems
+    ) {
+        ValueChip(text = value)
+    }
+}
+
+@Composable
+private fun ValueChip(text: String) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun DetailRow(
+    icon: ImageVector,
+    label: String,
+    index: Int,
+    totalItems: Int,
+    trailingContent: @Composable () -> Unit
+) {
     SegmentedListItem(
         selected = false,
         enabled = true,
         onClick = {},
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shapes = ListItemDefaults.segmentedShapes(index = index, count = totalItems),
-        leadingContent = { Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        ) },
-        trailingContent = { Text(text = value) },
-        content = { Text( text = label) },
+        leadingContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(20.dp)
+                    .padding(top = 2.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        content = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    trailingContent()
+                }
+            }
+        },
     )
 }
 

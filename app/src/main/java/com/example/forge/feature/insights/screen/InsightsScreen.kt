@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.designsystem.component.ActivityWeeklyPager
-import com.example.forge.core.designsystem.component.BottomNavBar
 import com.example.forge.core.designsystem.component.HeroStatCard
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.services.interfaces.*
@@ -76,15 +74,9 @@ fun InsightsScreen(
     onHeatmapMonthSelected: (YearMonth) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic = LocalHapticFeedback.current
-    val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
-        exitDirection = FloatingToolbarExitDirection.Bottom
-    )
-    
     Scaffold(
         modifier = modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior),
+            .fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
@@ -284,20 +276,6 @@ fun InsightsScreen(
 
                 }
             }
-            
-            BottomNavBar(
-                scrollBehavior = scrollBehavior,
-                onAddHabitClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onAddHabitClick()
-                },
-                initialSelected = "Insights",
-                onNavigateToHome = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onNavigateToHome()
-                },
-                onNavigateToInsights = {}
-            )
         }
     }
 }
