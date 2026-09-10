@@ -14,7 +14,7 @@ import com.example.forge.core.database.entity.User
 
 @Database(
     entities = [Habit::class, HabitActivity::class, User::class],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

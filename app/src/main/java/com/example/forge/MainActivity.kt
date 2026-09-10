@@ -94,17 +94,19 @@ fun ForgeApp(
 ) {
     val navController = rememberNavController()
 
-    LaunchedEffect(notificationHabitId) {
-        if (notificationHabitId != null) {
+    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+
+    if (startDestination == null) return
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(notificationHabitId, currentRoute) {
+        if (notificationHabitId != null && currentRoute != null) {
             navController.navigate("habit_detail/$notificationHabitId")
             onNotificationHandled()
         }
     }
-    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    if (startDestination == null) return
 
     val horizontalEnter = slideInHorizontally(
         initialOffsetX = { fullWidth -> fullWidth },

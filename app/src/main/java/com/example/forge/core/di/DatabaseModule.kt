@@ -29,7 +29,8 @@ object DatabaseModule {
             ForgeDatabase.MIGRATION_3_4,
             ForgeDatabase.MIGRATION_4_5,
             ForgeDatabase.MIGRATION_5_6
-        ).build()
+        ).fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides

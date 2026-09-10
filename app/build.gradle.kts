@@ -47,6 +47,9 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
 
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     implementation("androidx.compose.material:material-icons-extended")
 
     // 2. Compose Emoji Picker
