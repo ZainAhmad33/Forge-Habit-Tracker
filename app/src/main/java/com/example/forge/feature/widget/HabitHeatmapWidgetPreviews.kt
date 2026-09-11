@@ -13,9 +13,12 @@ import com.example.forge.core.database.entity.Habit
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.entity.HabitType
+import com.example.forge.core.services.interfaces.DailyCompletion
 import com.example.forge.core.uiEntities.ActivityData
 import com.example.forge.core.uiEntities.ProgressShape
+import com.example.forge.feature.habits.widget.MonthlyCompletionWidget
 import java.time.LocalDate
+import java.time.YearMonth
 import java.util.Date
 import java.util.UUID
 
@@ -181,7 +184,7 @@ fun HabitHeatmapWidgetWidePreview() {
 fun HabitHeatmapWidgetEmptyPreview() {
     val widget = HabitHeatmapWidget()
     GlanceTheme {
-        widget.EmptyWidgetContent()
+        EmptyWidgetContent()
     }
 }
 
@@ -211,6 +214,178 @@ fun HabitHeatmapWidgetLockedPreview() {
             habit = lockedHabit,
             streak = 2,
             heatmapData = emptyList()
+        )
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 401, heightDp = 218)
+@Composable
+fun MonthlyCompletionWidgetPreview() {
+    val widget = MonthlyCompletionWidget()
+    val today = LocalDate.of(2026, 9, 11)
+    val selectedMonth = YearMonth.of(2026, 8)
+    val sixMonthsAgoDate = remember(today) {
+        java.util.Date.from(
+            today.minusMonths(6)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+        )
+    }
+    val sampleHabit = Habit(
+        id = UUID.randomUUID(),
+        title = "Morning Reading",
+        category = HabitCategory.Productivity,
+        emoji = "📖",
+        habitType = HabitType.YesNo,
+        frequencyType = HabitFrequency.EveryDay,
+        numberOfTrackedDays = 7,
+        completionTargetPerDay = 1,
+        targetUnit = "Pages",
+        progressShape = ProgressShape.Circle,
+        createdAt = sixMonthsAgoDate,
+        updatedAt = java.util.Date()
+    )
+
+    // Generate mock completion data for the month
+    val mockMonthData = (1..selectedMonth.lengthOfMonth()).map { day ->
+        val isFuture = day > today.dayOfMonth
+        val isSkip = day % 7 == 0
+        val completedQuantity = when {
+            isFuture || isSkip -> 0
+            day % 3 == 0 -> 1500 // Below goal
+            else -> 3000          // On goal
+        }
+
+        DailyCompletion(
+            day = day,
+            completedQuantity = completedQuantity,
+            isSkipDay = isSkip
+        )
+    }
+
+    GlanceTheme {
+        widget.CompletionBarChartWidgetContent(
+            habit = sampleHabit,
+            streak = 15,
+            monthData = mockMonthData,
+            target = 2500,
+            today = today
+        )
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 294, heightDp = 218)
+@Composable
+fun MonthlyCompletionMidWidgetPreview() {
+    val widget = MonthlyCompletionWidget()
+    val today = LocalDate.of(2026, 9, 11)
+    val selectedMonth = YearMonth.of(2026, 8)
+    val sixMonthsAgoDate = remember(today) {
+        java.util.Date.from(
+            today.minusMonths(6)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+        )
+    }
+    val sampleHabit = Habit(
+        id = UUID.randomUUID(),
+        title = "Morning Reading",
+        category = HabitCategory.Productivity,
+        emoji = "📖",
+        habitType = HabitType.YesNo,
+        frequencyType = HabitFrequency.EveryDay,
+        numberOfTrackedDays = 7,
+        completionTargetPerDay = 1,
+        targetUnit = "Pages",
+        progressShape = ProgressShape.Circle,
+        createdAt = sixMonthsAgoDate,
+        updatedAt = java.util.Date()
+    )
+
+    // Generate mock completion data for the month
+    val mockMonthData = (1..selectedMonth.lengthOfMonth()).map { day ->
+        val isFuture = day > today.dayOfMonth
+        val isSkip = day % 7 == 0
+        val completedQuantity = when {
+            isFuture || isSkip -> 0
+            day % 3 == 0 -> 1500 // Below goal
+            else -> 3000          // On goal
+        }
+
+        DailyCompletion(
+            day = day,
+            completedQuantity = completedQuantity,
+            isSkipDay = isSkip
+        )
+    }
+
+    GlanceTheme {
+        widget.CompletionBarChartWidgetContent(
+            habit = sampleHabit,
+            streak = 15,
+            monthData = mockMonthData,
+            target = 2500,
+            today = today
+        )
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 187, heightDp = 218)
+@Composable
+fun MonthlyCompletionSmallWidgetPreview() {
+
+    val widget = MonthlyCompletionWidget()
+    val today = LocalDate.of(2026, 9, 11)
+    val selectedMonth = YearMonth.of(2026, 8)
+    val sixMonthsAgoDate = remember(today) {
+        java.util.Date.from(
+            today.minusMonths(6)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+        )
+    }
+    val sampleHabit = Habit(
+        id = UUID.randomUUID(),
+        title = "Morning Reading",
+        category = HabitCategory.Productivity,
+        emoji = "📖",
+        habitType = HabitType.YesNo,
+        frequencyType = HabitFrequency.EveryDay,
+        numberOfTrackedDays = 7,
+        completionTargetPerDay = 1,
+        targetUnit = "Pages",
+        progressShape = ProgressShape.Circle,
+        createdAt = sixMonthsAgoDate,
+        updatedAt = java.util.Date()
+    )
+
+    // Generate mock completion data for the month
+    val mockMonthData = (1..selectedMonth.lengthOfMonth()).map { day ->
+        val isFuture = day > today.dayOfMonth
+        val isSkip = day % 7 == 0
+        val completedQuantity = when {
+            isFuture || isSkip -> 0
+            day % 3 == 0 -> 1500 // Below goal
+            else -> 3000          // On goal
+        }
+
+        DailyCompletion(
+            day = day,
+            completedQuantity = completedQuantity,
+            isSkipDay = isSkip
+        )
+    }
+
+    GlanceTheme {
+        widget.CompletionBarChartWidgetContent(
+            habit = sampleHabit,
+            streak = 15,
+            monthData = mockMonthData,
+            target = 2500,
+            today = today
         )
     }
 }
