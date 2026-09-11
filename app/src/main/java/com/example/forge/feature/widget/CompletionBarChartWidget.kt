@@ -44,7 +44,6 @@ import com.example.forge.core.services.interfaces.DailyCompletion
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.feature.widget.EmptyWidgetContent
-import com.example.forge.feature.widget.HabitHeatmapWidget
 import com.example.forge.feature.widget.NavigateToHabitAction
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -53,9 +52,10 @@ import dagger.hilt.components.SingletonComponent
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
+import androidx.datastore.preferences.core.Preferences
 
 
-class MonthlyCompletionWidget: GlanceAppWidget(){
+class CompletionBarChartWidget: GlanceAppWidget(){
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
     override val sizeMode: SizeMode = SizeMode.Exact
@@ -82,8 +82,9 @@ class MonthlyCompletionWidget: GlanceAppWidget(){
 
         provideContent {
             GlanceTheme {
-                val prefs = currentState<androidx.datastore.preferences.core.Preferences>()
-                val habitIdString = prefs[HabitHeatmapWidget.habitIdKey]
+                val prefs = currentState<Preferences>()
+                val HABIT_ID_KEY = stringPreferencesKey("habit_id")
+                val habitIdString = prefs[HABIT_ID_KEY]
                 val habitId = remember(habitIdString) {
                     habitIdString?.let { UUID.fromString(it) }
                 }
@@ -108,8 +109,21 @@ class MonthlyCompletionWidget: GlanceAppWidget(){
                     val lastMonthData = monthlyCompletions.get(lastMonth)
 
                     var totalDailyCompletions: List<DailyCompletion> = emptyList()
-                    if (currentData?.size != 0 && lastMonthData?.size != 0){
-                        totalDailyCompletions = lastMonthData!! + currentData!!
+                    if (!lastMonthData.isNullOrEmpty()){
+                        totalDailyCompletions = totalDailyCompletions + lastMonthData
+                    }
+                    else{
+                        val days = lastMonth.lengthOfMonth()
+                        totalDailyCompletions = totalDailyCompletions + List(days) {
+                            DailyCompletion(
+                                day = 0,
+                                completedQuantity = 0,
+                                isSkipDay = true
+                            )
+                        }
+                    }
+                    if (!currentData.isNullOrEmpty()){
+                        totalDailyCompletions = totalDailyCompletions + currentData
                     }
 
                     if (habit != null) {
@@ -148,7 +162,7 @@ class MonthlyCompletionWidget: GlanceAppWidget(){
                 .background(GlanceTheme.colors.widgetBackground)
                 .clickable(
                     actionRunCallback<NavigateToHabitAction>(
-                        actionParametersOf(HabitHeatmapWidget.habitIdParam to habit.id.toString())
+                        actionParametersOf(CompletionBarChartWidget.habitIdParam to habit.id.toString())
                     )
                 )
         ) {
@@ -211,9 +225,8 @@ class MonthlyCompletionWidget: GlanceAppWidget(){
                 modifier = GlanceModifier
                     .fillMaxWidth()
                     .defaultWeight()
-                    .background(GlanceTheme.colors.surfaceVariant)
-                    .cornerRadius(24.dp)
-                    .padding(12.dp)
+                    .background(GlanceTheme.colors.widgetBackground)
+
             ) {
                 Column(
                     modifier = GlanceModifier.fillMaxSize()
@@ -242,7 +255,7 @@ class MonthlyCompletionWidget: GlanceAppWidget(){
 
                     // Approximate dynamic pixel sizing based on Glance available dimensions
                     val widthPx = ((size.width.value - 24f - 24f) * density).toInt().coerceAtLeast(100)
-                    val heightPx = ((size.height.value - 24f - 32f - 24f - 20f) * density).toInt().coerceAtLeast(80)
+                    val heightPx = ((size.height.value - 32f - 24f - 20f) * density).toInt().coerceAtLeast(80)
 
                     // 1. Extract the ColorProviders first (These are @Composable calls)
                     val errorProvider = GlanceTheme.colors.error
@@ -367,8 +380,11 @@ class MonthlyCompletionWidget: GlanceAppWidget(){
         val maxFitBars = ((chartWidth + spacingPx) / (barWidthPx + spacingPx)).toInt()
             .coerceIn(1, data.size)
 
+        val thisMonthsDays = LocalDate.now().dayOfMonth
+        val lastMonthDays = YearMonth.now().minusMonths(1).lengthOfMonth()
         // 2. Slice data to show the most recent visible days
-        val visibleData = data.takeLast(maxFitBars)
+        var visibleData = data.take(thisMonthsDays + lastMonthDays)
+        visibleData = visibleData.takeLast(maxFitBars)
 
         // 3. Recalculate exact barWidth in PX to fit width without fractional pixel gaps
         val totalSpacingPx = spacingPx * (visibleData.size - 1)

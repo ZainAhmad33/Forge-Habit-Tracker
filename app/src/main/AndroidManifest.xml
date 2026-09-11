@@ -49,6 +49,17 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/habit_heatmap_widget_info" />
         </receiver>
+        <receiver
+            android:name=".feature.widget.CompletionBarChartWidgetReceiver"
+            android:exported="true"
+            android:label="Monthly Completion">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/monthly_completion_widget_info" />
+        </receiver>
 
         <activity
             android:name=".feature.widget.HabitWidgetConfigurationActivity"

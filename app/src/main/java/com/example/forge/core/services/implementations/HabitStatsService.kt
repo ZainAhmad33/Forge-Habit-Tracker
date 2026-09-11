@@ -473,25 +473,33 @@ class HabitStatsService @Inject constructor(
             val sum = dailyTotals[date] ?: 0
             val isCompleted = sum >= target
 
-            val isSkipDay = when (habit.frequencyType) {
-                HabitFrequency.EveryDay -> false
-                HabitFrequency.SpecificDays -> {
-                    // Convert DayOfWeek (1=Mon..7=Sun) to app format (0=Mon..6=Sun)
-                    val dayOfWeekIdx = date.dayOfWeek.value - 1
-                    !habit.trackedDays.contains(dayOfWeekIdx)
-                }
-                HabitFrequency.DaysPerWeek -> {
-                    val startOfWeek = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                    val endOfWeek = startOfWeek.plusDays(6)
-
-                    var count = 0
-                    var d = startOfWeek
-                    while (!d.isAfter(endOfWeek)) {
-                        if (successfulDates.contains(d)) count++
-                        d = d.plusDays(1)
+            var isSkipDay = false
+            if (date.isBefore(timeService.toLocalDate(habit.createdAt))){
+                isSkipDay = true
+            }
+            else {
+                isSkipDay = when (habit.frequencyType) {
+                    HabitFrequency.EveryDay -> false
+                    HabitFrequency.SpecificDays -> {
+                        // Convert DayOfWeek (1=Mon..7=Sun) to app format (0=Mon..6=Sun)
+                        val dayOfWeekIdx = date.dayOfWeek.value - 1
+                        !habit.trackedDays.contains(dayOfWeekIdx)
                     }
 
-                    count == habit.numberOfTrackedDays && !isCompleted
+                    HabitFrequency.DaysPerWeek -> {
+                        val startOfWeek =
+                            date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                        val endOfWeek = startOfWeek.plusDays(6)
+
+                        var count = 0
+                        var d = startOfWeek
+                        while (!d.isAfter(endOfWeek)) {
+                            if (successfulDates.contains(d)) count++
+                            d = d.plusDays(1)
+                        }
+
+                        count == habit.numberOfTrackedDays && !isCompleted
+                    }
                 }
             }
 

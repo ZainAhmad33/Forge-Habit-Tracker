@@ -27,11 +27,15 @@ import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import com.example.forge.core.uiEntities.ProgressShape
+import com.example.forge.feature.habits.widget.CompletionBarChartWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.glance.appwidget.state.updateAppWidgetState
 
 @AndroidEntryPoint
 class HabitWidgetConfigurationActivity : ComponentActivity() {
@@ -75,19 +79,32 @@ class HabitWidgetConfigurationActivity : ComponentActivity() {
         }
     }
 
+
+    // Shared preference key accessible by all habit widgets
+    val HABIT_ID_KEY = stringPreferencesKey("habit_id")
+
     private fun saveWidgetConfig(habitId: UUID) {
         val context = this
         val glanceManager = GlanceAppWidgetManager(context)
-        
+
         lifecycleScope.launch {
             val glanceId = glanceManager.getGlanceIdBy(appWidgetId)
-            updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
-                prefs.toMutablePreferences().apply {
-                    this[HabitHeatmapWidget.habitIdKey] = habitId.toString()
-                }
+
+            // ✅ Mutate 'prefs' directly (do NOT use toMutablePreferences())
+            updateAppWidgetState(context, glanceId) { prefs ->
+                prefs[HABIT_ID_KEY] = habitId.toString()
             }
-            HabitHeatmapWidget().update(context, glanceId)
-            
+
+            // Determine which receiver triggered configuration
+            val appWidgetInfo = AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
+            val providerClassName = appWidgetInfo?.provider?.className
+
+            if (providerClassName?.endsWith("CompletionBarChartWidgetReceiver") == true) {
+                CompletionBarChartWidget().update(context, glanceId)
+            } else {
+                HabitHeatmapWidget().update(context, glanceId)
+            }
+
             val resultValue = Intent().apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             }

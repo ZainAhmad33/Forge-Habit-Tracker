@@ -16,7 +16,7 @@ import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.services.interfaces.DailyCompletion
 import com.example.forge.core.uiEntities.ActivityData
 import com.example.forge.core.uiEntities.ProgressShape
-import com.example.forge.feature.habits.widget.MonthlyCompletionWidget
+import com.example.forge.feature.habits.widget.CompletionBarChartWidget
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Date
@@ -222,7 +222,7 @@ fun HabitHeatmapWidgetLockedPreview() {
 @Preview(widthDp = 401, heightDp = 218)
 @Composable
 fun MonthlyCompletionWidgetPreview() {
-    val widget = MonthlyCompletionWidget()
+    val widget = CompletionBarChartWidget()
     val today = LocalDate.of(2026, 9, 11)
     val selectedMonth = YearMonth.of(2026, 8)
     val sixMonthsAgoDate = remember(today) {
@@ -279,7 +279,7 @@ fun MonthlyCompletionWidgetPreview() {
 @Preview(widthDp = 294, heightDp = 218)
 @Composable
 fun MonthlyCompletionMidWidgetPreview() {
-    val widget = MonthlyCompletionWidget()
+    val widget = CompletionBarChartWidget()
     val today = LocalDate.of(2026, 9, 11)
     val selectedMonth = YearMonth.of(2026, 8)
     val sixMonthsAgoDate = remember(today) {
@@ -337,7 +337,7 @@ fun MonthlyCompletionMidWidgetPreview() {
 @Composable
 fun MonthlyCompletionSmallWidgetPreview() {
 
-    val widget = MonthlyCompletionWidget()
+    val widget = CompletionBarChartWidget()
     val today = LocalDate.of(2026, 9, 11)
     val selectedMonth = YearMonth.of(2026, 8)
     val sixMonthsAgoDate = remember(today) {

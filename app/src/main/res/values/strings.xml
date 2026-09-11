@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Forge</string>
+    <string name="monthly_completion_widget_description">Track your daily habit completion history against your goal.</string>
 </resources>

@@ -52,6 +52,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.toArgb
+import androidx.datastore.preferences.core.Preferences
 
 // Workaround for restricted ColorProvider factory functions
 private fun fixedColorProvider(color: Color): ColorProvider = object : ColorProvider {
@@ -86,8 +87,9 @@ class HabitHeatmapWidget : GlanceAppWidget() {
 
         provideContent {
             GlanceTheme {
-                val prefs = currentState<androidx.datastore.preferences.core.Preferences>()
-                val habitIdString = prefs[habitIdKey]
+                val prefs = currentState<Preferences>()
+                val HABIT_ID_KEY = stringPreferencesKey("habit_id")
+                val habitIdString = prefs[HABIT_ID_KEY]
                 val habitId = remember(habitIdString) {
                     habitIdString?.let { UUID.fromString(it) }
                 }
