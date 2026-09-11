@@ -317,7 +317,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                 val calculatedWeeks = when {
                     size.width >= 320.dp -> 15
                     size.width >= 240.dp -> 11
-                    else -> 6
+                    else -> 8
                 }
 
                 // Exact padding and header offsets
