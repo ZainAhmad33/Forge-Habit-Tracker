@@ -102,7 +102,10 @@ fun HabitSelectionScreen(
     habits: List<Habit>,
     onHabitSelected: (UUID) -> Unit
 ) {
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .systemBarsPadding() // Consumes status bar and navigation bar insets
+        .padding(16.dp)) {
         Text(
             text = "Select a habit for the widget",
             style = MaterialTheme.typography.headlineSmall,
