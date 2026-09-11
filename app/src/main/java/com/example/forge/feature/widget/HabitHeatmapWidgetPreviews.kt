@@ -20,7 +20,7 @@ import java.util.Date
 import java.util.UUID
 
 @OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 200, heightDp = 200)
+@Preview(widthDp = 187, heightDp = 218)
 @Composable
 fun HabitHeatmapWidgetPreview() {
     val widget = HabitHeatmapWidget()
@@ -71,47 +71,7 @@ fun HabitHeatmapWidgetPreview() {
 }
 
 @OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 200, heightDp = 100)
-@Composable
-fun HabitHeatmapWidgetEmptyPreview() {
-    val widget = HabitHeatmapWidget()
-    GlanceTheme {
-        widget.EmptyWidgetContent()
-    }
-}
-
-@OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 200, heightDp = 300)
-@Composable
-fun HabitHeatmapWidgetLockedPreview() {
-    val widget = HabitHeatmapWidget()
-    val lockedHabit = Habit(
-        id = UUID.randomUUID(),
-        title = "Morning Run",
-        category = HabitCategory.Health,
-        emoji = "🏃",
-        habitType = HabitType.Quantity,
-        frequencyType = HabitFrequency.EveryDay,
-        numberOfTrackedDays = 7,
-        completionTargetPerDay = 5,
-        targetUnit = "km",
-        progressShape = ProgressShape.Circle,
-        isLocked = true,
-        createdAt = Date(),
-        updatedAt = Date()
-    )
-
-    GlanceTheme {
-        widget.HeatmapWidgetContent(
-            habit = lockedHabit,
-            streak = 2,
-            heatmapData = emptyList()
-        )
-    }
-}
-
-@OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 300, heightDp = 250)
+@Preview(widthDp = 294, heightDp = 218)
 @Composable
 fun HabitHeatmapWidgetMidWidePreview() {
     val widget = HabitHeatmapWidget()
@@ -164,7 +124,7 @@ fun HabitHeatmapWidgetMidWidePreview() {
 }
 
 @OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 400, heightDp = 250)
+@Preview(widthDp = 401, heightDp = 218)
 @Composable
 fun HabitHeatmapWidgetWidePreview() {
     val widget = HabitHeatmapWidget()
@@ -212,5 +172,45 @@ fun HabitHeatmapWidgetWidePreview() {
                 heatmapData = sampleHeatmapData
             )
         }
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 187, heightDp = 218)
+@Composable
+fun HabitHeatmapWidgetEmptyPreview() {
+    val widget = HabitHeatmapWidget()
+    GlanceTheme {
+        widget.EmptyWidgetContent()
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 187, heightDp = 218)
+@Composable
+fun HabitHeatmapWidgetLockedPreview() {
+    val widget = HabitHeatmapWidget()
+    val lockedHabit = Habit(
+        id = UUID.randomUUID(),
+        title = "Morning Run",
+        category = HabitCategory.Health,
+        emoji = "🏃",
+        habitType = HabitType.Quantity,
+        frequencyType = HabitFrequency.EveryDay,
+        numberOfTrackedDays = 7,
+        completionTargetPerDay = 5,
+        targetUnit = "km",
+        progressShape = ProgressShape.Circle,
+        isLocked = true,
+        createdAt = Date(),
+        updatedAt = Date()
+    )
+
+    GlanceTheme {
+        widget.HeatmapWidgetContent(
+            habit = lockedHabit,
+            streak = 2,
+            heatmapData = emptyList()
+        )
     }
 }

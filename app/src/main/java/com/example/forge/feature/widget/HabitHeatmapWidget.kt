@@ -302,7 +302,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                 }
             }
 
-            Spacer(GlanceModifier.height(6.dp))
+            //Spacer(GlanceModifier.height(6.dp))
 
             if (habit.isLocked) {
                 LockedHabitContent()
@@ -314,25 +314,31 @@ class HabitHeatmapWidget : GlanceAppWidget() {
 
                 val size = LocalSize.current
 
-                val calculatedWeeks = when {
-                    size.width >= 320.dp -> 15
-                    size.width >= 240.dp -> 11
-                    else -> 8
-                }
+                // Outer container padding: 12dp top + 12dp bottom = 24dp total
+                val verticalPaddingDp = 24f
 
-                // Exact padding and header offsets
-                val horizontalPaddingDp = 24f // 12dp left + 12dp right padding
+                // Outer container padding: 12dp left + 12dp right = 24dp total
+                val horizontalPaddingDp = 24f
 
-                val availableWidthDp = (size.width.value - horizontalPaddingDp).coerceAtLeast(100f)
+                // Header height: ~26dp (18sp emoji / 16sp bold text bounds)
+                val headerHeightDp = 26f
 
-                val spacingDp = 2.5f
-                val dayLabelWidthDp = 22f
+                // Total available width for the canvas
+                val availableWidthDp = (size.width.value - horizontalPaddingDp).coerceAtLeast(0f)
+
+                // Total available height for the canvas
+                val availableHeightDp = (size.height.value - verticalPaddingDp - headerHeightDp).coerceAtLeast(0f)
+
+                val dayLabelWidthDp = 22f// 2. Define fixed layout constraints
+                val monthHeaderHeightDp = 18f
+                val spacingDp = 3f
 
                 // 1. Calculate square size strictly from available HEIGHT to prevent image downscaling
-                val squareSizeDp = (availableWidthDp - dayLabelWidthDp - (spacingDp * (calculatedWeeks - 1))) / calculatedWeeks
+                val squareSizeDp = ((availableHeightDp - monthHeaderHeightDp - (6 * spacingDp)) / 7f).coerceAtLeast(1f)
 
                 // 2. Calculate how many full week columns fit across available width
                 val gridAvailableWidthDp = availableWidthDp - dayLabelWidthDp
+                val calculatedWeeks = (gridAvailableWidthDp/(squareSizeDp + spacingDp)).toInt()
 
                 // 3. Absorbs leftover horizontal pixels into the gap so grid spans 100% of available width
                 val totalGridWidthDp = (calculatedWeeks * (squareSizeDp + spacingDp)) - spacingDp
