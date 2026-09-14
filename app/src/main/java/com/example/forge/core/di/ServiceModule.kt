@@ -20,6 +20,8 @@ import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.core.services.interfaces.IUserService
 import com.example.forge.core.services.interfaces.INotificationService
 import com.example.forge.core.services.interfaces.IReminderManager
+import com.example.forge.core.services.interfaces.IWidgetUpdater
+import com.example.forge.feature.widget.GlanceWidgetUpdater
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -89,4 +91,10 @@ abstract class ServiceModule {
     abstract fun bindReminderManager(
         impl: ReminderManager
     ): IReminderManager
+
+    @Binds
+    @Singleton
+    abstract fun bindWidgetUpdater(
+        impl: GlanceWidgetUpdater
+    ): IWidgetUpdater
 }

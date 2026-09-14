@@ -56,7 +56,8 @@ fun HabitHeatmapWidgetPreview() {
     val sampleHeatmapData = remember {
         (0 until 98).map { dayOffset ->
             val date = today.minusDays(dayOffset.toLong())
-            val percentage = if (dayOffset % 2 == 0) 100 else 0 // Alternate days for clear visual testing
+            // Show varied intensities (0, 20, 40, 60, 80, 100)
+            val percentage = (dayOffset % 6) * 20
             ActivityData(
                 date = date,
                 percentage = percentage

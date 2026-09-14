@@ -8,5 +8,6 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
-    android:previewLayout="@layout/glance_default_loading_layout"
+    android:previewImage="@mipmap/ic_launcher"
+    android:previewLayout="@layout/widget_preview_heatmap"
     android:configure="com.example.forge.feature.widget.HabitWidgetConfigurationActivity" />

@@ -10,6 +10,7 @@ import com.example.forge.core.database.interfaces.IHabitRepository
 import com.example.forge.core.services.interfaces.IHabitsService
 import com.example.forge.core.services.interfaces.IReminderManager
 import com.example.forge.core.services.interfaces.ITimeService
+import com.example.forge.core.services.interfaces.IWidgetUpdater
 import com.example.forge.core.uiEntities.CategoryPill
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.feature.upserthabit.state.UpsertHabitUiState
@@ -24,7 +25,8 @@ class HabitsService @Inject constructor(
     private val habitRepository: IHabitRepository,
     private val habitActivityRepository: IHabitActivityRepository,
     private val timeService: ITimeService,
-    private val reminderManager: IReminderManager
+    private val reminderManager: IReminderManager,
+    private val widgetUpdater: IWidgetUpdater
 ) : IHabitsService {
     override fun getAllowedCategories(): List<CategoryPill> {
         return HabitCategory.entries
@@ -42,6 +44,7 @@ class HabitsService @Inject constructor(
             reminderManager.cancelReminders(habitId)
             habitActivityRepository.deleteActivitiesForHabit(habitId)
             habitRepository.deleteHabit(habit)
+            widgetUpdater.updateAllWidgets()
         }
     }
 
@@ -105,6 +108,7 @@ class HabitsService @Inject constructor(
         } else {
             reminderManager.cancelReminders(habit.id)
         }
+        widgetUpdater.updateAllWidgets()
     }
 
     suspend fun isHabitCompletedToday(habitId: UUID, target: Int): Boolean{

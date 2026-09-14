@@ -5,6 +5,7 @@ import com.example.forge.core.database.interfaces.IHabitActivityRepository
 import com.example.forge.core.database.pojo.DailyHabitQuantity
 import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.ITimeService
+import com.example.forge.core.services.interfaces.IWidgetUpdater
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 class HabitActivityService @Inject constructor(
     private val activityRepository: IHabitActivityRepository,
-    private val timeService: ITimeService
+    private val timeService: ITimeService,
+    private val widgetUpdater: IWidgetUpdater
 ) : IHabitActivityService {
 
     override suspend fun logHabitActivity(habitId: UUID, quantity: Int) {
@@ -25,6 +27,7 @@ class HabitActivityService @Inject constructor(
             quantity = quantity
         )
         activityRepository.logActivity(activity)
+        widgetUpdater.updateAllWidgets()
     }
 
     override suspend fun logSkipActivity(habitId: UUID, quantity: Int, date: Date) {
@@ -35,6 +38,7 @@ class HabitActivityService @Inject constructor(
             createdAt = date
         )
         activityRepository.logActivity(activity)
+        widgetUpdater.updateAllWidgets()
     }
 
     override fun getActivitiesForHabits(habitIds: List<UUID>, from: Date, to: Date): Flow<List<HabitActivity>> {
@@ -77,5 +81,6 @@ class HabitActivityService @Inject constructor(
 
     override suspend fun deleteHabitActivity(activityId: UUID) {
         activityRepository.deleteActivity(activityId)
+        widgetUpdater.updateAllWidgets()
     }
 }

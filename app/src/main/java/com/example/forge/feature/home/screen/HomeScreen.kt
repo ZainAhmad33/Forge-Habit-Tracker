@@ -190,6 +190,12 @@ fun HomeScreen(
                             }
                         }
 
+                        if(uiState.todaysHabits.size < 3 && uiState.otherHabits.isNotEmpty()){
+                            item {
+                                Spacer(modifier = Modifier.height(32.dp))
+                            }
+                        }
+
                         if (uiState.otherHabits.isNotEmpty()) {
                             item {
                                 SectionHeader(

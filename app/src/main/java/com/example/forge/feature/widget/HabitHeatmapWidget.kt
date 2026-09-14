@@ -52,6 +52,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.ColorUtils
 import androidx.datastore.preferences.core.Preferences
 
 // Workaround for restricted ColorProvider factory functions
@@ -124,6 +125,54 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                         EmptyWidgetContent()
                     }
                 }
+            }
+        }
+    }
+
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        val today = LocalDate.now()
+        val sixMonthsAgoDate = java.util.Date.from(
+            today.minusMonths(6)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+        )
+
+        val sampleHabit = Habit(
+            id = UUID.randomUUID(),
+            title = "Morning Workout",
+            category = com.example.forge.core.database.entity.HabitCategory.Health,
+            emoji = "🏋️",
+            habitType = com.example.forge.core.database.entity.HabitType.YesNo,
+            frequencyType = com.example.forge.core.database.entity.HabitFrequency.EveryDay,
+            numberOfTrackedDays = 7,
+            completionTargetPerDay = 1,
+            targetUnit = "Session",
+            progressShape = com.example.forge.core.uiEntities.ProgressShape.Circle,
+            createdAt = sixMonthsAgoDate,
+            updatedAt = java.util.Date()
+        )
+
+        val sampleHeatmapData = (0 until 98).map { dayOffset ->
+            val date = today.minusDays(dayOffset.toLong())
+            // Show varied intensities for a better preview
+            val percentage = when {
+                dayOffset % 7 == 0 -> 100
+                dayOffset % 7 == 1 -> 80
+                dayOffset % 7 == 2 -> 60
+                dayOffset % 7 == 3 -> 40
+                dayOffset % 7 == 4 -> 20
+                else -> 0
+            }
+            ActivityData(date = date, percentage = percentage)
+        }
+
+        provideContent {
+            GlanceTheme {
+                HeatmapWidgetContent(
+                    habit = sampleHabit,
+                    streak = 10,
+                    heatmapData = sampleHeatmapData
+                )
             }
         }
     }
@@ -208,10 +257,17 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                 if (date.isAfter(today) || date.isBefore(habitCreatedAt)) continue
 
                 val activity = activityMap[date]
-                val hasActivity = activity != null && activity.percentage > 0
+                val percentage = activity?.percentage ?: 0
+                val hasActivity = percentage > 0
 
-                val cellBg = if (hasActivity) primaryColor else surfaceVariantColor
-                val cellFg = if (hasActivity) onPrimaryColor else onSurfaceVariantColor
+                val cellBg = if (hasActivity) {
+                    ColorUtils.blendARGB(surfaceVariantColor, primaryColor, (percentage / 100f).coerceIn(0f, 1f))
+                } else {
+                    surfaceVariantColor
+                }
+                
+                // For text color, if intensity is very high, use onPrimary for contrast
+                val cellFg = if (hasActivity && percentage > 70) onPrimaryColor else onSurfaceVariantColor
 
                 val cellTop = monthHeaderHeightPx + (dayIndex * (squareSizePx + spacingPx))
                 val rect = RectF(xOffset, cellTop, xOffset + squareSizePx, cellTop + squareSizePx)
@@ -333,7 +389,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
 
                 val dayLabelWidthDp = 22f// 2. Define fixed layout constraints
                 val monthHeaderHeightDp = 18f
-                val spacingDp = 3f
+                val spacingDp = 2f
 
                 // 1. Calculate square size strictly from available HEIGHT to prevent image downscaling
                 val squareSizeDp = ((availableHeightDp - monthHeaderHeightDp - (6 * spacingDp)) / 7f).coerceAtLeast(1f)

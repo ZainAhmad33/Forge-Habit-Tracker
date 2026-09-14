@@ -6,6 +6,7 @@ import com.example.forge.core.services.interfaces.IHabitActivityService
 import com.example.forge.core.services.interfaces.IHabitMaintenanceService
 import com.example.forge.core.services.interfaces.IHabitStatsService
 import com.example.forge.core.services.interfaces.ITimeService
+import com.example.forge.core.services.interfaces.IWidgetUpdater
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
@@ -21,7 +22,8 @@ class HabitMaintenanceService @Inject constructor(
     private val habitRepository: IHabitRepository,
     private val activityService: IHabitActivityService,
     private val statsService: IHabitStatsService,
-    private val timeService: ITimeService
+    private val timeService: ITimeService,
+    private val widgetUpdater: IWidgetUpdater
 ) : IHabitMaintenanceService {
 
     override suspend fun performMaintenanceForAll() {
@@ -29,6 +31,7 @@ class HabitMaintenanceService @Inject constructor(
         for (habit in habits) {
             performMaintenance(habit.id)
         }
+        widgetUpdater.updateAllWidgets()
     }
 
     override suspend fun performMaintenance(habitId: UUID) {
@@ -113,6 +116,7 @@ class HabitMaintenanceService @Inject constructor(
         habit.skipDaysAllowed = habit.skipDaysAllowed.coerceAtLeast(0)
         
         habitRepository.createHabit(habit) // Room @Insert(onConflict = REPLACE)
+        widgetUpdater.updateAllWidgets()
     }
 
     private fun isDayMissedInternal(habit: Habit, date: LocalDate, completedQuantityMap: Map<LocalDate, Int>, today: LocalDate): Boolean {

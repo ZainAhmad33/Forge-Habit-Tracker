@@ -53,6 +53,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 import androidx.datastore.preferences.core.Preferences
+import com.example.forge.feature.widget.LockedHabitContent
 
 
 class CompletionBarChartWidget: GlanceAppWidget(){
@@ -145,6 +146,60 @@ class CompletionBarChartWidget: GlanceAppWidget(){
         }
     }
 
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        val today = LocalDate.now()
+        val currentMonth = YearMonth.now()
+        val lastMonth = currentMonth.minusMonths(1)
+        val sixMonthsAgoDate = java.util.Date.from(
+            today.minusMonths(6)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+        )
+
+        val sampleHabit = Habit(
+            id = UUID.randomUUID(),
+            title = "Daily Reading",
+            category = com.example.forge.core.database.entity.HabitCategory.Productivity,
+            emoji = "📖",
+            habitType = com.example.forge.core.database.entity.HabitType.YesNo,
+            frequencyType = com.example.forge.core.database.entity.HabitFrequency.EveryDay,
+            numberOfTrackedDays = 7,
+            completionTargetPerDay = 2500,
+            targetUnit = "Pages",
+            progressShape = com.example.forge.core.uiEntities.ProgressShape.Circle,
+            createdAt = sixMonthsAgoDate,
+            updatedAt = java.util.Date()
+        )
+
+        val mockMonthData = (1..lastMonth.lengthOfMonth()).map { day ->
+            val isSkip = day % 7 == 0
+            DailyCompletion(
+                day = day,
+                completedQuantity = if (isSkip) 0 else 3000,
+                isSkipDay = isSkip
+            )
+        } + (1..today.dayOfMonth).map { day ->
+            val isSkip = day % 7 == 0
+            DailyCompletion(
+                day = day,
+                completedQuantity = if (isSkip) 0 else 3000,
+                isSkipDay = isSkip
+            )
+        }
+
+        provideContent {
+            GlanceTheme {
+                CompletionBarChartWidgetContent(
+                    habit = sampleHabit,
+                    streak = 15,
+                    monthData = mockMonthData,
+                    target = 2500,
+                    today = today
+                )
+            }
+        }
+    }
+
     @Composable
     internal fun CompletionBarChartWidgetContent(
         habit: Habit,
@@ -219,94 +274,119 @@ class CompletionBarChartWidget: GlanceAppWidget(){
             }
 
             Spacer(GlanceModifier.height(8.dp))
+            if (habit.isLocked) {
+                LockedHabitContent()
+            } else {
+                // 2. Chart Container Card
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .defaultWeight()
+                        .background(GlanceTheme.colors.widgetBackground)
 
-            // 2. Chart Container Card
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxWidth()
-                    .defaultWeight()
-                    .background(GlanceTheme.colors.widgetBackground)
-
-            ) {
-                Column(
-                    modifier = GlanceModifier.fillMaxSize()
                 ) {
-                    val size = LocalSize.current
-                    // Static Legends
+                    Column(
+                        modifier = GlanceModifier.fillMaxSize()
+                    ) {
+                        val size = LocalSize.current
+                        // Static Legends
 
-                    if (size.width >= 250.dp){
-                        Row(
-                            modifier = GlanceModifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            WidgetLegendItem(color = androidx.compose.ui.graphics.Color(0xFF4CAF50), label = "On Goal")
-                            // Use Spacer instead of horizontalArrangement
-                            Spacer(GlanceModifier.width(12.dp))
-                            WidgetLegendItem(color = GlanceTheme.colors.error.getColor(context), label = "Below Goal")
-                            // Use Spacer instead of horizontalArrangement
-                            Spacer(GlanceModifier.width(12.dp))
-                            WidgetLegendItem(color = GlanceTheme.colors.outline.getColor(context), label = "Skip Day")
+                        if (size.width >= 250.dp) {
+                            Row(
+                                modifier = GlanceModifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                WidgetLegendItem(
+                                    color = androidx.compose.ui.graphics.Color(0xFF4CAF50),
+                                    label = "On Goal"
+                                )
+                                // Use Spacer instead of horizontalArrangement
+                                Spacer(GlanceModifier.width(12.dp))
+                                WidgetLegendItem(
+                                    color = GlanceTheme.colors.error.getColor(context),
+                                    label = "Below Goal"
+                                )
+                                // Use Spacer instead of horizontalArrangement
+                                Spacer(GlanceModifier.width(12.dp))
+                                WidgetLegendItem(
+                                    color = GlanceTheme.colors.outline.getColor(context),
+                                    label = "Skip Day"
+                                )
+                            }
+                            Spacer(GlanceModifier.height(8.dp))
                         }
-                        Spacer(GlanceModifier.height(8.dp))
-                    }
 
 
-                    val density = context.resources.displayMetrics.density
+                        val density = context.resources.displayMetrics.density
 
-                    // Approximate dynamic pixel sizing based on Glance available dimensions
-                    val widthPx = ((size.width.value - 24f - 24f) * density).toInt().coerceAtLeast(100)
-                    val heightPx = ((size.height.value - 32f - 24f - 20f) * density).toInt().coerceAtLeast(80)
+                        // Approximate dynamic pixel sizing based on Glance available dimensions
+                        val widthPx =
+                            ((size.width.value - 24f - 24f) * density).toInt().coerceAtLeast(100)
+                        val heightPx =
+                            ((size.height.value - 32f - 24f - 20f) * density).toInt()
+                                .coerceAtLeast(80)
 
-                    // 1. Extract the ColorProviders first (These are @Composable calls)
-                    val errorProvider = GlanceTheme.colors.error
-                    val outlineProvider = GlanceTheme.colors.outline
-                    val surfaceVariantProvider = GlanceTheme.colors.surfaceVariant
-                    val onSurfaceVariantProvider = GlanceTheme.colors.onSurfaceVariant
+                        // 1. Extract the ColorProviders first (These are @Composable calls)
+                        val errorProvider = GlanceTheme.colors.error
+                        val outlineProvider = GlanceTheme.colors.outline
+                        val surfaceVariantProvider = GlanceTheme.colors.surfaceVariant
+                        val onSurfaceVariantProvider = GlanceTheme.colors.onSurfaceVariant
 
 // 2. Resolve the exact colors safely inside runCatching (Standard function calls)
-                    val successColor = android.graphics.Color.parseColor("#4CAF50")
+                        val successColor = android.graphics.Color.parseColor("#4CAF50")
 
-                    val errorColor = remember(errorProvider, context) {
-                        runCatching { errorProvider.getColor(context).toArgb() }.getOrDefault(android.graphics.Color.RED)
-                    }
-                    val skipColor = remember(outlineProvider, context) {
-                        runCatching { outlineProvider.getColor(context).toArgb() }.getOrDefault(android.graphics.Color.GRAY)
-                    }
-                    val trackColor = remember(surfaceVariantProvider, context) {
-                        runCatching { surfaceVariantProvider.getColor(context).toArgb() }.getOrDefault(android.graphics.Color.LTGRAY)
-                    }
-                    val targetLineColor = remember(outlineProvider, context) {
-                        runCatching { outlineProvider.getColor(context).toArgb() }.getOrDefault(android.graphics.Color.DKGRAY)
-                    }
-                    val labelTextColor = remember(onSurfaceVariantProvider, context) {
-                        runCatching { onSurfaceVariantProvider.getColor(context).toArgb() }.getOrDefault(android.graphics.Color.BLACK)
-                    }
-
-                    val chartBitmap = remember(monthData, target, today, widthPx, heightPx) {
-                        runCatching {
-                            renderCompletionBarChartBitmap(
-                                context = context,
-                                data = monthData,
-                                target = target,
-                                today = today,
-                                widthPx = widthPx,
-                                heightPx = heightPx,
-                                successColor = successColor,
-                                errorColor = errorColor,
-                                skipColor = skipColor,
-                                trackColor = trackColor,
-                                targetLineColor = targetLineColor,
-                                labelTextColor = labelTextColor
+                        val errorColor = remember(errorProvider, context) {
+                            runCatching { errorProvider.getColor(context).toArgb() }.getOrDefault(
+                                android.graphics.Color.RED
                             )
-                        }.getOrNull()
-                    }
+                        }
+                        val skipColor = remember(outlineProvider, context) {
+                            runCatching { outlineProvider.getColor(context).toArgb() }.getOrDefault(
+                                android.graphics.Color.GRAY
+                            )
+                        }
+                        val trackColor = remember(surfaceVariantProvider, context) {
+                            runCatching {
+                                surfaceVariantProvider.getColor(context).toArgb()
+                            }.getOrDefault(android.graphics.Color.LTGRAY)
+                        }
+                        val targetLineColor = remember(outlineProvider, context) {
+                            runCatching { outlineProvider.getColor(context).toArgb() }.getOrDefault(
+                                android.graphics.Color.DKGRAY
+                            )
+                        }
+                        val labelTextColor = remember(onSurfaceVariantProvider, context) {
+                            runCatching {
+                                onSurfaceVariantProvider.getColor(context).toArgb()
+                            }.getOrDefault(android.graphics.Color.BLACK)
+                        }
 
-                    if (chartBitmap != null) {
-                        Image(
-                            provider = ImageProvider(chartBitmap),
-                            contentDescription = "Monthly completion bar chart",
-                            modifier = GlanceModifier.fillMaxWidth().defaultWeight()
-                        )
+                        val chartBitmap = remember(monthData, target, today, widthPx, heightPx) {
+                            runCatching {
+                                renderCompletionBarChartBitmap(
+                                    context = context,
+                                    data = monthData,
+                                    target = target,
+                                    today = today,
+                                    widthPx = widthPx,
+                                    heightPx = heightPx,
+                                    successColor = successColor,
+                                    errorColor = errorColor,
+                                    skipColor = skipColor,
+                                    trackColor = trackColor,
+                                    targetLineColor = targetLineColor,
+                                    labelTextColor = labelTextColor
+                                )
+                            }.getOrNull()
+                        }
+
+                        if (chartBitmap != null) {
+                            Image(
+                                provider = ImageProvider(chartBitmap),
+                                contentDescription = "Monthly completion bar chart",
+                                modifier = GlanceModifier.fillMaxWidth().defaultWeight()
+                            )
+                        }
                     }
                 }
             }

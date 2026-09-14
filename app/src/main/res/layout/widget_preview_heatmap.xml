@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#1C1B1F">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <View
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="#4F378B"/>
+        <View
+            android:layout_width="100dp"
+            android:layout_height="12dp"
+            android:layout_marginStart="8dp"
+            android:background="#E6E1E5"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <!-- Simulate a few columns of a heatmap -->
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="4dp">
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#313033"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:background="#313033"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="4dp">
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#313033"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#313033"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:background="#D0BCFF"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="4dp">
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#313033"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:layout_marginBottom="4dp" android:background="#D0BCFF"/>
+            <View android:layout_width="16dp" android:layout_height="16dp" android:background="#D0BCFF"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
