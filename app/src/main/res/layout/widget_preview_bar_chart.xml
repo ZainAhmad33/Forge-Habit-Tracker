@@ -11,11 +11,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        <View
+        <FrameLayout
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:background="#4F378B"/>
-        <View
+        <FrameLayout
             android:layout_width="80dp"
             android:layout_height="10dp"
             android:layout_marginStart="8dp"
@@ -28,12 +28,12 @@
         android:layout_marginTop="12dp"
         android:gravity="bottom"
         android:orientation="horizontal">
-        <View android:layout_width="12dp" android:layout_height="40dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <View android:layout_width="12dp" android:layout_height="70dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <View android:layout_width="12dp" android:layout_height="30dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <View android:layout_width="12dp" android:layout_height="50dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <View android:layout_width="12dp" android:layout_height="80dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <View android:layout_width="12dp" android:layout_height="20dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <View android:layout_width="12dp" android:layout_height="60dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="40dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="70dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="30dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="50dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="80dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="20dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
+        <FrameLayout android:layout_width="12dp" android:layout_height="60dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
     </LinearLayout>
 </LinearLayout>
