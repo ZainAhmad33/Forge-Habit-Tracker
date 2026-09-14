@@ -26,12 +26,14 @@ class HabitMaintenanceServiceTest {
     private lateinit var statsService: FakeHabitStatsService
     private lateinit var realStatsService: HabitStatsService
     private lateinit var timeService: FakeTimeService
+    private lateinit var widgetUpdater: FakeWidgetUpdater
 
     @Before
     fun setup() {
         habitRepo = FakeHabitRepository()
         activityService = FakeHabitActivityService()
         timeService = FakeTimeService()
+        widgetUpdater = FakeWidgetUpdater()
 
         realStatsService = HabitStatsService(
             habitRepository = habitRepo,
@@ -44,7 +46,8 @@ class HabitMaintenanceServiceTest {
             habitRepository = habitRepo,
             activityService = activityService,
             statsService = statsService,
-            timeService = timeService
+            timeService = timeService,
+            widgetUpdater = widgetUpdater
         )
     }
 
@@ -389,5 +392,12 @@ class HabitMaintenanceServiceTest {
         override fun toLocalDate(date: Date): LocalDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
         override fun toStartOfDayDate(localDate: LocalDate): Date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
         override fun toEndOfDayDate(localDate: LocalDate): Date = Date.from(localDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant())
+    }
+
+    class FakeWidgetUpdater : IWidgetUpdater {
+        var updateAllWidgetsCalledCount = 0
+        override suspend fun updateAllWidgets() {
+            updateAllWidgetsCalledCount++
+        }
     }
 }

@@ -14,6 +14,7 @@ import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.database.entity.HabitFrequency
 import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.services.interfaces.DailyCompletion
+import com.example.forge.core.services.interfaces.LeaderboardEntry
 import com.example.forge.core.uiEntities.ActivityData
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.feature.habits.widget.CompletionBarChartWidget
@@ -31,7 +32,7 @@ fun HabitHeatmapWidgetPreview() {
 
     // Convert LocalDate to java.util.Date cleanly
     val sixMonthsAgoDate = remember(today) {
-        java.util.Date.from(
+        Date.from(
             today.minusMonths(6)
                 .atStartOfDay(java.time.ZoneId.systemDefault())
                 .toInstant()
@@ -276,6 +277,7 @@ fun MonthlyCompletionWidgetPreview() {
     }
 }
 
+
 @OptIn(ExperimentalGlancePreviewApi::class)
 @Preview(widthDp = 294, heightDp = 218)
 @Composable
@@ -390,3 +392,78 @@ fun MonthlyCompletionSmallWidgetPreview() {
         )
     }
 }
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 187, heightDp = 218)
+@Composable
+fun HabitLeaderboardWidgetPreview() {
+    val widget = HabitLeaderboardWidget()
+    val sampleEntries = listOf(
+        LeaderboardEntry(UUID.randomUUID(), "Hydration", "💧", 0.9f),
+        LeaderboardEntry(UUID.randomUUID(), "Gym Session", "🏋️", 0.75f),
+        LeaderboardEntry(UUID.randomUUID(), "Daily Reading", "📚", 0.6f),
+        LeaderboardEntry(UUID.randomUUID(), "Morning Meditation", "🧘", 0.5f),
+        LeaderboardEntry(UUID.randomUUID(), "Sleep Hygiene", "😴", 0.4f)
+    )
+
+    GlanceTheme {
+        widget.LeaderboardWidgetContent(sampleEntries)
+    }
+}
+
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 294, heightDp = 218)
+@Composable
+fun HabitLeaderboardMedWidgetPreview() {
+    val widget = HabitLeaderboardWidget()
+    val sampleEntries = listOf(
+        LeaderboardEntry(UUID.randomUUID(), "Hydration", "💧", 0.9f),
+        LeaderboardEntry(UUID.randomUUID(), "Gym Session", "🏋️", 0.75f),
+        LeaderboardEntry(UUID.randomUUID(), "Daily Reading", "📚", 0.6f),
+        LeaderboardEntry(UUID.randomUUID(), "Morning Meditation", "🧘", 0.5f),
+        LeaderboardEntry(UUID.randomUUID(), "Sleep Hygiene", "😴", 0.4f)
+    )
+
+    GlanceTheme {
+        widget.LeaderboardWidgetContent(sampleEntries)
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 187, heightDp = 327)
+@Composable
+fun HabitLeaderboardLongWidgetPreview() {
+    val widget = HabitLeaderboardWidget()
+    val sampleEntries = listOf(
+        LeaderboardEntry(UUID.randomUUID(), "Hydration", "💧", 0.9f),
+        LeaderboardEntry(UUID.randomUUID(), "Gym Session", "🏋️", 0.75f),
+        LeaderboardEntry(UUID.randomUUID(), "Daily Reading", "📚", 0.6f),
+        LeaderboardEntry(UUID.randomUUID(), "Morning Meditation", "🧘", 0.5f),
+        LeaderboardEntry(UUID.randomUUID(), "Sleep Hygiene", "😴", 0.4f)
+    )
+
+    GlanceTheme {
+        widget.LeaderboardWidgetContent(sampleEntries)
+    }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 294, heightDp = 327)
+@Composable
+fun HabitLeaderboardMedLongWidgetPreview() {
+    val widget = HabitLeaderboardWidget()
+    val sampleEntries = listOf(
+        LeaderboardEntry(UUID.randomUUID(), "Hydration", "💧", 0.9f),
+        LeaderboardEntry(UUID.randomUUID(), "Gym Session", "🏋️", 0.75f),
+        LeaderboardEntry(UUID.randomUUID(), "Daily Reading", "📚", 0.6f),
+        LeaderboardEntry(UUID.randomUUID(), "Morning Meditation", "🧘", 0.5f),
+        LeaderboardEntry(UUID.randomUUID(), "Sleep Hygiene", "😴", 0.4f)
+    )
+
+    GlanceTheme {
+        widget.LeaderboardWidgetContent(sampleEntries)
+    }
+}
+
+
