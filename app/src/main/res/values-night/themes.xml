@@ -3,6 +3,7 @@
     <!-- Dark mode layout configurations using Material 3 style semantics -->
     <style name="Theme.Forge" parent="android:Theme.Material.NoActionBar">
         <item name="android:colorBackground">#1C1B1F</item>
+        <item name="android:windowBackground">#1C1B1F</item>
         <item name="android:textColorPrimary">#E6E1E5</item>
         <item name="android:textColorSecondary">#938F99</item>
         <item name="android:colorPrimary">#D0BCFF</item>

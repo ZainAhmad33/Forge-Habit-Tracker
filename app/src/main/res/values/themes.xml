@@ -3,6 +3,7 @@
     <!-- Light mode layout configurations matching basic Material 3 color tones -->
     <style name="Theme.Forge" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorBackground">#FFFFFBFE</item>
+        <item name="android:windowBackground">#FFFFFBFE</item>
         <item name="android:textColorPrimary">#1C1B1F</item>
         <item name="android:textColorSecondary">#49454F</item>
         <item name="android:colorPrimary">#6650a4</item>

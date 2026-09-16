@@ -254,7 +254,7 @@ class CompletionBarChartWidget: GlanceAppWidget(){
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        provider = ImageProvider(R.drawable.ic_forge_flame),
+                        provider = ImageProvider(R.drawable.ic_local_fire_department),
                         contentDescription = null,
                         modifier = GlanceModifier.size(14.dp),
                         colorFilter = androidx.glance.ColorFilter.tint(GlanceTheme.colors.onTertiaryContainer)
