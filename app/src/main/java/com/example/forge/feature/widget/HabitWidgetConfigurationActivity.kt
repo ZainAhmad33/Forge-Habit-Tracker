@@ -105,6 +105,13 @@ class HabitWidgetConfigurationActivity : ComponentActivity() {
                 HabitHeatmapWidget().update(context, glanceId)
             }
 
+            // Notify launcher that configuration is complete and update broadcast is dispatched
+            val updateIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                `package` = context.packageName
+            }
+            context.sendBroadcast(updateIntent)
+
             val resultValue = Intent().apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             }

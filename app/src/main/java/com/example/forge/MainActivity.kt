@@ -105,7 +105,11 @@ fun ForgeApp(
 
     LaunchedEffect(notificationHabitId, currentRoute) {
         if (notificationHabitId != null && currentRoute != null) {
-            navController.navigate("habit_detail/$notificationHabitId")
+            navController.navigate("habit_detail/$notificationHabitId") {
+                // Clear backstack duplicates if clicking multiple times from outside the app
+                popUpTo("home") { saveState = false }
+                launchSingleTop = true
+            }
             onNotificationHandled()
         }
     }

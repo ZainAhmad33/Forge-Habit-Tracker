@@ -437,7 +437,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                     Image(
                         provider = ImageProvider(heatmapBitmap),
                         contentDescription = "Habit Heatmap Grid",
-                        modifier = GlanceModifier.fillMaxWidth() // Force the image to span the full box
+                        modifier = GlanceModifier.fillMaxWidth()
                     )
                 }
             }
@@ -468,11 +468,12 @@ class NavigateToHabitAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        val habitId = parameters[HabitHeatmapWidget.habitIdParam]
+        // Check either parameter key to ensure compatibility across all sharing widgets
+        val habitId = parameters[HabitHeatmapWidget.habitIdParam] ?: parameters[com.example.forge.feature.habits.widget.CompletionBarChartWidget.habitIdParam]
         if (habitId != null) {
             val intent = Intent(context, MainActivity::class.java).apply {
                 putExtra("habit_id", habitId)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
             context.startActivity(intent)
         }
