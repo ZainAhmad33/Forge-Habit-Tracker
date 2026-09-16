@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.Forge" parent="android:Theme.Material.NoActionBar" />
+    <!-- Light mode layout configurations matching basic Material 3 color tones -->
+    <style name="Theme.Forge" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorBackground">#FFFFFBFE</item>
+        <item name="android:textColorPrimary">#1C1B1F</item>
+        <item name="android:textColorSecondary">#49454F</item>
+        <item name="android:colorPrimary">#6650a4</item>
+    </style>
 </resources>

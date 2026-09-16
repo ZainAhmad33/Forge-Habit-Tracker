@@ -77,12 +77,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent) // Mandated: Update intent instance to prevent reading old intent cache later
         handleIntent(intent)
     }
 
     private fun handleIntent(intent: Intent?) {
         intent?.getStringExtra("habit_id")?.let {
             notificationHabitId = it
+            intent.removeExtra("habit_id") // Consume and clear parameter to prevent loops on lifecycle resets
         }
     }
 }

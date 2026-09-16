@@ -95,16 +95,22 @@ private fun SlidingTabRow(
 
     val density = LocalDensity.current
 
-    // Animate target offset and width of the background pill
+    // Animate target offset and width of the background pill with a juicy, custom spring damping ratio for a bouncy feel
     val animatedOffset by animateDpAsState(
         targetValue = tabOffsets[selectedIndex] ?: 0.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "TabOffsetAnimation"
     )
 
     val animatedWidth by animateDpAsState(
         targetValue = tabWidths[selectedIndex] ?: 0.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "TabWidthAnimation"
     )
 

@@ -190,12 +190,6 @@ fun HomeScreen(
                             }
                         }
 
-                        if(uiState.todaysHabits.size < 3 && uiState.otherHabits.isNotEmpty()){
-                            item {
-                                Spacer(modifier = Modifier.height(32.dp))
-                            }
-                        }
-
                         if (uiState.otherHabits.isNotEmpty()) {
                             item {
                                 SectionHeader(
@@ -216,6 +210,14 @@ fun HomeScreen(
                             item {
                                 // No results for current search or category filter
                                 EmptySearchState(query = uiState.searchQuery)
+                            }
+                        }
+
+                        // Add bottom spacing buffer if layout content is too sparse (e.g. only 1 row) to clear the floating bottom navigation bar
+                        val totalRows = uiState.todaysHabits.chunked(2).size + uiState.otherHabits.chunked(2).size
+                        if (totalRows <= 1) {
+                            item {
+                                Spacer(modifier = Modifier.height(80.dp))
                             }
                         }
                     } else {
