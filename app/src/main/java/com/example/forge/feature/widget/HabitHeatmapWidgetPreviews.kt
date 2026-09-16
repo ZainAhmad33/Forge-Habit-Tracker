@@ -284,7 +284,7 @@ fun MonthlyCompletionWidgetPreview() {
 fun MonthlyCompletionMidWidgetPreview() {
     val widget = CompletionBarChartWidget()
     val today = LocalDate.of(2026, 9, 11)
-    val selectedMonth = YearMonth.of(2026, 8)
+    val selectedMonth = YearMonth.of(2026, 9)
     val sixMonthsAgoDate = remember(today) {
         java.util.Date.from(
             today.minusMonths(6)
@@ -341,8 +341,8 @@ fun MonthlyCompletionMidWidgetPreview() {
 fun MonthlyCompletionSmallWidgetPreview() {
 
     val widget = CompletionBarChartWidget()
-    val today = LocalDate.of(2026, 9, 11)
-    val selectedMonth = YearMonth.of(2026, 8)
+    val today = LocalDate.of(2026, 9, 14)
+    val selectedMonth = YearMonth.of(2026, 9)
     val sixMonthsAgoDate = remember(today) {
         java.util.Date.from(
             today.minusMonths(6)
@@ -366,21 +366,70 @@ fun MonthlyCompletionSmallWidgetPreview() {
     )
 
     // Generate mock completion data for the month
-    val mockMonthData = (1..selectedMonth.lengthOfMonth()).map { day ->
-        val isFuture = day > today.dayOfMonth
-        val isSkip = day % 7 == 0
-        val completedQuantity = when {
-            isFuture || isSkip -> 0
-            day % 3 == 0 -> 1500 // Below goal
-            else -> 3000          // On goal
-        }
+    val mockMonthData = listOf(
+        DailyCompletion(day = 1,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 2,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 3,  completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 4,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 5,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 6,  completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 7,  completedQuantity = 0,    isSkipDay = true),
+        DailyCompletion(day = 8,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 9,  completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 10, completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 11, completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 12, completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 13, completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 14, completedQuantity = 0,    isSkipDay = true),
 
-        DailyCompletion(
-            day = day,
-            completedQuantity = completedQuantity,
-            isSkipDay = isSkip
-        )
-    }
+        DailyCompletion(day = 15, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 16, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 17, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 18, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 19, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 20, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 21, completedQuantity = 0, isSkipDay = true),
+        DailyCompletion(day = 22, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 23, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 24, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 25, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 26, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 27, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 28, completedQuantity = 0, isSkipDay = true),
+        DailyCompletion(day = 29, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 30, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 1,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 2,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 3,  completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 4,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 5,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 6,  completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 7,  completedQuantity = 0,    isSkipDay = true),
+        DailyCompletion(day = 8,  completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 9,  completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 10, completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 11, completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 12, completedQuantity = 1500, isSkipDay = false),
+        DailyCompletion(day = 13, completedQuantity = 3000, isSkipDay = false),
+        DailyCompletion(day = 14, completedQuantity = 0,    isSkipDay = true),
+
+        DailyCompletion(day = 15, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 16, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 17, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 18, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 19, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 20, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 21, completedQuantity = 0, isSkipDay = true),
+        DailyCompletion(day = 22, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 23, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 24, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 25, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 26, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 27, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 28, completedQuantity = 0, isSkipDay = true),
+        DailyCompletion(day = 29, completedQuantity = 0, isSkipDay = false),
+        DailyCompletion(day = 30, completedQuantity = 0, isSkipDay = false)
+    )
 
     GlanceTheme {
         widget.CompletionBarChartWidgetContent(

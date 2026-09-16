@@ -39,6 +39,7 @@ android {
 dependencies {
     // 1. Compose BOM (Manages Material 3 & Compose versions)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.cardview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)

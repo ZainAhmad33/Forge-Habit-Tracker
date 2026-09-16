@@ -2,38 +2,354 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical"
-    android:padding="12dp"
-    android:background="#1C1B1F">
+    android:padding="8dp">
 
+    <!-- Top Header: Title & Dynamic Streak Badge -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📚"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Study"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_pill_badge"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔥"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:text="15"
+                android:textColor="?android:attr/colorBackground"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Chart Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="6dp">
+
+        <!-- Target Line (Using FrameLayout for RemoteViews compatibility) -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="#8E8E93" />
+
+        <!-- 12 Bar Columns -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:weightSum="12">
+
+            <!-- Bar 1: Green 100% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_green" />
+            </FrameLayout>
+
+            <!-- Bar 2: Green 100% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_green" />
+            </FrameLayout>
+
+            <!-- Bar 3: Red ~45% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_bar_red" />
+            </FrameLayout>
+
+            <!-- Bar 4: Gray Nub ~5% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_bar_gray" />
+            </FrameLayout>
+
+            <!-- Bar 5: Green 100% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_green" />
+            </FrameLayout>
+
+            <!-- Bar 6: Red ~45% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_bar_red" />
+            </FrameLayout>
+
+            <!-- Bar 7: Green 100% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_green" />
+            </FrameLayout>
+
+            <!-- Bar 8: Green 100% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_green" />
+            </FrameLayout>
+
+            <!-- Bar 9: Red ~45% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_bar_red" />
+            </FrameLayout>
+
+            <!-- Bar 10: Green 100% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_green" />
+            </FrameLayout>
+
+            <!-- Bar 11: Gray Nub ~5% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_bar_gray" />
+            </FrameLayout>
+
+            <!-- Bar 12: Red Nub ~5% -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:paddingHorizontal="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_bar_track" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_bar_red" />
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- X-Axis Labels -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:weightSum="12">
+
         <FrameLayout
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="#4F378B"/>
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="5"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="9sp" />
+
         <FrameLayout
-            android:layout_width="80dp"
-            android:layout_height="10dp"
-            android:layout_marginStart="8dp"
-            android:background="#E6E1E5"/>
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="10"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="9sp" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="12dp"
-        android:gravity="bottom"
-        android:orientation="horizontal">
-        <FrameLayout android:layout_width="12dp" android:layout_height="40dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <FrameLayout android:layout_width="12dp" android:layout_height="70dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <FrameLayout android:layout_width="12dp" android:layout_height="30dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <FrameLayout android:layout_width="12dp" android:layout_height="50dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <FrameLayout android:layout_width="12dp" android:layout_height="80dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <FrameLayout android:layout_width="12dp" android:layout_height="20dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-        <FrameLayout android:layout_width="12dp" android:layout_height="60dp" android:layout_marginEnd="6dp" android:background="#D0BCFF"/>
-    </LinearLayout>
 </LinearLayout>
