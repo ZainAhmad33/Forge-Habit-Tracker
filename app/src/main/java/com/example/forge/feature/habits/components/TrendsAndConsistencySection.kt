@@ -64,6 +64,7 @@ fun TrendsAndConsistencySection(
                 value = "${(monthlyTrend.currentRate * 100).toInt()}%",
                 change = monthlyTrend.changePercentage
             )
+
             GapItem(
                 label = "Longest gap",
                 days = longestGapDays,
@@ -154,11 +155,13 @@ private fun GapItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Text(
-            text = "$startDate–$endDate",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (startDate != null && endDate != null){
+            Text(
+                text = "$startDate–$endDate",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
