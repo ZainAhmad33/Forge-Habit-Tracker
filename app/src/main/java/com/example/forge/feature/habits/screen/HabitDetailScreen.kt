@@ -236,7 +236,9 @@ fun HabitDetailScreen(
                         bestWeekEndDate = stats.trends?.bestWeek?.endDate
                     )
 
-                    SkipDaysInfoSection(habit.skipDaysAllowed, stats.currentStreak)
+                    if (habit.isLockingEnabled){
+                        SkipDaysInfoSection(habit.skipDaysAllowed, stats.currentStreak)
+                    }
 
                     MonthlyCompletionPager(
                         allData = uiState.allMonthlyCompletion,
