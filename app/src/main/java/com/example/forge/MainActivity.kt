@@ -118,17 +118,17 @@ fun ForgeApp(
 
     val horizontalEnter = slideInHorizontally(
         initialOffsetX = { fullWidth -> fullWidth },
-        animationSpec = tween(400, easing = FastOutSlowInEasing)
-    ) + fadeIn(animationSpec = tween(400))
+        animationSpec = tween(300, easing = FastOutSlowInEasing)
+    ) + fadeIn(animationSpec = tween(300))
 
-    val horizontalExit = fadeOut(animationSpec = tween(400))
+    val horizontalExit = fadeOut(animationSpec = tween(300))
 
-    val horizontalPopEnter = fadeIn(animationSpec = tween(400))
+    val horizontalPopEnter = fadeIn(animationSpec = tween(300))
 
     val horizontalPopExit = slideOutHorizontally(
         targetOffsetX = { fullWidth -> fullWidth },
-        animationSpec = tween(400, easing = FastOutSlowInEasing),
-    ) + fadeOut(animationSpec = tween(400))
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+    ) + fadeOut(animationSpec = tween(300))
 
     val scrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
         exitDirection = FloatingToolbarExitDirection.Bottom,
