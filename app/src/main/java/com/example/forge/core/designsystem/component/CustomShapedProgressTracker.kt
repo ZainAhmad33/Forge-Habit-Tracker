@@ -77,13 +77,28 @@ fun CustomShapeProgress(
     label: String = "${(progress * 100).toInt()}%"
 ) {
     val isInspectionMode = LocalInspectionMode.current
+    var animateToValue by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    
+    // In normal execution, animate from 0 to the progress percentage.
+    // In inspection mode (Preview), look directly at the progress parameter so the preview inspector can animate it from 0 to progress.
+    val targetValue = if (isInspectionMode) progress.coerceIn(0f, 1f) else animateToValue
+
+    androidx.compose.runtime.LaunchedEffect(progress) {
+        if (!isInspectionMode) {
+            // Force reset to 0 before animating to the new progress percentage
+            animateToValue = 0f
+            kotlinx.coroutines.delay(10)
+            animateToValue = progress.coerceIn(0f, 1f)
+        }
+    }
+
     val animatedProgress by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = if (isInspectionMode) 0 else 650, easing = FastOutSlowInEasing),
+        targetValue = targetValue,
+        animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
         label = "ProgressAnimation"
     )
 
-    val isCompleted = (if (isInspectionMode) progress else animatedProgress) >= 0.999f
+    val isCompleted = animatedProgress >= 0.999f
 
     val checkmarkStrokeProgress by animateFloatAsState(
         targetValue = if (isCompleted) 1f else 0f,
@@ -209,19 +224,19 @@ fun CustomShapeProgress(
             AnimatedVisibility(
                 visible = isCompleted && startPoint != Offset.Zero,
                 enter = fadeIn() + scaleIn(
-                    initialScale = 0.5f,
+                    initialScale = 0f,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessLow
                     )
                 ),
-                exit = fadeOut() + scaleOut(targetScale = 0.5f),
+                exit = fadeOut() + scaleOut(targetScale = 0f),
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .offset {
                         IntOffset(
-                            x = (startPoint.x + with(density) { (strokeWidth / 2).toPx() }).roundToInt(),
-                            y = (startPoint.y + with(density) { (strokeWidth / 2).toPx() }).roundToInt()
+                            x = (startPoint.x + with(density) { (strokeWidth / 2).toPx() - badgeRadius.toPx() }).roundToInt(),
+                            y = (startPoint.y + with(density) { (strokeWidth / 2).toPx() - badgeRadius.toPx() }).roundToInt()
                         )
                     }
             ) {
@@ -229,9 +244,7 @@ fun CustomShapeProgress(
                     shape = CircleShape,
                     color = progressColor,
                     shadowElevation = 3.dp,
-                    modifier = Modifier
-                        .size(badgeSize)
-                        .offset(x = -badgeRadius, y = -badgeRadius)
+                    modifier = Modifier.size(badgeSize)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         // Checkmark Canvas (Unrotated)

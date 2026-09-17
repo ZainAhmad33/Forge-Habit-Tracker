@@ -23,3 +23,9 @@
 -keep class dev.alexdametto.compose_emoji_picker.** { *; }
 -keep class dev.alexdametto.compose_emoji_picker.data.model.** { *; }
 
+# Keep Glance ActionCallback implementations and their parameterless constructors
+-keep class * implements androidx.glance.appwidget.action.ActionCallback {
+    <init>();
+}
+
+

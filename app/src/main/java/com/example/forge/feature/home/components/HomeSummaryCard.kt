@@ -46,9 +46,9 @@ fun HomeSummaryCard(
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
 
                 Text(
                     text = "${summary.weeklyCompletionPercent}% complete today",
@@ -66,11 +66,11 @@ fun HomeSummaryCard(
                     amplitude = { 1f }
                 )
             }
-            Column (verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column (verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = "${summary.completedCount} of ${summary.totalCount} habits completed",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer,
