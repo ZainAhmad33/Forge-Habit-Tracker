@@ -37,16 +37,17 @@ import com.example.forge.core.uiEntities.HomeHabit
 import com.example.forge.core.uiEntities.ProgressShape
 import com.example.forge.core.uiEntities.ProgressShapeAngleResolver
 import com.example.forge.core.uiEntities.ProgressShapeEnumResolver
+import com.example.forge.core.designsystem.component.ShowcaseHintOverlay
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HabitCard(
     habit: HomeHabit,
     modifier: Modifier = Modifier,
+    enableOnboardingHints: Boolean = false,
     onDetailsClick: () -> Unit = {},
     onHabitCardClick: (habit: HomeHabit) -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     val context = LocalContext.current
     var isPressed by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -63,150 +64,167 @@ fun HabitCard(
     val containerColor = MaterialTheme.colorScheme.surfaceContainer
     val progressShape = ProgressShapeEnumResolver[habit.progressShape] ?: MaterialShapes.Cookie12Sided.toShape()
     val shapeAngle = ProgressShapeAngleResolver[habit.progressShape] ?: 0f
-    Card(
-        modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
-                    },
-                    onTap = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onHabitCardClick(habit)
-                    }
-                )
-            },
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        shape = MaterialTheme.shapes.large,
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp, 16.dp, 16.dp, 0.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            // 1. Centered Icon with Status Ring
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(100.dp)
-            ) {
-                CustomShapeProgress(
-                    habit.progressPercent/100f,
-                    shape = progressShape,
-                    startAngle = shapeAngle,
-                    label = habit.image,
-                    strokeWidth = 7.dp,
-                    showCheckMark = true
-                )
-            }
 
-            // 2. Centered Title & Schedule
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = habit.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = habit.targetLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-            Spacer(modifier = Modifier.size(12.dp))
-            // 3. Horizontal Divider
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                thickness = 1.dp
-            )
-
-            // 4. Bottom Actions: Details Link (Left) & Streak Pill (Right)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Details Link
-                Surface(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDetailsClick()
-                    },
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = CircleShape
-                ) {
-                    Text(
-                        text = "Details",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier
-                            .padding(horizontal = 10.dp, vertical = 2.dp)
+    // Reusable card body content taking a modifier parameter properly
+    val cardBody: @Composable (Modifier) -> Unit = { cardModifier ->
+        Card(
+            modifier = cardModifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            isPressed = true
+                            tryAwaitRelease()
+                            isPressed = false
+                        },
+                        onTap = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onHabitCardClick(habit)
+                        }
                     )
-                }
-
-                if (habit.isLocked) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.error,
-
+                },
+            colors = CardDefaults.cardColors(containerColor = containerColor),
+            shape = MaterialTheme.shapes.large,
+        ) {
+            ShowcaseHintOverlay(
+                hintKey = "hint_habit_card_details",
+                dependsOnKey = "hint_habit_card_tap",
+                message = "Tap 'Details' to see your comprehensive logging history and completion trends!"
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp, 16.dp, 16.dp, 0.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                ) {
+                    // 1. Centered Icon with Status Ring
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(100.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Rounded.Lock,
-                                contentDescription = "Locked",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                        CustomShapeProgress(
+                            habit.progressPercent / 100f,
+                            shape = progressShape,
+                            startAngle = shapeAngle,
+                            label = habit.image,
+                            strokeWidth = 7.dp,
+                            showCheckMark = true
+                        )
                     }
-                }
-                else{
 
-                    // Streak Pill
-                    Surface(
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
-                        shape = CircleShape
+                    // 2. Centered Title & Schedule
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        Text(
+                            text = habit.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = habit.targetLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.size(12.dp))
+
+                    // 3. Horizontal Divider
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        thickness = 1.dp
+                    )
+
+                    // 4. Bottom Actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    )
+                    {
+                        Surface(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onDetailsClick()
+                            },
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = CircleShape
                         ) {
-                            Icon(
-                                imageVector = Icons.Rounded.LocalFireDepartment,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
                             Text(
-                                text = habit.streakDays.toString(),
+                                text = "Details",
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
                             )
+                        }
+
+                        if (habit.isLocked) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.error,
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Lock,
+                                        contentDescription = "Locked",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        } else {
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = CircleShape
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.LocalFireDepartment,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Text(
+                                        text = habit.streakDays.toString(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-
             }
         }
+    }
+
+    if (enableOnboardingHints) {
+        ShowcaseHintOverlay(
+            hintKey = "hint_habit_card_tap",
+            message = "Tap the card anywhere to log your progress for today! ?",
+            modifier = modifier // Weight modifier goes to the outer wrapper Box
+        ) {
+            cardBody(Modifier)
+        }
+    } else {
+        cardBody(modifier) // Weight modifier goes straight to the Card
     }
 }
 

@@ -22,15 +22,17 @@ fun HabitGrid(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        habits.chunked(2).forEach { rowHabits ->
+        habits.chunked(2).forEachIndexed { rowIndex, rowHabits ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                rowHabits.forEach { habit ->
+                rowHabits.forEachIndexed { colIndex, habit ->
+                    val isFirstItem = rowIndex == 0 && colIndex == 0
                     HabitCard(
                         habit = habit,
                         modifier = Modifier.weight(1f),
+                        enableOnboardingHints = isFirstItem,
                         onHabitCardClick = onHabitCardClick,
                         onDetailsClick = { onHabitDetailsClick(habit.id) }
                     )

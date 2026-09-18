@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -181,9 +182,10 @@ fun HomeScreen(
                                     trailingText = "${uiState.todaysHabits.size} shown",
                                 )
                             }
-                            items(uiState.todaysHabits.chunked(2)) { rowHabits ->
+                            itemsIndexed(uiState.todaysHabits.chunked(2)) { index, rowHabits ->
                                 HabitRow(
                                     habits = rowHabits,
+                                    isFirstRow = index == 0,
                                     onHabitCardClick = onHabitCardClick,
                                     onHabitDetailsClick = onHabitDetailsClick
                                 )
@@ -197,9 +199,10 @@ fun HomeScreen(
                                     trailingText = "${uiState.otherHabits.size} shown",
                                 )
                             }
-                            items(uiState.otherHabits.chunked(2)) { rowHabits ->
+                            itemsIndexed(uiState.otherHabits.chunked(2)) { index, rowHabits ->
                                 HabitRow(
                                     habits = rowHabits,
+                                    isFirstRow = index == 0 && uiState.todaysHabits.isEmpty(),
                                     onHabitCardClick = onHabitCardClick,
                                     onHabitDetailsClick = onHabitDetailsClick
                                 )
@@ -251,6 +254,7 @@ fun HomeScreen(
 @Composable
 private fun HabitRow(
     habits: List<HomeHabit>,
+    isFirstRow: Boolean = false,
     onHabitCardClick: (HomeHabit) -> Unit,
     onHabitDetailsClick: (String) -> Unit
 ) {
@@ -258,10 +262,11 @@ private fun HabitRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        habits.forEach { habit ->
+        habits.forEachIndexed { index, habit ->
             HabitCard(
                 habit = habit,
                 modifier = Modifier.weight(1f),
+                enableOnboardingHints = isFirstRow && index == 0,
                 onHabitCardClick = onHabitCardClick,
                 onDetailsClick = { onHabitDetailsClick(habit.id) }
             )
@@ -372,6 +377,14 @@ private fun HomeScreenPreview() {
                     "1", "Water", HabitCategory.Health, "2L", 5, 50, isCompletedToday = false, "💧",
                     ProgressShape.Circle, HabitType.Quantity, isScheduledForToday = true, quantityLoggedToday = 1000
                 ),
+                HomeHabit(
+                    "3", "Water", HabitCategory.Health, "2L", 5, 50, isCompletedToday = false, "💧",
+                    ProgressShape.Circle, HabitType.Quantity, isScheduledForToday = true, quantityLoggedToday = 1000
+                ),
+//                    HomeHabit(
+//                        "4", "Water", HabitCategory.Health, "2L", 5, 50, isCompletedToday = false, "💧",
+//                        ProgressShape.Circle, HabitType.Quantity, isScheduledForToday = true, quantityLoggedToday = 1000
+//                    ),
                 HomeHabit(
                     "2", "Read", HabitCategory.Productivity, "20p", 3, 0, isCompletedToday = false, "📚",
                     ProgressShape.Arch, HabitType.Quantity, isScheduledForToday = false, quantityLoggedToday = 10

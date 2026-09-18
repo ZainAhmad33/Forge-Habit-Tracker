@@ -31,13 +31,18 @@ fun HistoricalActivitiesSection(
             fontWeight = FontWeight(700)
         )
 
-        ActivityWeeklyPager(
-            startDate = startDate,
-            currentMonth = currentMonth,
-            monthlyActivities = monthlyActivities,
-            onMonthChanged = onMonthChanged,
-            today = today,
-            showLegend = showLegend
-        )
+        com.example.forge.core.designsystem.component.ShowcaseHintOverlay(
+            hintKey = "hint_details_heatmap_scroll",
+            message = "Swipe to explore your full history and see old activity data!"
+        ) {
+            ActivityWeeklyPager(
+                startDate = startDate,
+                currentMonth = currentMonth,
+                monthlyActivities = monthlyActivities,
+                onMonthChanged = onMonthChanged,
+                today = today,
+                showLegend = showLegend
+            )
+        }
     }
 }

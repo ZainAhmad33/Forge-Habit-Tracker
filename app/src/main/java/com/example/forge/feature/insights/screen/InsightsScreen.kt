@@ -173,15 +173,20 @@ fun InsightsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        ActivityWeeklyPager(
-                            startDate = uiState.earliestHabitDate ?: LocalDate.now(),
-                            currentMonth = uiState.selectedHeatmapMonth,
-                            monthlyActivities = uiState.heatmap,
-                            onMonthChanged = onHeatmapMonthSelected,
-                            today = LocalDate.now(),
-                            weeksPerPage = 14,
-                            showLegend = true
-                        )
+                        com.example.forge.core.designsystem.component.ShowcaseHintOverlay(
+                            hintKey = "hint_insights_heatmap_scroll",
+                            message = "Swipe the grid to see your complete history across all habits!"
+                        ) {
+                            ActivityWeeklyPager(
+                                startDate = uiState.earliestHabitDate ?: LocalDate.now(),
+                                currentMonth = uiState.selectedHeatmapMonth,
+                                monthlyActivities = uiState.heatmap,
+                                onMonthChanged = onHeatmapMonthSelected,
+                                today = LocalDate.now(),
+                                weeksPerPage = 14,
+                                showLegend = true
+                            )
+                        }
                     }
 
                     // Momentum Section
@@ -224,20 +229,25 @@ fun InsightsScreen(
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
 
-                            HorizontalPager(
-                                state = pagerState,
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.Top,
-                                pageSpacing = 16.dp
-                            ) { page ->
-                                val month = uiState.momentumMonths.getOrNull(page)
-                                val monthlyPoints = uiState.momentumData[month] ?: emptyList()
+                            com.example.forge.core.designsystem.component.ShowcaseHintOverlay(
+                                hintKey = "hint_insights_momentum_scroll",
+                                message = "Swipe the momentum chart to view your performance trends for previous months!"
+                            ) {
+                                HorizontalPager(
+                                    state = pagerState,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.Top,
+                                    pageSpacing = 16.dp
+                                ) { page ->
+                                    val month = uiState.momentumMonths.getOrNull(page)
+                                    val monthlyPoints = uiState.momentumData[month] ?: emptyList()
 
-                                MomentumLineChart(
-                                    points = monthlyPoints,
-                                    totalDaysInMonth = month?.lengthOfMonth() ?: 30,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                    MomentumLineChart(
+                                        points = monthlyPoints,
+                                        totalDaysInMonth = month?.lengthOfMonth() ?: 30,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }

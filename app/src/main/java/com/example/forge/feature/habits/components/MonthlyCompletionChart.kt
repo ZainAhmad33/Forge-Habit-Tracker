@@ -130,22 +130,29 @@ fun MonthlyCompletionPager(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    verticalAlignment = Alignment.Top,
-                    pageSpacing = 16.dp
-                ) { page ->
-                    val month = months.getOrNull(page)
-                    val monthData = allData[month] ?: emptyList()
+                com.example.forge.core.designsystem.component.ShowcaseHintOverlay(
+                    hintKey = "hint_details_bar_chart_scroll",
+                    message = "Swipe on the chart to navigate between different months!"
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalAlignment = Alignment.Top,
+                        pageSpacing = 16.dp
+                    ) { page ->
+                        val month = months.getOrNull(page)
+                        val monthData = allData[month] ?: emptyList()
 
-                    MonthlyCompletionChart(
-                        data = monthData,
-                        target = target,
-                        yearMonth = month ?: YearMonth.from(today),
-                        today = today,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                        MonthlyCompletionChart(
+                            data = monthData,
+                            target = target,
+                            yearMonth = month ?: YearMonth.from(today),
+                            today = today,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
         }
