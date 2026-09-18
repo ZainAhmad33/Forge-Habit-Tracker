@@ -28,4 +28,9 @@
     <init>();
 }
 
+# Keep Glance AppWidget and Receiver classes to prevent tracking state or provider mismatches due to obfuscation
+-keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
+-keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
+
+
 
