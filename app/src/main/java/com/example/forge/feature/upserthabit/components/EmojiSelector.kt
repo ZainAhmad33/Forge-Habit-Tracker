@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.forge.core.designsystem.theme.ForgeTheme
 import dev.alexdametto.compose_emoji_picker.presentation.EmojiPicker
+import dev.alexdametto.compose_emoji_picker.presentation.EmojiPickerDefaults
 
 @Composable
 fun EmojiPreviewCard(
@@ -147,6 +148,15 @@ fun EmojiPickerKeyboard(
     EmojiPicker(
         open = isOpen,
         onClose = onDismiss,
+        colors = EmojiPickerDefaults.emojiPickerColors(
+            backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            searchBarBackgroundColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            searchBarIconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+            searchBarTextColor = MaterialTheme.colorScheme.onSurface,
+            textColor = MaterialTheme.colorScheme.onSurface,
+            activeCategoryTint = MaterialTheme.colorScheme.primary,
+            inactiveCategoryTint = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
         onEmojiSelected = { emojiItem ->
             onEmojiSelected(emojiItem.emoji)
             onDismiss()

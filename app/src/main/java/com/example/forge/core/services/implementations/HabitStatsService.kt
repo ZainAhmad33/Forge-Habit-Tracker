@@ -193,92 +193,76 @@ class HabitStatsService @Inject constructor(
         dailyTotals: Map<LocalDate, Int>,
         target: Int
     ): StreakInfo {
-        var streak = 0
-        var streakStartDate: LocalDate? = null
         val habitStart = timeService.toLocalDate(habit.createdAt)
-        val startOfFirstWeek = habitStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val startOfFirstWeek = habitStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
         var weekStart = currentWeekStart
+        var streakStartDate: LocalDate? = null
+        var foundAnyCompletion = false
         var isCurrentWeek = true
-        var foundCompletion = false
+        var overallStreakDays = 0
+
+        // Streak count only includes today if it's completed, consistent with EveryDay habits
+        val isTodayCompleted = (dailyTotals[today] ?: 0) >= target
+        val lastDayOfStreak = if (isTodayCompleted) today else today.minusDays(1)
 
         while (!weekStart.isBefore(startOfFirstWeek)) {
             val weekEnd = weekStart.plusDays(6)
+            
             var completionsInWeek = 0
-            var continueWeeksCompletion = true
-            var completionsBeforeFirstMiss = 0
-            var firstMissInWeek: LocalDate? = null
-
             for (i in 0..6) {
-                val d = weekEnd.minusDays(i.toLong())
+                val d = weekStart.plusDays(i.toLong())
                 if (d.isBefore(habitStart)) continue
-                if (d.isAfter(today)) continue
+                if (d.isAfter(today)) break
                 if ((dailyTotals[d] ?: 0) >= target) {
                     completionsInWeek++
-                    foundCompletion = true
-                    if (continueWeeksCompletion)
-                        completionsBeforeFirstMiss += 1
-                } else {
-                    if (continueWeeksCompletion) {
-                        firstMissInWeek = d
-                    }
-                    continueWeeksCompletion = false
+                    foundAnyCompletion = true
                 }
             }
 
-            val targetForThisWeek = if (weekStart == startOfFirstWeek) {
-                val availableDaysInFirstWeek = ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
-                minOf(habit.numberOfTrackedDays, availableDaysInFirstWeek)
+            val availableDaysInWeek = if (weekStart == startOfFirstWeek) {
+                ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
             } else {
-                habit.numberOfTrackedDays
+                7
             }
+            val targetForThisWeek = minOf(habit.numberOfTrackedDays, availableDaysInWeek)
 
             val goalMet = completionsInWeek >= targetForThisWeek
-
+            
             if (isCurrentWeek) {
-                if (goalMet) {
-                    if (weekStart.isBefore(habitStart)){
-                        streak += ChronoUnit.DAYS.between(habitStart, today).toInt() + 1
-                        streakStartDate = habitStart
-                    }
-                    else{
-                        streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
-                        streakStartDate = weekStart
+                val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                val isStillPossible = completionsInWeek + daysRemaining >= targetForThisWeek
+
+                if (goalMet || isStillPossible) {
+                    val effectiveStart = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                    if (!lastDayOfStreak.isBefore(effectiveStart)) {
+                        overallStreakDays += ChronoUnit.DAYS.between(effectiveStart, lastDayOfStreak).toInt() + 1
+                        streakStartDate = effectiveStart
                     }
                 } else {
-                    // Check if still possible
-                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt() + 1
-                    if (completionsInWeek + daysRemaining < targetForThisWeek) {
-                        return if (foundCompletion) StreakInfo(0, null) else StreakInfo(0, null)
-                    }
-                    // Still possible, continue sequence
-                    streak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
+                    // Goal not met and no longer possible
+                    return if (foundAnyCompletion) StreakInfo(0, null) else StreakInfo(0, null)
                 }
                 isCurrentWeek = false
             } else {
                 if (goalMet) {
-                    if (weekStart.isBefore(habitStart)){
-                        streak += ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
-                        streakStartDate = habitStart
-                    }
-                    else{
-                        streak += 7
-                        streakStartDate = weekStart
-                    }
+                    val effectiveStart = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                    val daysInWeek = ChronoUnit.DAYS.between(effectiveStart, weekEnd).toInt() + 1
+                    overallStreakDays += daysInWeek
+                    streakStartDate = effectiveStart
                 } else {
-                    streak += completionsBeforeFirstMiss
-                    if (completionsBeforeFirstMiss > 0) {
-                        val potentialStart = firstMissInWeek?.plusDays(1) ?: weekStart
-                        streakStartDate = if (potentialStart.isBefore(habitStart)) habitStart else potentialStart
-                    }
                     break
                 }
             }
             weekStart = weekStart.minusWeeks(1)
         }
-        
-        return if (foundCompletion) StreakInfo(streak, streakStartDate) else StreakInfo(0, null)
+
+        return if (foundAnyCompletion && overallStreakDays > 0) {
+            StreakInfo(overallStreakDays, streakStartDate)
+        } else {
+            StreakInfo(0, null)
+        }
     }
 
     private fun calculateBestStreakForDaysPerWeek(
@@ -287,86 +271,68 @@ class HabitStatsService @Inject constructor(
         dailyTotals: Map<LocalDate, Int>,
         target: Int
     ): Int {
-        var currentStreak = 0
-        var maxStreak = 0
+        var currentStreakCount = 0
+        var maxStreakCount = 0
         val habitStart = timeService.toLocalDate(habit.createdAt)
         val startOfFirstWeek = habitStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
+        val isTodayCompleted = (dailyTotals[today] ?: 0) >= target
+        val lastDayOfTodayWeek = if (isTodayCompleted) today else today.minusDays(1)
+
         var weekStart = startOfFirstWeek
-
         while (!weekStart.isAfter(currentWeekStart)) {
-            var completionsInWeek = 0
-            var continueWeeksCompletion = true
-            var completionsBeforeFirstMiss = 0
             val weekEnd = weekStart.plusDays(6)
-
+            
+            var completionsInWeek = 0
             for (i in 0..6) {
                 val d = weekStart.plusDays(i.toLong())
                 if (d.isBefore(habitStart)) continue
-                if (d.isAfter(today)) continue
+                if (d.isAfter(today)) break
                 if ((dailyTotals[d] ?: 0) >= target) {
                     completionsInWeek++
-                    if (continueWeeksCompletion)
-                        completionsBeforeFirstMiss += 1
-                } else {
-                    continueWeeksCompletion = false
                 }
             }
 
-            val goalMet = completionsInWeek >= habit.numberOfTrackedDays
-            if (goalMet) {
-                if (weekStart == currentWeekStart){
-                    // streak continues but range is exhausted
-                    currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
-                    maxStreak = maxOf(currentStreak, maxStreak)
-                }
-                else if (weekStart.isBefore(habitStart)){
-                    currentStreak += ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
-                    maxStreak = maxOf(currentStreak, maxStreak)
-                }
-                else{
-                    currentStreak += 7
-                    maxStreak = maxOf(currentStreak, maxStreak)
+            val availableDaysInWeek = if (weekStart == startOfFirstWeek) {
+                ChronoUnit.DAYS.between(habitStart, weekEnd).toInt() + 1
+            } else {
+                7
+            }
+            val targetForThisWeek = minOf(habit.numberOfTrackedDays, availableDaysInWeek)
+
+            val goalMet = completionsInWeek >= targetForThisWeek
+            
+            if (weekStart == currentWeekStart) {
+                val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                val isStillPossible = completionsInWeek + daysRemaining >= targetForThisWeek
+
+                if (goalMet || isStillPossible) {
+                    val effectiveStart = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                    if (!lastDayOfTodayWeek.isBefore(effectiveStart)) {
+                        currentStreakCount += ChronoUnit.DAYS.between(effectiveStart, lastDayOfTodayWeek).toInt() + 1
+                    }
+                    maxStreakCount = maxOf(maxStreakCount, currentStreakCount)
+                } else {
+                    maxStreakCount = maxOf(maxStreakCount, currentStreakCount)
+                    currentStreakCount = 0
                 }
             } else {
-                if (weekStart == currentWeekStart){
-                    val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt() + 1
-                    if (completionsInWeek + daysRemaining < habit.numberOfTrackedDays) {
-                        currentStreak += completionsBeforeFirstMiss
-                        maxStreak = maxOf(currentStreak, maxStreak)
-                    }
-                    else{
-                        // Still possible, continue checking previous weeks without incrementing streak
-                        if (today == weekEnd){
-
-                            currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt()
-                        }
-                        else{
-                            currentStreak += ChronoUnit.DAYS.between(weekStart, today).toInt() + 1
-                        }
-                        maxStreak = maxOf(currentStreak, maxStreak)
-                    }
+                if (goalMet) {
+                    val effectiveStart = if (weekStart.isBefore(habitStart)) habitStart else weekStart
+                    val daysInWeek = ChronoUnit.DAYS.between(effectiveStart, weekEnd).toInt() + 1
+                    currentStreakCount += daysInWeek
+                    maxStreakCount = maxOf(maxStreakCount, currentStreakCount)
+                } else {
+                    maxStreakCount = maxOf(maxStreakCount, currentStreakCount)
+                    currentStreakCount = 0
                 }
-                else if (weekStart == startOfFirstWeek){
-                    val daysBeforeStart = ChronoUnit.DAYS.between(weekStart, habitStart).toInt()
-                    if (completionsBeforeFirstMiss + daysBeforeStart >= habit.numberOfTrackedDays){
-                        currentStreak += completionsBeforeFirstMiss
-                        maxStreak = maxOf(currentStreak, maxStreak)
-                    }
-                }
-                else{
-                    currentStreak += completionsBeforeFirstMiss
-                    maxStreak = maxOf(currentStreak, maxStreak)
-                    currentStreak = 0
-                }
-                // streak broken
-
             }
             weekStart = weekStart.plusWeeks(1)
         }
-        return maxStreak
+        return maxStreakCount
     }
+
 
     internal fun calculateBestStreak(habit: Habit, dailyTotals: Map<LocalDate, Int>, target: Int, today: LocalDate): Int {
         if (habit.frequencyType == HabitFrequency.DaysPerWeek) {

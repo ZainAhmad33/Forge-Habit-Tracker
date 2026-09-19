@@ -167,13 +167,12 @@ fun DetailRow(
         onClick = {},
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shapes = ListItemDefaults.segmentedShapes(index = index, count = totalItems),
+        verticalAlignment = Alignment.CenterVertically,
         leadingContent = {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier
-                    .size(20.dp)
-                    .padding(top = 2.dp),
+                modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
@@ -183,7 +182,7 @@ fun DetailRow(
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = label,
@@ -215,7 +214,9 @@ fun AdditionalDetailsPreview() {
         habitType = HabitType.YesNo,
         reminders = listOf(
             LocalTime.of(17, 0),
-            LocalTime.of(22, 0)
+            LocalTime.of(22, 0),
+            LocalTime.of(19, 0),
+            LocalTime.of(23, 0)
         ),
         frequencyType = HabitFrequency.EveryDay,
         numberOfTrackedDays = 7,
