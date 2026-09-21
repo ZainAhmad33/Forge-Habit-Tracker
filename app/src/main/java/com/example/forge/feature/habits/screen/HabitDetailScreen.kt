@@ -191,9 +191,9 @@ fun HabitDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = padding.calculateTopPadding())
+                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 48.dp + padding.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 

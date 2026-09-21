@@ -180,9 +180,9 @@ fun ProfileDetailsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
+                    .padding(top = innerPadding.calculateTopPadding())
+                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp + innerPadding.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.Start
             ) {

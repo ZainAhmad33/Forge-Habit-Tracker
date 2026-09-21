@@ -230,11 +230,10 @@ fun NewHabitScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .consumeWindowInsets(innerPadding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
+                .padding(top = innerPadding.calculateTopPadding())
+                .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp + innerPadding.calculateBottomPadding()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {

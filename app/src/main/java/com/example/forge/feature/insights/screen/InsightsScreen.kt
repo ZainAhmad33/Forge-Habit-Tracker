@@ -114,8 +114,8 @@ fun InsightsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(innerPadding)
-                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp),
+                        .padding(top = innerPadding.calculateTopPadding())
+                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp + innerPadding.calculateBottomPadding()),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     // Hero Stats
