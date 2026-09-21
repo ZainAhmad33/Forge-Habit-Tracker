@@ -62,6 +62,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.forge.core.database.entity.HabitCategory
 import com.example.forge.core.designsystem.theme.ForgeTheme
@@ -207,10 +210,11 @@ fun NewHabitScreen(
             )
         },
         bottomBar = {
+            val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp)
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp + navBarHeight)
             ) {
                 CreateHabitButton(
                     text = if (uiState.habitId != null) "Save Changes" else "Create Habit",

@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -172,10 +175,11 @@ fun ProfileScreen(
                 }
             },
             bottomBar = {
+                val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp)
+                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp + navBarHeight)
                 ) {
                     Button(
                         onClick = {
