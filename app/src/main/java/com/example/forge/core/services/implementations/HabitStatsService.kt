@@ -231,8 +231,9 @@ class HabitStatsService @Inject constructor(
             val goalMet = completionsInWeek >= targetForThisWeek
             
             if (isCurrentWeek) {
-                val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
-                val isStillPossible = completionsInWeek + daysRemaining >= targetForThisWeek
+                val futureDays = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                val canStillCompleteToday = if (isTodayCompleted) 0 else 1
+                val isStillPossible = completionsInWeek + futureDays + canStillCompleteToday >= targetForThisWeek
 
                 if (goalMet || isStillPossible) {
                     val effectiveStart = if (weekStart.isBefore(habitStart)) habitStart else weekStart
@@ -304,8 +305,9 @@ class HabitStatsService @Inject constructor(
             val goalMet = completionsInWeek >= targetForThisWeek
             
             if (weekStart == currentWeekStart) {
-                val daysRemaining = ChronoUnit.DAYS.between(today, weekEnd).toInt()
-                val isStillPossible = completionsInWeek + daysRemaining >= targetForThisWeek
+                val futureDays = ChronoUnit.DAYS.between(today, weekEnd).toInt()
+                val canStillCompleteToday = if (isTodayCompleted) 0 else 1
+                val isStillPossible = completionsInWeek + futureDays + canStillCompleteToday >= targetForThisWeek
 
                 if (goalMet || isStillPossible) {
                     val effectiveStart = if (weekStart.isBefore(habitStart)) habitStart else weekStart
