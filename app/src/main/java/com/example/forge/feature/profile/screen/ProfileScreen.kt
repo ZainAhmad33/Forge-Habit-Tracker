@@ -175,7 +175,7 @@ fun ProfileScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 32.dp)
+                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp)
                 ) {
                     Button(
                         onClick = {
@@ -207,7 +207,7 @@ fun ProfileScreen(
                     .padding(innerPadding)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.Start
             ) {

@@ -63,7 +63,6 @@ import com.example.forge.feature.habits.components.SkipDaysInfoSection
 import com.example.forge.feature.habits.components.TrendsAndConsistencySection
 import com.example.forge.feature.habits.state.HabitDetailUiState
 import com.example.forge.feature.habits.viewmodel.HabitDetailViewModel
-import com.example.forge.core.services.interfaces.ITimeService
 import com.example.forge.feature.home.components.HabitLogBottomSheet
 import java.time.LocalDate
 import java.time.YearMonth
@@ -268,7 +267,7 @@ fun HabitDetailScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(100.dp)) // Padding for FABs
+                Spacer(modifier = Modifier.height(72.dp))
             }
         }
     }

@@ -210,7 +210,7 @@ fun NewHabitScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 32.dp)
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp)
             ) {
                 CreateHabitButton(
                     text = if (uiState.habitId != null) "Save Changes" else "Create Habit",
@@ -230,7 +230,7 @@ fun NewHabitScreen(
                 .consumeWindowInsets(innerPadding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 24.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {

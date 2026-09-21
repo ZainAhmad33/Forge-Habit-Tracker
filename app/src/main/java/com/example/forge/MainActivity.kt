@@ -16,7 +16,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
@@ -60,6 +59,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         handleIntent(intent)
         enableEdgeToEdge()
+        window.isNavigationBarContrastEnforced = false
         setContent {
             ForgeTheme {
                 Surface(
@@ -138,11 +138,15 @@ fun ForgeApp(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior),
-        contentWindowInsets = WindowInsets.navigationBars,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             NavHost(
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 navController = navController,
                 startDestination = startDestination!!,
                 enterTransition = { horizontalEnter },

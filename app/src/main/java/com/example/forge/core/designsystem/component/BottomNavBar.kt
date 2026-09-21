@@ -9,8 +9,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -58,6 +61,7 @@ fun BottomNavBar(
     onNavigateToHome: () -> Unit = {},
     onNavigateToInsights: () -> Unit = {}
 ) {
+    val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -67,7 +71,7 @@ fun BottomNavBar(
             floatingActionButton = { CreateHabitFab(onClick = onAddHabitClick) },
             scrollBehavior = scrollBehavior,
             modifier = Modifier
-                .offset(y = -FloatingToolbarDefaults.ScreenOffset)
+                .offset(y = -(FloatingToolbarDefaults.ScreenOffset + navBarHeight))
                 .align(Alignment.BottomCenter),
         ) {
             SlidingTabRow(
