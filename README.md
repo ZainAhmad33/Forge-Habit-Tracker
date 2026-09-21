@@ -37,11 +37,11 @@ Understand your behavior with rich data visualizations:
 
 | Dashboard | Habit Details | Insights |
 | :---: | :---: | :---: |
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Habit Details](docs/screenshots/details.png) | ![Insights](docs/screenshots/insights.png) |
+| <img src="docs/screenshots/dashboard.png" width="250"> | <img src="docs/screenshots/details.png" width="250"> | <img src="docs/screenshots/insights.png" width="250"> |
 
 | Widgets | Emoji Picker | New Habit |
 | :---: | :---: | :---: |
-| ![Widgets](docs/screenshots/widgets.png) | ![Emoji Selector](docs/screenshots/emoji.png) | ![Creation](docs/screenshots/create.png) |
+| <img src="docs/screenshots/widgets.png" width="250"> | <img src="docs/screenshots/emoji.png" width="250"> | <img src="docs/screenshots/create.png" width="250"> |
 
 ---
 
@@ -59,7 +59,7 @@ Understand your behavior with rich data visualizations:
 
 ## 📦 Installation
 
-You can download the latest APK from the [Releases](https://github.com/zainahmad/Forge/releases) page.
+You can download the latest APK from the [Releases](https://github.com/ZainAhmad33/Forge-Habit-Tracker/releases) page.
 
 1.  Download the `app-release.apk`.
 2.  Install it on your Android device (ensure "Install from Unknown Sources" is enabled).
