@@ -360,7 +360,7 @@ class HabitHeatmapWidget : GlanceAppWidget() {
                 }
             }
 
-            //Spacer(GlanceModifier.height(6.dp))
+            Spacer(GlanceModifier.height(2.dp))
 
             if (habit.isLocked) {
                 LockedHabitContent()

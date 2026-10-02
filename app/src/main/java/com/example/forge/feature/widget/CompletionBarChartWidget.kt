@@ -98,33 +98,26 @@ class CompletionBarChartWidget: GlanceAppWidget(){
                         .collectAsState(initial = null)
 
                     val today = LocalDate.now()
+                    val currentYearMonth = YearMonth.now()
 
                     val monthlyCompletions by statsService
-                        .getAllMonthlyCompletion(
-                            habitId
-                        )
+                        .getAllMonthlyCompletion(habitId)
                         .collectAsState(initial = emptyMap())
-                    val currentYearMonth = YearMonth.now()
-                    val currentData = monthlyCompletions.get(currentYearMonth)
-                    val lastMonth = currentYearMonth.minusMonths(1)
-                    val lastMonthData = monthlyCompletions.get(lastMonth)
 
-                    var totalDailyCompletions: List<DailyCompletion> = emptyList()
-                    if (!lastMonthData.isNullOrEmpty()){
-                        totalDailyCompletions = totalDailyCompletions + lastMonthData
-                    }
-                    else{
-                        val days = lastMonth.lengthOfMonth()
-                        totalDailyCompletions = totalDailyCompletions + List(days) {
-                            DailyCompletion(
-                                day = 0,
-                                completedQuantity = 0,
-                                isSkipDay = true
-                            )
+                    val sortedMonths = monthlyCompletions.entries
+                        .filter { !it.key.isAfter(currentYearMonth) }
+                        .sortedBy { it.key }
+
+                    val totalDailyCompletions = if (sortedMonths.isEmpty()) {
+                        emptyList()
+                    } else {
+                        sortedMonths.flatMap { (yearMonth, completions) ->
+                            if (yearMonth == currentYearMonth) {
+                                completions.filter { it.day <= today.dayOfMonth }
+                            } else {
+                                completions
+                            }
                         }
-                    }
-                    if (!currentData.isNullOrEmpty()){
-                        totalDailyCompletions = totalDailyCompletions + currentData
                     }
 
                     if (habit != null) {
@@ -136,7 +129,7 @@ class CompletionBarChartWidget: GlanceAppWidget(){
                             streak = streakCount,
                             monthData = totalDailyCompletions,
                             target = habit!!.completionTargetPerDay,
-                            today = LocalDate.now()
+                            today = today
                         )
                     } else {
                         EmptyWidgetContent()
@@ -171,7 +164,16 @@ class CompletionBarChartWidget: GlanceAppWidget(){
             updatedAt = java.util.Date()
         )
 
-        val mockMonthData = (1..lastMonth.lengthOfMonth()).map { day ->
+        val twoMonthsAgo = currentMonth.minusMonths(2)
+
+        val mockMonthData = (1..twoMonthsAgo.lengthOfMonth()).map { day ->
+            val isSkip = day % 7 == 0
+            DailyCompletion(
+                day = day,
+                completedQuantity = if (isSkip) 0 else 3000,
+                isSkipDay = isSkip
+            )
+        } + (1..lastMonth.lengthOfMonth()).map { day ->
             val isSkip = day % 7 == 0
             DailyCompletion(
                 day = day,
@@ -437,7 +439,7 @@ class CompletionBarChartWidget: GlanceAppWidget(){
         val density = context.resources.displayMetrics.density
         val xAxisHeightPx = 14f * density
         val chartHeight = heightPx - xAxisHeightPx
-        val horizontalPadding = 8f * density
+        val horizontalPadding = 4f * density
         val chartWidth = widthPx - (horizontalPadding * 2)
 
         // Background Grid lines
@@ -457,18 +459,25 @@ class CompletionBarChartWidget: GlanceAppWidget(){
         val spacingPx = spacingDp * density
 
         // 1. Calculate how many bars physically fit inside chartWidth
-        val maxFitBars = ((chartWidth + spacingPx) / (barWidthPx + spacingPx)).toInt()
-            .coerceIn(1, data.size)
+        val maxFitBars = ((chartWidth + spacingPx) / (barWidthPx + spacingPx)).toInt().coerceAtLeast(1)
 
-        val thisMonthsDays = LocalDate.now().dayOfMonth
-        val lastMonthDays = YearMonth.now().minusMonths(1).lengthOfMonth()
-        // 2. Slice data to show the most recent visible days
-        var visibleData = data.take(thisMonthsDays + lastMonthDays)
-        visibleData = visibleData.takeLast(maxFitBars)
+        // 2. Ensure visibleData has EXACTLY maxFitBars items ending on today
+        val visibleData = if (data.size >= maxFitBars) {
+            data.takeLast(maxFitBars)
+        } else {
+            val paddingCount = maxFitBars - data.size
+            val padding = List(paddingCount) {
+                DailyCompletion(
+                    day = 0,
+                    completedQuantity = 0,
+                    isSkipDay = true
+                )
+            }
+            padding + data
+        }
 
-        // 3. Recalculate exact barWidth in PX to fit width without fractional pixel gaps
-        val totalSpacingPx = spacingPx * (visibleData.size - 1)
-        //val adjustedBarWidthPx = ((chartWidth - totalSpacingPx) / visibleData.size).coerceAtLeast(1f)
+        val totalChartWidthPx = maxFitBars * barWidthPx + (maxFitBars - 1) * spacingPx
+        val startX = ((widthPx - totalChartWidthPx) / 2f).coerceAtLeast(horizontalPadding)
 
         val cornerRadiusPx = 4f * density
         val maxQuantity = visibleData.maxOfOrNull { it.completedQuantity } ?: 0
@@ -496,7 +505,7 @@ class CompletionBarChartWidget: GlanceAppWidget(){
                 else -> successColor
             }
 
-            val xOffset = horizontalPadding + (index * (barWidthPx + spacingPx))
+            val xOffset = startX + (index * (barWidthPx + spacingPx))
             val barHeight = (chartHeight * (item.completedQuantity.toFloat() / yMax).coerceIn(0f, 1f)).coerceAtLeast(4f * density)
 
             // Track Background
@@ -520,7 +529,12 @@ class CompletionBarChartWidget: GlanceAppWidget(){
                     // Displays short month name (e.g., "Sep", "Oct") on month turnover
                     itemDate.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
                 } else {
-                    itemDate.dayOfMonth.toString()
+                    if (itemDate.dayOfMonth != 30 && itemDate.dayOfMonth != 31){
+                        itemDate.dayOfMonth.toString()
+                    }
+                    else{
+                        ""
+                    }
                 }
 
                 val textX = xOffset + (barWidthPx / 2f)
