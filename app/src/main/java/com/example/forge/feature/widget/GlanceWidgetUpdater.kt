@@ -14,6 +14,7 @@ class GlanceWidgetUpdater @Inject constructor(
 ) : IWidgetUpdater {
     override suspend fun updateAllWidgets() {
         CompletionBarChartWidget().updateAll(context)
+        CompletionLineChartWidget().updateAll(context)
         HabitHeatmapWidget().updateAll(context)
         HabitLeaderboardWidget().updateAll(context)
     }

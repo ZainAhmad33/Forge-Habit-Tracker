@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Forge</string>
     <string name="monthly_completion_widget_description">Track your daily habit completion history against your goal.</string>
+    <string name="completion_line_chart_widget_description">Track your daily habit completion history with a line graph against your goal.</string>
     <string name="habit_heatmap_widget_description">Visualize your long-term habit consistency with an interactive heatmap.</string>
     <string name="habit_leaderboard_widget_description">See your top-performing habits by completion rate.</string>
 </resources>

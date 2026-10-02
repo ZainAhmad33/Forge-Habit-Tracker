@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="150dp"
+    android:height="50dp"
+    android:viewportWidth="300"
+    android:viewportHeight="100">
+
+    <!-- Green Fill for On Goal area -->
+    <path
+        android:pathData="M 0,10 L 40,10 L 60,90 L 80,10 L 120,10 L 140,90 L 160,10 L 200,10 L 220,50 L 240,10 L 260,90 L 280,10 L 290,10 L 290,100 L 0,100 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startY="0"
+                android:endY="100"
+                android:type="linear">
+                <item android:color="#554CAF50" android:offset="0.0" />
+                <item android:color="#054CAF50" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Green Line Segments -->
+    <path
+        android:pathData="M 0,10 L 40,10 M 60,90 L 80,10 L 120,10 M 140,90 L 160,10 L 200,10 M 240,10"
+        android:strokeWidth="3"
+        android:strokeColor="#4CAF50"
+        android:strokeLineCap="round" />
+
+    <!-- Red Line Segments -->
+    <path
+        android:pathData="M 200,10 L 220,50 L 240,10 M 260,90 L 280,10"
+        android:strokeWidth="3"
+        android:strokeColor="#F44336"
+        android:strokeLineCap="round" />
+
+    <!-- Skip Line Segments -->
+    <path
+        android:pathData="M 40,10 L 60,90 M 120,10 L 140,90"
+        android:strokeWidth="2.5"
+        android:strokeColor="#9E9E9E"
+        android:strokeLineCap="round" />
+
+    <!-- End Node Circle -->
+    <path
+        android:pathData="M 290,10 m -5,0 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0"
+        android:fillColor="#4CAF50" />
+
+    <path
+        android:pathData="M 290,10 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+        android:fillColor="#FFFFFF" />
+
+</vector>

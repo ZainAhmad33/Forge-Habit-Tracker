@@ -101,6 +101,10 @@ class HabitWidgetConfigurationActivity : ComponentActivity() {
 
             if (providerClassName?.endsWith("CompletionBarChartWidgetReceiver") == true) {
                 CompletionBarChartWidget().update(context, glanceId)
+            } else if (providerClassName?.endsWith("CompletionLineChartWidgetReceiver") == true) {
+                CompletionLineChartWidget().update(context, glanceId)
+            } else if (providerClassName?.endsWith("HabitLeaderboardWidgetReceiver") == true) {
+                HabitLeaderboardWidget().update(context, glanceId)
             } else {
                 HabitHeatmapWidget().update(context, glanceId)
             }
