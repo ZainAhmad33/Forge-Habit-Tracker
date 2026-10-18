@@ -52,6 +52,9 @@ fun SkipDaysInfoSection(
     var showInfoText by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
+    val progressInCycle = currentStreak % 30
+    val daysToNextSkip = 30 - progressInCycle
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -132,7 +135,7 @@ fun SkipDaysInfoSection(
                 }
                 Spacer(Modifier.size(1.dp))
                 LinearWavyProgressIndicator(
-                    progress = { currentStreak / 30f },
+                    progress = { progressInCycle / 30f },
                     modifier = Modifier
                         .fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
@@ -146,12 +149,12 @@ fun SkipDaysInfoSection(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "$currentStreak / 30 days",
+                        text = "$progressInCycle / 30 days",
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Text(
-                        text = "${30 - currentStreak} days to next skip day",
+                        text = if (daysToNextSkip == 1) "1 day to next skip day" else "$daysToNextSkip days to next skip day",
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         style = MaterialTheme.typography.bodySmall,
                     )
