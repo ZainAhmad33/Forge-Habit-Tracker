@@ -74,6 +74,7 @@ fun CustomShapeProgress(
     strokeWidth: Dp = 6.dp,
     startAngle: Float = 0f, // 0f = Top, 90f = Right, 180f = Bottom, -90f = Left
     showCheckMark: Boolean = false,
+    checkColor: Color = MaterialTheme.colorScheme.onPrimary,
     label: String = "${(progress * 100).toInt()}%"
 ) {
     val isInspectionMode = LocalInspectionMode.current
@@ -100,11 +101,13 @@ fun CustomShapeProgress(
 
     val isCompleted = animatedProgress >= 0.999f
 
-    val checkmarkStrokeProgress by animateFloatAsState(
-        targetValue = if (isCompleted) 1f else 0f,
+    val checkmarkStrokeTarget = if (isCompleted) 1f else 0f
+    val checkmarkStrokeProgressAnimated by animateFloatAsState(
+        targetValue = checkmarkStrokeTarget,
         animationSpec = tween(durationMillis = 400, delayMillis = 200, easing = FastOutSlowInEasing),
         label = "CheckmarkStrokeAnimation"
     )
+    val checkmarkStrokeProgress = if (isInspectionMode) checkmarkStrokeTarget else checkmarkStrokeProgressAnimated
 
     val dynamicLabelColor by animateColorAsState(
         targetValue = if (isCompleted) progressColor else MaterialTheme.colorScheme.onSurface,
@@ -114,7 +117,6 @@ fun CustomShapeProgress(
 
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
-    val checkColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
 
     var containerSize by remember { mutableStateOf(Size.Zero) }
 

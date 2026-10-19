@@ -378,7 +378,7 @@ private fun HomeScreenPreview() {
                 List(2) { CategoryPill(HabitCategory.Home, "🏡") },
                 listOf(
                 HomeHabit(
-                    "1", "Water", HabitCategory.Health, "2L", 5, 50, isCompletedToday = false, "💧",
+                    "1", "Water", HabitCategory.Health, "2L", 5, 100, isCompletedToday = false, "💧",
                     ProgressShape.Circle, HabitType.Quantity, isScheduledForToday = true, quantityLoggedToday = 1000
                 ),
                 HomeHabit(

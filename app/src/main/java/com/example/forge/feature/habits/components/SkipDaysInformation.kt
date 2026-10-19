@@ -128,7 +128,7 @@ fun SkipDaysInfoSection(
                         )
                         Text(
                             text = "Earn 1 skip for every 30 day streak",
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -150,12 +150,12 @@ fun SkipDaysInfoSection(
                 ) {
                     Text(
                         text = "$progressInCycle / 30 days",
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Text(
                         text = if (daysToNextSkip == 1) "1 day to next skip day" else "$daysToNextSkip days to next skip day",
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -184,7 +184,7 @@ fun SkipDaysInfoSection(
                             )
                             Text(
                                 text = "If you miss your goal with no skip days banked, this habit locks for 30 days — log daily to unlock it early",
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }

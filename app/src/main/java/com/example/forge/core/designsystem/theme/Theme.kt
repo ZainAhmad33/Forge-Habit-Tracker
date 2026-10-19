@@ -37,16 +37,35 @@ private val LightColorScheme = lightColorScheme(
     secondary = PurpleGrey40,
     tertiary = Pink40,
     error = ErrorLight
+)
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+/**
+ * A simulated Material You dynamic dark color scheme for gray/white wallpaper themes,
+ * used for testing high-contrast compliance in previews.
+ */
+val GrayMonochromeDarkColorScheme = darkColorScheme(
+    primary = Color(0xFFE2E2E2),
+    onPrimary = Color(0xFF1A1A1A),
+    primaryContainer = Color(0xFFD6D6D6),
+    onPrimaryContainer = Color(0xFF121212),
+    secondary = Color(0xFFC6C6C6),
+    onSecondary = Color(0xFF2A2A2A),
+    secondaryContainer = Color(0xFF444444),
+    onSecondaryContainer = Color(0xFFE2E2E2),
+    tertiary = Color(0xFFCCCCCC),
+    onTertiary = Color(0xFF1F1F1F),
+    tertiaryContainer = Color(0xFF383838),
+    onTertiaryContainer = Color(0xFFE2E2E2),
+    background = Color(0xFF121212),
+    onBackground = Color(0xFFE2E2E2),
+    surface = Color(0xFF121212),
+    onSurface = Color(0xFFE2E2E2),
+    surfaceContainer = Color(0xFF1E1E1E),
+    surfaceContainerHigh = Color(0xFF282828),
+    surfaceContainerHighest = Color(0xFF333333),
+    onSurfaceVariant = Color(0xFFC4C4C4),
+    outline = Color(0xFF8E8E8E),
+    outlineVariant = Color(0xFF484848)
 )
 
 @Composable

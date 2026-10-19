@@ -253,3 +253,31 @@ private fun HabitCardPreview() {
         )
     }
 }
+
+@Preview(name = "Monochrome Gray Dynamic Dark - Completed Habit", showBackground = true)
+@Composable
+private fun PreviewHabitCardMonochromeTheme() {
+    MaterialTheme(
+        colorScheme = com.example.forge.core.designsystem.theme.GrayMonochromeDarkColorScheme
+    ) {
+        HabitCard(
+            habit = HomeHabit(
+                id = "1",
+                title = "Discipline",
+                category = HabitCategory.Mindfulness,
+                targetLabel = "1 times per day",
+                streakDays = 1,
+                progressPercent = 100,
+                isCompletedToday = true,
+                image = "🧘",
+                progressShape = ProgressShape.Circle,
+                habitType = HabitType.YesNo,
+                isScheduledForToday = true,
+                quantityLoggedToday = 1,
+                isLocked = false
+            ),
+            onDetailsClick = { },
+            onHabitCardClick = { }
+        )
+    }
+}

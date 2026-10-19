@@ -86,14 +86,14 @@ fun MonthlyCompletionPager(
                 )
                 Text(
                     text = "Your daily completion vs daily goal",
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
 
             Text(
                 text = "$totalCompletion/$effectiveDays days on goal",
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.End
             )

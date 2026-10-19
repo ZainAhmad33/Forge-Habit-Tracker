@@ -54,14 +54,14 @@ fun HomeSummaryCard(
                     text = "${summary.weeklyCompletionPercent}% complete today",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(0.dp, 8.dp)
                 )
                 LinearWavyProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f),
                     stroke = Stroke(17f),
                     amplitude = { 1f }
                 )
@@ -70,7 +70,7 @@ fun HomeSummaryCard(
                 Text(
                     text = "${summary.completedCount} of ${summary.totalCount} habits completed",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -136,4 +136,22 @@ private fun SummaryMetric(
 @Preview
 fun previewHomeSummaryCard(){
     HomeSummaryCard(HomeSummary(4, 7, 34, 57))
+}
+
+@Composable
+@Preview(name = "Monochrome Gray Dynamic Dark Theme", showBackground = true)
+fun PreviewHomeSummaryCardMonochromeTheme() {
+    MaterialTheme(
+        colorScheme = com.example.forge.core.designsystem.theme.GrayMonochromeDarkColorScheme
+    ) {
+        HomeSummaryCard(
+            summary = HomeSummary(
+                completedCount = 1,
+                totalCount = 3,
+                weeklyCompletionPercent = 33,
+                currentStreakDays = 2
+            ),
+            modifier = Modifier.padding(16.dp)
+        )
+    }
 }
