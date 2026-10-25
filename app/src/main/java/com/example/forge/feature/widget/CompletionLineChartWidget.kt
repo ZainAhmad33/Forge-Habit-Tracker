@@ -219,7 +219,6 @@ class CompletionLineChartWidget : GlanceAppWidget() {
                     )
                 )
         ) {
-            // Unified Header (Emoji, Title, and Streak Pill) matching the bar graph widget
             Row(
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -275,7 +274,6 @@ class CompletionLineChartWidget : GlanceAppWidget() {
             if (habit.isLocked) {
                 LockedHabitContent()
             } else {
-                // Chart Container Card
                 Box(
                     modifier = GlanceModifier
                         .fillMaxWidth()
@@ -312,7 +310,7 @@ class CompletionLineChartWidget : GlanceAppWidget() {
 
                         val density = context.resources.displayMetrics.density
 
-                        val widthPx = ((size.width.value - 24f - 24f) * density).toInt().coerceAtLeast(100)
+                        val widthPx = ((size.width.value - 24f) * density).toInt().coerceAtLeast(100)
                         val heightPx = ((size.height.value - 32f - 24f - 20f) * density).toInt().coerceAtLeast(80)
 
                         val errorProvider = GlanceTheme.colors.error
@@ -422,25 +420,14 @@ class CompletionLineChartWidget : GlanceAppWidget() {
 
         val density = context.resources.displayMetrics.density
         val xAxisHeightPx = 14f * density
+
         val chartHeight = heightPx - xAxisHeightPx
         val horizontalPadding = 8f * density
         val chartWidth = widthPx - (horizontalPadding * 2)
 
-        // Vertical padding so top and bottom nodes/lines are never clipped
         val topPaddingPx = 8f * density
         val bottomPaddingPx = 4f * density
         val availableChartHeight = (chartHeight - topPaddingPx - bottomPaddingPx).coerceAtLeast(1f)
-
-        // Subtle background grid lines
-        val segmentHeight = availableChartHeight / 10f
-        paint.color = trackColor
-        paint.alpha = 76
-        paint.strokeWidth = 1f * density
-        paint.style = Paint.Style.STROKE
-        for (i in 0..10) {
-            val y = topPaddingPx + availableChartHeight - (i * segmentHeight)
-            canvas.drawLine(0f, y, widthPx.toFloat(), y, paint)
-        }
 
         val minPointSpacingDp = 10f
         val minPointSpacingPx = minPointSpacingDp * density
@@ -474,10 +461,38 @@ class CompletionLineChartWidget : GlanceAppWidget() {
 
         val targetY = getY(target)
 
-        // 1. Draw Fill and Line Stroke Segment by Segment (Green = On Goal, Red = Below Goal, Grey = Skip Day)
+        // Precompute points
+        val points = Array(numPoints) { i ->
+            val item = visibleData[i]
+            val x = getX(i)
+            val y = getY(item.completedQuantity)
+            Triple(x, y, item)
+        }
+
+        // Shared tangent per point (monotone cubic / PCHIP style).
+        // Both segments touching a point use the same tangent, so joins are C1-continuous
+        // (no kinks), and flat tops / peaks / dips get a horizontal tangent with no overshoot.
+        val tangents = FloatArray(numPoints)
+        if (numPoints > 1) {
+            val slopes = FloatArray(numPoints - 1) { points[it + 1].second - points[it].second }
+            tangents[0] = slopes[0]
+            tangents[numPoints - 1] = slopes[numPoints - 2]
+            for (k in 1 until numPoints - 1) {
+                val d0 = slopes[k - 1]
+                val d1 = slopes[k]
+                tangents[k] = if (d0 * d1 <= 0f) {
+                    0f                          // flat, peak or dip -> horizontal tangent
+                } else {
+                    2f * d0 * d1 / (d0 + d1)    // harmonic mean, prevents overshoot
+                }
+            }
+        }
+        val handle = 0.4f // 0.33 = tighter, 0.5 = rounder shoulders
+
+        // 1. Draw smooth segments
         for (i in 0 until numPoints - 1) {
-            val item1 = visibleData[i]
-            val item2 = visibleData[i + 1]
+            val (x1, y1, item1) = points[i]
+            val (x2, y2, item2) = points[i + 1]
 
             val daysBeforeToday2 = (numPoints - 1 - (i + 1)).toLong()
             val itemDate2 = today.minusDays(daysBeforeToday2)
@@ -489,16 +504,17 @@ class CompletionLineChartWidget : GlanceAppWidget() {
                 else -> errorColor
             }
 
-            val x1 = getX(i)
-            val y1 = getY(item1.completedQuantity)
-            val x2 = getX(i + 1)
-            val y2 = getY(item2.completedQuantity)
+            val dx = x2 - x1
+            val cp1x = x1 + dx * handle
+            val cp1y = y1 + tangents[i] * handle
+            val cp2x = x2 - dx * handle
+            val cp2y = y2 - tangents[i + 1] * handle
 
-            // Fill Polygon under segment i -> i+1
+            // Fill Path
             val segmentPath = Path().apply {
                 moveTo(x1, chartHeight)
                 lineTo(x1, y1)
-                lineTo(x2, y2)
+                cubicTo(cp1x, cp1y, cp2x, cp2y, x2, y2)
                 lineTo(x2, chartHeight)
                 close()
             }
@@ -517,13 +533,17 @@ class CompletionLineChartWidget : GlanceAppWidget() {
             canvas.drawPath(segmentPath, paint)
             paint.shader = null
 
-            // Line Stroke for segment i -> i+1
+            // Line Stroke Path
+            val strokePath = Path().apply {
+                moveTo(x1, y1)
+                cubicTo(cp1x, cp1y, cp2x, cp2y, x2, y2)
+            }
             paint.style = Paint.Style.STROKE
             paint.color = segmentColor
             paint.strokeWidth = 2.5f * density
             paint.strokeCap = Paint.Cap.ROUND
             paint.strokeJoin = Paint.Join.ROUND
-            canvas.drawLine(x1, y1, x2, y2, paint)
+            canvas.drawPath(strokePath, paint)
         }
 
         // 2. Target / Goal Line (Dashed)
@@ -570,7 +590,6 @@ class CompletionLineChartWidget : GlanceAppWidget() {
         visibleData.forEachIndexed { index, item ->
             val daysBeforeToday = (numPoints - 1 - index).toLong()
             val itemDate = today.minusDays(daysBeforeToday)
-
             val x = getX(index)
 
             val isFirstDayOfMonth = itemDate.dayOfMonth == 1

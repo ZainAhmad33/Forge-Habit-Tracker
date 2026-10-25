@@ -442,16 +442,6 @@ class CompletionBarChartWidget: GlanceAppWidget(){
         val horizontalPadding = 4f * density
         val chartWidth = widthPx - (horizontalPadding * 2)
 
-        // Background Grid lines
-        val segmentHeight = chartHeight / 10f
-        paint.color = trackColor
-        paint.alpha = 76
-        paint.strokeWidth = 1f * density
-        for (i in 0..10) {
-            val y = chartHeight - (i * segmentHeight)
-            canvas.drawLine(0f, y, widthPx.toFloat(), y, paint)
-        }
-
         val standardBarWidthDp = 7f
         val spacingDp = 3f
 
