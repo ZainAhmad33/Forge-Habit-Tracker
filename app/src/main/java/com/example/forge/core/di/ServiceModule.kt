@@ -97,4 +97,10 @@ abstract class ServiceModule {
     abstract fun bindWidgetUpdater(
         impl: GlanceWidgetUpdater
     ): IWidgetUpdater
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupService(
+        impl: com.example.forge.core.services.implementations.BackupService
+    ): com.example.forge.core.services.interfaces.IBackupService
 }

@@ -1,9 +1,12 @@
 package com.example.forge.feature.profile.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -15,28 +18,34 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FactCheck
-import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -47,6 +56,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,11 +68,12 @@ import com.example.forge.R
 import com.example.forge.core.database.entity.User
 import com.example.forge.core.designsystem.component.HeroStatCard
 import com.example.forge.core.designsystem.theme.ForgeTheme
-import com.example.forge.core.uiEntities.HeroStatItem
 import com.example.forge.core.services.interfaces.ProfileStats
+import com.example.forge.core.uiEntities.HeroStatItem
 import com.example.forge.feature.profile.viewmodel.ProfileDetailsUiState
 import com.example.forge.feature.profile.viewmodel.ProfileDetailsViewModel
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -73,11 +84,36 @@ fun ProfileDetailsRoute(
     viewModel: ProfileDetailsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            viewModel.exportBackup(it, context.contentResolver)
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            viewModel.importBackup(it, context.contentResolver)
+        }
+    }
 
     ProfileDetailsScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onEditClick = onEditClick,
+        onExportClick = {
+            val dateStr = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            exportLauncher.launch("forge_backup_$dateStr.json")
+        },
+        onImportClick = {
+            importLauncher.launch(arrayOf("application/json", "*/*"))
+        },
+        onClearStatusMessage = viewModel::clearStatusMessage,
         modifier = modifier
     )
 }
@@ -88,11 +124,22 @@ fun ProfileDetailsScreen(
     uiState: ProfileDetailsUiState,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
+    onExportClick: () -> Unit = {},
+    onImportClick: () -> Unit = {},
+    onClearStatusMessage: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()) }
     val monthYearFormatter = remember { SimpleDateFormat("MMM yyyy", Locale.getDefault()) }
     val haptic = LocalHapticFeedback.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.statusMessage) {
+        uiState.statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearStatusMessage()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -121,6 +168,7 @@ fun ProfileDetailsScreen(
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -162,6 +210,7 @@ fun ProfileDetailsScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(28.dp),
+                        enabled = !uiState.isExporting && !uiState.isImporting,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -240,6 +289,73 @@ fun ProfileDetailsScreen(
                         HeroStatCard(items = statItems)
                     }
                 }
+
+                // Backup & Restore Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Backup & Restore Data",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Export your habits and logs or restore from a backup file.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onExportClick()
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !uiState.isExporting && !uiState.isImporting,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Download,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = if (uiState.isExporting) "Exporting..." else "Export")
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onImportClick()
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !uiState.isExporting && !uiState.isImporting,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Download,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = if (uiState.isImporting) "Importing..." else "Import")
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }

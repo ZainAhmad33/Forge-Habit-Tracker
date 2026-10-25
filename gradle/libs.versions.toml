@@ -62,6 +62,7 @@ androidx-glance-material3 = { group = "androidx.glance", name = "glance-material
 androidx-glance-preview = { group = "androidx.glance", name = "glance-preview", version.ref = "glance" }
 androidx-glance-appwidget-preview = { group = "androidx.glance", name = "glance-appwidget-preview", version.ref = "glance" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+gson = { group = "com.google.code.gson", name = "gson", version = "2.10.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

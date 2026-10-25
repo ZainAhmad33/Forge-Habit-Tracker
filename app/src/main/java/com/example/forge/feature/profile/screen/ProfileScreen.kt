@@ -1,5 +1,7 @@
 package com.example.forge.feature.profile.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -28,8 +30,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -37,14 +42,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +67,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -84,6 +94,15 @@ fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            viewModel.importBackup(it, context.contentResolver, onSuccess = onSaveSuccess)
+        }
+    }
 
     ProfileScreen(
         uiState = uiState,
@@ -93,6 +112,10 @@ fun ProfileRoute(
         onSaveClick = {
             viewModel.onSaveClick(onSaveSuccess)
         },
+        onImportClick = {
+            importLauncher.launch(arrayOf("application/json", "*/*"))
+        },
+        onClearStatusMessage = viewModel::clearStatusMessage,
         onBackClick = onBackClick,
         modifier = modifier
     )
@@ -106,6 +129,8 @@ fun ProfileScreen(
     onLastNameChange: (String) -> Unit,
     onDobChange: (Date?) -> Unit,
     onSaveClick: () -> Unit,
+    onImportClick: () -> Unit = {},
+    onClearStatusMessage: () -> Unit = {},
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -113,6 +138,14 @@ fun ProfileScreen(
     val haptic = LocalHapticFeedback.current
     var showDatePicker by remember { mutableStateOf(false) }
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.statusMessage) {
+        uiState.statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearStatusMessage()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -147,6 +180,7 @@ fun ProfileScreen(
                     })
                 },
             containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 if (uiState.isUserExisting) {
                     CenterAlignedTopAppBar(
@@ -190,7 +224,7 @@ fun ProfileScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(28.dp),
-                        enabled = !uiState.isSaving,
+                        enabled = !uiState.isSaving && !uiState.isImporting,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
@@ -231,6 +265,51 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+
+                // Restore Card (Only visible during onboarding flow when user is new)
+                if (!uiState.isUserExisting) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "Already have a backup?",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Restore your habits, history, and profile from an existing Forge backup file.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            OutlinedButton(
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onImportClick()
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !uiState.isImporting,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Upload,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(text = if (uiState.isImporting) "Restoring..." else "Restore Backup File")
+                            }
+                        }
+                    }
                 }
 
                 // Form Fields

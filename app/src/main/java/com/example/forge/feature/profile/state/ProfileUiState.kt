@@ -12,5 +12,8 @@ data class ProfileUiState(
     val lastNameError: Boolean = false,
     val dobError: Boolean = false,
     val isSaving: Boolean = false,
-    val isUserExisting: Boolean = false
+    val isUserExisting: Boolean = false,
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false,
+    val statusMessage: String? = null
 )
