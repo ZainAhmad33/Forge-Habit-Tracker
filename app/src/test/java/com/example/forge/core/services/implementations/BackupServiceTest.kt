@@ -12,11 +12,11 @@ import com.example.forge.core.database.entity.HabitType
 import com.example.forge.core.database.entity.User
 import com.example.forge.core.services.interfaces.IWidgetUpdater
 import com.example.forge.core.uiEntities.ProgressShape
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -148,13 +148,13 @@ class BackupServiceTest {
     }
 
     @Test
-    fun `exportBackup creates valid JSON output with signature`() = runBlocking {
+    fun `exportBackup creates valid JSON output without signature`() = runBlocking {
         val outputStream = ByteArrayOutputStream()
         val result = backupService.exportBackup(outputStream)
 
         assertTrue(result.isSuccess)
         val jsonOutput = outputStream.toString(Charsets.UTF_8.name())
-        assertTrue(jsonOutput.contains("\"signature\":"))
+        assertFalse(jsonOutput.contains("\"signature\":"))
         assertTrue(jsonOutput.contains("Morning Run"))
         assertTrue(jsonOutput.contains("John"))
     }
@@ -176,43 +176,5 @@ class BackupServiceTest {
         assertEquals(1, insertedHabits.size)
         assertEquals("Morning Run", insertedHabits[0].title)
         assertEquals(1, insertedActivities.size)
-    }
-
-    @Test
-    fun `importBackup fails when backup payload is tampered with`() = runBlocking {
-        val outputStream = ByteArrayOutputStream()
-        backupService.exportBackup(outputStream)
-
-        val originalJson = outputStream.toString(Charsets.UTF_8.name())
-        val tamperedJson = originalJson.replace("Morning Run", "Tampered Habit")
-
-        val inputStream = ByteArrayInputStream(tamperedJson.toByteArray(Charsets.UTF_8))
-        val result = backupService.importBackup(inputStream)
-
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is SecurityException)
-    }
-
-    @Test
-    fun `importBackup fails when signature is missing`() = runBlocking {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(java.time.LocalTime::class.java, LocalTimeAdapter())
-            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-            .create()
-        val payloadWithoutSignature = ForgeBackupPayload(
-            version = 1,
-            exportedAt = System.currentTimeMillis(),
-            user = sampleUser,
-            habits = listOf(sampleHabit),
-            activities = listOf(sampleActivity),
-            signature = null
-        )
-        val json = gson.toJson(payloadWithoutSignature)
-
-        val inputStream = ByteArrayInputStream(json.toByteArray(Charsets.UTF_8))
-        val result = backupService.importBackup(inputStream)
-
-        assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is IllegalArgumentException)
     }
 }

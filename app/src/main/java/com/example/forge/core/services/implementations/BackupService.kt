@@ -25,8 +25,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.reflect.Type
 import java.time.LocalTime
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 
 data class ForgeBackupPayload(
@@ -34,8 +32,7 @@ data class ForgeBackupPayload(
     val exportedAt: Long,
     val user: User?,
     val habits: List<Habit>,
-    val activities: List<HabitActivity>,
-    val signature: String? = null
+    val activities: List<HabitActivity>
 )
 
 class LocalTimeAdapter : JsonSerializer<LocalTime>, JsonDeserializer<LocalTime> {
@@ -73,14 +70,10 @@ class BackupService @Inject constructor(
                 exportedAt = System.currentTimeMillis(),
                 user = user,
                 habits = habits,
-                activities = activities,
-                signature = null
+                activities = activities
             )
 
-            val jsonWithoutSignature = gson.toJson(rawPayload)
-            val signature = computeHmacSha256(jsonWithoutSignature)
-            val signedPayload = rawPayload.copy(signature = signature)
-            val finalJson = gson.toJson(signedPayload)
+            val finalJson = gson.toJson(rawPayload)
 
             val writer = outputStream.bufferedWriter(Charsets.UTF_8)
             writer.write(finalJson)
@@ -94,17 +87,6 @@ class BackupService @Inject constructor(
 
             val payload = gson.fromJson(jsonString, ForgeBackupPayload::class.java)
                 ?: throw IllegalArgumentException("Failed to parse backup JSON.")
-
-            val providedSignature = payload.signature
-                ?: throw IllegalArgumentException("Backup file is missing required signature.")
-
-            val unsignedPayload = payload.copy(signature = null)
-            val jsonWithoutSignature = gson.toJson(unsignedPayload)
-            val expectedSignature = computeHmacSha256(jsonWithoutSignature)
-
-            if (providedSignature != expectedSignature) {
-                throw SecurityException("Backup file signature is invalid or file has been tampered with.")
-            }
 
             val applyImport: suspend () -> Unit = {
                 payload.user?.let { user ->
@@ -126,14 +108,5 @@ class BackupService @Inject constructor(
 
             widgetUpdater.updateAllWidgets()
         }
-    }
-
-    private fun computeHmacSha256(data: String): String {
-        val secretKey = "ForgeHabitTracker_SecretBackupKey_2026"
-        val mac = Mac.getInstance("HmacSHA256")
-        val secretKeySpec = SecretKeySpec(secretKey.toByteArray(Charsets.UTF_8), "HmacSHA256")
-        mac.init(secretKeySpec)
-        val hash = mac.doFinal(data.toByteArray(Charsets.UTF_8))
-        return hash.joinToString("") { "%02x".format(it) }
     }
 }
