@@ -9,8 +9,10 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.example.forge.core.services.interfaces.IHabitMaintenanceService
 import com.example.forge.core.services.interfaces.INotificationService
+import com.example.forge.core.services.interfaces.IReminderManager
 import com.example.forge.feature.widget.WidgetUpdateWorker
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +28,9 @@ class ForgeApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var maintenanceService: IHabitMaintenanceService
 
+    @Inject
+    lateinit var reminderManager: IReminderManager
+
     private val applicationScope = MainScope()
 
     override fun onCreate() {
@@ -34,6 +39,14 @@ class ForgeApplication : Application(), Configuration.Provider {
 
         // Schedule daily widget update work at midnight
         WidgetUpdateWorker.scheduleNextMidnightUpdate(this)
+
+        // Reschedule active habit exact alarms on application start
+        applicationScope.launch(Dispatchers.IO) {
+            try {
+                reminderManager.rescheduleAllReminders()
+            } catch (ignored: Exception) {
+            }
+        }
 
         // Register dynamic broadcast receiver for runtime date/time/timezone changes
         val filter = IntentFilter().apply {
@@ -46,6 +59,7 @@ class ForgeApplication : Application(), Configuration.Provider {
                 applicationScope.launch {
                     try {
                         maintenanceService.performMaintenanceForAll()
+                        reminderManager.rescheduleAllReminders()
                         // Reschedule just in case time settings were changed
                         WidgetUpdateWorker.scheduleNextMidnightUpdate(this@ForgeApplication)
                     } catch (ignored: Exception) {

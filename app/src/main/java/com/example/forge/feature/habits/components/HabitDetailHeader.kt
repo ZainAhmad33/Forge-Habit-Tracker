@@ -30,10 +30,15 @@ import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.DpOffset
+import com.example.forge.core.designsystem.component.CustomShapeProgress
 import com.example.forge.core.designsystem.component.HeroStatCard
 import com.example.forge.core.uiEntities.HeroStatItem
+import com.example.forge.core.uiEntities.ProgressShapeAngleResolver
+import com.example.forge.core.uiEntities.ProgressShapeEnumResolver
 import androidx.compose.material.icons.rounded.Lock
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HabitDetailHeader(
     emoji: String,
@@ -45,8 +50,13 @@ fun HabitDetailHeader(
     bestStreak: Int,
     overallCompletionRate: Float,
     currentStreakStartDate: LocalDate?,
+    progressShape: ProgressShape = ProgressShape.Circle,
+    todayCompletedQuantity: Int = 0,
     isLocked: Boolean = false
 ) {
+    val shape = RoundedCornerShape(32.dp)
+    val progressPercent = (todayCompletedQuantity.toFloat() / completionTargetPerDay.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
@@ -54,21 +64,29 @@ fun HabitDetailHeader(
             modifier = Modifier.fillMaxWidth()
         ) {
             Box(contentAlignment = Alignment.BottomEnd) {
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    color = if (isLocked) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-                            else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(text = emoji, fontSize = 48.sp)
-                    }
-                }
+                CustomShapeProgress(
+                    progress = progressPercent,
+                    shape = shape,
+                    startAngle = 180f,
+                    checkMarkAngle = 200f,
+                    checkMarkOffset = DpOffset(4.dp, 4.dp),
+                    label = emoji,
+                    trackerSize = 110.dp,
+                    strokeWidth = 7.dp,
+                    showCheckMark = !isLocked,
+                    fontSize = 48.sp,
+                    shapeColor = if (isLocked) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                                else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    progressColor = if (isLocked) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.primary,
+                    trackColor = if (isLocked) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                                 else MaterialTheme.colorScheme.surfaceContainerHighest
+                )
                 if (isLocked) {
                     Surface(
                         modifier = Modifier
                             .size(32.dp)
-                            .offset(x = 8.dp, y = 8.dp),
+                            .offset(x = 4.dp, y = 4.dp),
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError,
@@ -84,7 +102,7 @@ fun HabitDetailHeader(
                     }
                 }
             }
-            Spacer(Modifier.size(24.dp))
+//            Spacer(Modifier.size(24.dp))
             Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight(800))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -201,7 +219,9 @@ fun HabitDetailHeaderPreview() {
             currentStreak = stats.currentStreak,
             bestStreak = stats.bestStreak,
             overallCompletionRate = stats.overallCompletionRate,
-            currentStreakStartDate = stats.currentStreakStartDate
+            currentStreakStartDate = stats.currentStreakStartDate,
+            progressShape = habit.progressShape,
+            todayCompletedQuantity = 1500
         )
     }
 }
@@ -248,7 +268,9 @@ fun HabitDetailHeaderDaysPerWeekPreview() {
             currentStreak = stats.currentStreak,
             bestStreak = stats.bestStreak,
             overallCompletionRate = stats.overallCompletionRate,
-            currentStreakStartDate = stats.currentStreakStartDate
+            currentStreakStartDate = stats.currentStreakStartDate,
+            progressShape = habit.progressShape,
+            todayCompletedQuantity = 1
         )
     }
 }

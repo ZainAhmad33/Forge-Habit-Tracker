@@ -54,7 +54,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
@@ -75,7 +77,10 @@ fun CustomShapeProgress(
     startAngle: Float = 0f, // 0f = Top, 90f = Right, 180f = Bottom, -90f = Left
     showCheckMark: Boolean = false,
     checkColor: Color = MaterialTheme.colorScheme.onPrimary,
-    label: String = "${(progress * 100).toInt()}%"
+    label: String = "${(progress * 100).toInt()}%",
+    fontSize: TextUnit = TextUnit.Unspecified,
+    checkMarkAngle: Float? = null,
+    checkMarkOffset: DpOffset = DpOffset.Zero
 ) {
     val isInspectionMode = LocalInspectionMode.current
     var animateToValue by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
@@ -120,7 +125,9 @@ fun CustomShapeProgress(
 
     var containerSize by remember { mutableStateOf(Size.Zero) }
 
-    val startPoint = remember(containerSize, shape, startAngle, layoutDirection, density) {
+    val effectiveCheckMarkAngle = checkMarkAngle ?: startAngle
+
+    val startPoint = remember(containerSize, shape, effectiveCheckMarkAngle, layoutDirection, density) {
         if (containerSize == Size.Zero) return@remember Offset.Zero
         val fullPath = Path()
         val outline = shape.createOutline(containerSize, layoutDirection, density)
@@ -132,7 +139,7 @@ fun CustomShapeProgress(
         val measure = PathMeasure()
         measure.setPath(fullPath, false)
         if (measure.length > 0f) {
-            rotatePoint(measure.getPosition(0f), containerSize.center, startAngle)
+            rotatePoint(measure.getPosition(0f), containerSize.center, effectiveCheckMarkAngle)
         } else Offset.Zero
     }
 
@@ -214,11 +221,12 @@ fun CustomShapeProgress(
         }
 
         // 3. Center Text Label (Normal / Upright - No Rotation)
+        val actualFontSize = if (fontSize != TextUnit.Unspecified) fontSize else if (trackerSize < 75.dp) 14.sp else 18.sp
         Text(
             text = label,
             color = dynamicLabelColor,
             fontWeight = FontWeight.Bold,
-            fontSize = if (trackerSize < 75.dp) 14.sp else 18.sp
+            fontSize = actualFontSize
         )
 
         // 4. Tick Badge at rotated position (Icon stays upright - No Rotation)
@@ -237,8 +245,8 @@ fun CustomShapeProgress(
                     .align(Alignment.TopStart)
                     .offset {
                         IntOffset(
-                            x = (startPoint.x + with(density) { (strokeWidth / 2).toPx() - badgeRadius.toPx() }).roundToInt(),
-                            y = (startPoint.y + with(density) { (strokeWidth / 2).toPx() - badgeRadius.toPx() }).roundToInt()
+                            x = (startPoint.x + with(density) { (strokeWidth / 2).toPx() - badgeRadius.toPx() + checkMarkOffset.x.toPx() }).roundToInt(),
+                            y = (startPoint.y + with(density) { (strokeWidth / 2).toPx() - badgeRadius.toPx() + checkMarkOffset.y.toPx() }).roundToInt()
                         )
                     }
             ) {

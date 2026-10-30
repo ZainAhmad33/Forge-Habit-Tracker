@@ -6,4 +6,5 @@ import java.util.UUID
 interface IReminderManager {
     fun updateReminders(habit: Habit)
     fun cancelReminders(habitId: UUID)
+    suspend fun rescheduleAllReminders()
 }

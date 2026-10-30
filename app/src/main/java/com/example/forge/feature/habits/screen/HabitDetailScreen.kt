@@ -207,6 +207,8 @@ fun HabitDetailScreen(
                     bestStreak = stats.bestStreak,
                     overallCompletionRate = stats.overallCompletionRate,
                     currentStreakStartDate = stats.currentStreakStartDate,
+                    progressShape = habit.progressShape,
+                    todayCompletedQuantity = uiState.todayLogs.sumOf { it.quantity },
                     isLocked = habit.isLocked
                 )
 

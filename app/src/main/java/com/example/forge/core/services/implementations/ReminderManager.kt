@@ -1,26 +1,30 @@
 package com.example.forge.core.services.implementations
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
-import androidx.work.*
+import android.content.Intent
+import android.os.Build
 import com.example.forge.core.database.entity.Habit
 import com.example.forge.core.database.entity.HabitFrequency
-import com.example.forge.core.notifications.HabitReminderWorker
+import com.example.forge.core.database.interfaces.IHabitRepository
+import com.example.forge.core.notifications.HabitReminderReceiver
 import com.example.forge.core.services.interfaces.IReminderManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ReminderManager @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val habitRepository: IHabitRepository,
 ) : IReminderManager {
 
-    private val workManager = WorkManager.getInstance(context)
+    private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     override fun updateReminders(habit: Habit) {
         cancelReminders(habit.id)
@@ -28,29 +32,70 @@ class ReminderManager @Inject constructor(
         if (habit.reminders.isEmpty()) return
 
         val nextReminderTime = getNextReminderTime(habit)
-        val delay = Duration.between(LocalDateTime.now(), nextReminderTime).toMillis()
+        val triggerAtMillis = nextReminderTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        val workRequest = OneTimeWorkRequestBuilder<HabitReminderWorker>()
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .addTag("habit_${habit.id}")
-            .setInputData(
-                workDataOf(
-                    "habit_id" to habit.id.toString(),
-                    "title" to habit.title,
-                    "emoji" to habit.emoji,
-                )
-            )
-            .build()
+        if (triggerAtMillis <= System.currentTimeMillis()) return
 
-        workManager.enqueueUniqueWork(
-            "habit_reminder_${habit.id}",
-            ExistingWorkPolicy.REPLACE,
-            workRequest
+        val intent = Intent(context, HabitReminderReceiver::class.java).apply {
+            action = HabitReminderReceiver.ACTION_HABIT_REMINDER
+            putExtra(HabitReminderReceiver.EXTRA_HABIT_ID, habit.id.toString())
+            putExtra(HabitReminderReceiver.EXTRA_HABIT_TITLE, habit.title)
+            putExtra(HabitReminderReceiver.EXTRA_HABIT_EMOJI, habit.emoji)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            habit.id.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        if (canScheduleExact) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent
+            )
+        }
     }
 
     override fun cancelReminders(habitId: UUID) {
-        workManager.cancelUniqueWork("habit_reminder_$habitId")
+        val intent = Intent(context, HabitReminderReceiver::class.java).apply {
+            action = HabitReminderReceiver.ACTION_HABIT_REMINDER
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            habitId.hashCode(),
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (pendingIntent != null) {
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
+        }
+    }
+
+    override suspend fun rescheduleAllReminders() {
+        val habits = habitRepository.getAllHabitsSync()
+        for (habit in habits) {
+            if (habit.reminders.isNotEmpty()) {
+                updateReminders(habit)
+            } else {
+                cancelReminders(habit.id)
+            }
+        }
     }
 
     private fun getNextReminderTime(habit: Habit): LocalDateTime {
