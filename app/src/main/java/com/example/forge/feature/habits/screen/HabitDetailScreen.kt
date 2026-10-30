@@ -193,7 +193,7 @@ fun HabitDetailScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(top = padding.calculateTopPadding())
-                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 48.dp + padding.calculateBottomPadding()),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 48.dp + padding.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 

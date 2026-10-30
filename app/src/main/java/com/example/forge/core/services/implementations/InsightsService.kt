@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.util.UUID
@@ -189,34 +190,56 @@ class InsightsService @Inject constructor(
             activityService.getAllDailyQuantities(),
             timeService.getCurrentDateFlow()
         ) { habits, dailyQuantities, today ->
+            if (habits.isEmpty()) {
+                return@combine WeeklyPerformance(emptyMap(), 0, 0)
+            }
+
             val habitDailyTotals = dailyQuantities.groupBy { it.habitId }
                 .mapValues { (_, quantities) -> quantities.associate { it.day to it.totalQuantity } }
-            val dayRates = mutableMapOf<Int, Float>()
-            
-            for (dayIdx in 0..6) {
-                var totalExpected = 0
-                var totalCompleted = 0
-                
-                val startDate = today.minusMonths(3)
-                var date = startDate
-                while (!date.isAfter(today)) {
-                    if (date.dayOfWeek.value - 1 == dayIdx) {
-                        habits.forEach { habit ->
-                            val totals = habitDailyTotals[habit.id] ?: emptyMap()
-                            if (statsService.calculateOverallRate(habit, totals, habit.completionTargetPerDay, date, date) > 0.99f) {
-                                totalCompleted++
-                            }
-                            totalExpected++
+
+            // Find the earliest creation date across all habits
+            val earliestCreatedAt = habits.minOf {
+                it.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            }
+            val startDate = if (earliestCreatedAt.isBefore(today)) earliestCreatedAt else today
+
+            // Track expected vs completed totals per day index (0..6)
+            val dayExpected = mutableMapOf<Int, Int>().withDefault { 0 }
+            val dayCompleted = mutableMapOf<Int, Int>().withDefault { 0 }
+
+            // Single pass through the date range
+            var date = startDate
+            while (!date.isAfter(today)) {
+                // Map dayOfWeek (1..7) to index (0..6) where Monday is 0 and Sunday is 6
+                val dayIndex = (date.dayOfWeek.value - 1) % 7
+
+                habits.forEach { habit ->
+                    val habitCreatedDate = habit.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+
+                    // Only evaluate this habit if the current date is on or after its creation date
+                    if (!date.isBefore(habitCreatedDate)) {
+                        dayExpected[dayIndex] = dayExpected.getValue(dayIndex) + 1
+
+                        val totals = habitDailyTotals[habit.id] ?: emptyMap()
+                        if (statsService.calculateOverallRate(habit, totals, habit.completionTargetPerDay, date, date) > 0.99f) {
+                            dayCompleted[dayIndex] = dayCompleted.getValue(dayIndex) + 1
                         }
                     }
-                    date = date.plusDays(1)
                 }
-                dayRates[dayIdx] = if (totalExpected > 0) totalCompleted.toFloat() / totalExpected else 0f
+                date = date.plusDays(1)
             }
-            
+
+            // Calculate final rates for index 0..6
+            val dayRates = mutableMapOf<Int, Float>()
+            for (dayIdx in 0..6) {
+                val expected = dayExpected.getValue(dayIdx)
+                val completed = dayCompleted.getValue(dayIdx)
+                dayRates[dayIdx] = if (expected > 0) completed.toFloat() / expected else 0f
+            }
+
             val bestDay = dayRates.maxByOrNull { it.value }?.key ?: 0
             val worstDay = dayRates.minByOrNull { it.value }?.key ?: 0
-            
+
             WeeklyPerformance(dayRates, bestDay, worstDay)
         }.flowOn(Dispatchers.Default)
     }
